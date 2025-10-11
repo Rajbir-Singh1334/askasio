@@ -22,7 +22,6 @@
       --color-primary-dark: #9333ea;
       --color-text-light: #d1d5db;
       --color-border: #4b4864;
-      --transition-fast: 0.3s ease;
     }
 
     body {
@@ -42,46 +41,9 @@
       border-top-color: var(--color-primary);
     }
 
-    #generatedImage {
-      box-shadow: 0 0 20px rgba(168, 85, 247, 0.7);
-    }
-
     body.light-mode {
       background: #f3f4f6;
       color: #1f2937;
-    }
-
-    body.light-mode .sidebar {
-      background: #ffffff;
-    }
-
-    body.light-mode #promptInput {
-      background: #ffffff;
-      color: #111827;
-      border-color: #d1d5db;
-    }
-
-    body.light-mode #imageArea {
-      background: #ffffff;
-      border-color: #d1d5db;
-    }
-
-    body.light-mode header {
-      background: #ffffff;
-    }
-
-    body.light-mode #themeToggle {
-      background: #e5e7eb;
-      color: #1f2937;
-    }
-
-    @media (max-width: 767px) {
-      #sidebar, #imageArea {
-        display: none;
-      }
-      #sidebar.active, #imageArea.active {
-        display: flex !important;
-      }
     }
   </style>
 </head>
@@ -90,16 +52,12 @@
   <!-- Header -->
   <header class="flex justify-between items-center p-4 bg-[var(--color-panel-bg)]">
     <h1 class="text-xl font-bold">Askaio</h1>
-    <div class="flex items-center gap-4">
-      <div id="clerk-sign-in"></div>
-      <div id="clerk-user-button"></div>
-    </div>
+    <div id="clerk-user-button"></div>
   </header>
 
   <!-- Protected Content -->
   <main id="protected-content" class="flex-1 hidden">
     <div class="main-layout flex flex-col md:flex-row gap-4 p-4 md:p-8">
-
       <!-- Sidebar -->
       <aside class="sidebar flex flex-col gap-4 bg-[var(--color-panel-bg)] rounded-2xl shadow-lg p-6 w-full md:w-[400px]" id="sidebar">
         <div class="sidebar-header flex justify-between items-center mb-4">
@@ -134,46 +92,76 @@
         </div>
       </main>
     </div>
-
-    <!-- Mobile bottom tabs -->
-    <div class="bottom-tabs fixed bottom-0 left-0 w-full flex justify-around bg-[var(--color-panel-bg)] p-2 md:hidden">
-      <button id="tabPrompt" class="flex-1 py-2 text-center active">Prompt</button>
-      <button id="tabPreview" class="flex-1 py-2 text-center">Preview</button>
-    </div>
   </main>
 
-  <!-- Public Auth Page -->
-  <div id="public-auth" class="flex-1 hidden flex justify-center items-center">
-    <div id="clerk-sign-in-form"></div>
+  <!-- 👋 Public Landing Page -->
+  <div id="landing-page" class="flex flex-col items-center justify-center flex-1 text-center p-8">
+    <h1 class="text-5xl font-extrabold text-white mb-4">Welcome to <span class="text-purple-400">Askaio</span></h1>
+    <p class="text-gray-400 mb-8 text-lg max-w-xl">
+      Create stunning AI-generated images instantly. Log in or sign up to start your creative journey.
+    </p>
+    <div class="flex gap-4">
+      <button id="loginBtn" class="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-fuchsia-600 text-white font-semibold hover:scale-105 transition-all shadow-lg">
+        Login
+      </button>
+      <button id="signupBtn" class="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold hover:scale-105 transition-all shadow-lg">
+        Sign Up
+      </button>
+    </div>
+
+    <!-- Where Clerk will mount -->
+    <div id="auth-container" class="mt-8 hidden"></div>
   </div>
 
   <script>
+    // Clerk Authentication + Landing Page Logic
     window.addEventListener("load", async () => {
       await Clerk.load();
 
-      if (!Clerk.user) {
-        document.getElementById("protected-content").classList.add("hidden");
-        document.getElementById("public-auth").classList.remove("hidden");
-        Clerk.mountSignIn(document.getElementById("clerk-sign-in-form"));
-      } else {
-        document.getElementById("protected-content").classList.remove("hidden");
-        document.getElementById("public-auth").classList.add("hidden");
+      const protectedContent = document.getElementById("protected-content");
+      const landingPage = document.getElementById("landing-page");
+      const authContainer = document.getElementById("auth-container");
+      const loginBtn = document.getElementById("loginBtn");
+      const signupBtn = document.getElementById("signupBtn");
+
+      // When user clicks Login
+      loginBtn.addEventListener("click", () => {
+        landingPage.classList.add("hidden");
+        authContainer.classList.remove("hidden");
+        Clerk.mountSignIn(authContainer);
+      });
+
+      // When user clicks Sign Up
+      signupBtn.addEventListener("click", () => {
+        landingPage.classList.add("hidden");
+        authContainer.classList.remove("hidden");
+        Clerk.mountSignUp(authContainer);
+      });
+
+      // If already logged in
+      if (Clerk.user) {
+        protectedContent.classList.remove("hidden");
+        landingPage.classList.add("hidden");
       }
 
+      // Mount user button in header
       Clerk.mountUserButton(document.getElementById("clerk-user-button"));
+
+      // Listen for auth changes
       Clerk.addListener(({ user }) => {
         if (user) {
-          document.getElementById("protected-content").classList.remove("hidden");
-          document.getElementById("public-auth").classList.add("hidden");
+          protectedContent.classList.remove("hidden");
+          landingPage.classList.add("hidden");
         } else {
-          document.getElementById("protected-content").classList.add("hidden");
-          document.getElementById("public-auth").classList.remove("hidden");
+          protectedContent.classList.add("hidden");
+          landingPage.classList.remove("hidden");
         }
       });
     });
   </script>
 
   <script>
+    // Image generation logic
     const apiKey = "AIzaSyD8xBXpp0FYeV0nCxZ9V_VtVjKwoo6_BUw";
     const sidebar = document.getElementById('sidebar');
     const imageArea = document.getElementById('imageArea');
@@ -185,8 +173,6 @@
     const errorMessage = document.getElementById('errorMessage');
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
-    const tabPrompt = document.getElementById('tabPrompt');
-    const tabPreview = document.getElementById('tabPreview');
 
     // ✅ Create Download Button
     const downloadBtn = document.createElement('button');
@@ -213,25 +199,6 @@
       generateBtn.textContent = disabled ? "GENERATING..." : "GENERATE IMAGE";
       generateBtn.style.opacity = disabled ? "0.7" : "1";
     }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const savedTheme = localStorage.getItem('theme');
-      if (!savedTheme || savedTheme === 'light') {
-        body.classList.add('light-mode');
-        themeToggle.textContent = '🌙';
-        localStorage.setItem('theme', 'light');
-      } else {
-        themeToggle.textContent = '☀️';
-      }
-
-      promptInput.addEventListener('input', () => {
-        generateBtn.disabled = promptInput.value.trim() === '';
-      });
-
-      if (window.innerWidth < 768) {
-        activateTab('prompt');
-      }
-    });
 
     themeToggle.addEventListener('click', () => {
       body.classList.toggle('light-mode');
@@ -272,7 +239,7 @@
       }
     }
 
-    // ✅ Download Feature
+    // ✅ Download feature
     downloadBtn.addEventListener('click', () => {
       const imgSrc = generatedImageDisplay.src;
       if (!imgSrc) return;
@@ -283,24 +250,6 @@
     });
 
     generateBtn.addEventListener('click', generateImage);
-
-    function activateTab(tab) {
-      tabPrompt.classList.remove('active');
-      tabPreview.classList.remove('active');
-      sidebar.classList.remove('active');
-      imageArea.classList.remove('active');
-
-      if (tab === 'prompt') {
-        tabPrompt.classList.add('active');
-        sidebar.classList.add('active');
-      } else {
-        tabPreview.classList.add('active');
-        imageArea.classList.add('active');
-      }
-    }
-
-    tabPrompt.addEventListener('click', () => activateTab('prompt'));
-    tabPreview.addEventListener('click', () => activateTab('preview'));
   </script>
 </body>
 </html>
