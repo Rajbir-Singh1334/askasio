@@ -85,6 +85,10 @@
     }
 
     /* Bottom tab styles */
+    .bottom-tabs {
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+
     .bottom-tabs button {
       transition: background var(--transition-fast), color var(--transition-fast);
       border-radius: 6px;
@@ -93,6 +97,15 @@
     .bottom-tabs button.active {
       color: white !important;
       background-color: var(--color-primary);
+    }
+
+    /* Light mode bottom tabs */
+    body.light-mode .bottom-tabs {
+      background-color: #f3f4f6;
+    }
+
+    body.light-mode .bottom-tabs button {
+      color: black;
     }
 
     body.light-mode .bottom-tabs button.active {
@@ -242,17 +255,14 @@
         generateBtn.disabled = promptInput.value.trim() === '';
       });
 
-      updateTabColors(); // Fix bottom tab text color
-      if (window.innerWidth < 768) {
-        activateTab('prompt');
-      }
+      updateTabColors();
+      if (window.innerWidth < 768) activateTab('prompt');
     });
 
     themeToggle.addEventListener('click', () => {
       body.classList.toggle('light-mode');
-      const isLight = body.classList.contains('light-mode');
-      themeToggle.textContent = isLight ? '🌙' : '☀️';
-      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+      themeToggle.textContent = body.classList.contains('light-mode') ? '🌙' : '☀️';
+      localStorage.setItem('theme', body.classList.contains('light-mode') ? 'light' : 'dark');
       updateTabColors();
     });
 
@@ -321,7 +331,7 @@
     tabPrompt.addEventListener('click', () => activateTab('prompt'));
     tabPreview.addEventListener('click', () => activateTab('preview'));
 
-    // 🔹 Update bottom tab colors dynamically
+    // Update tab text colors dynamically
     function updateTabColors() {
       const isLight = body.classList.contains('light-mode');
       [tabPrompt, tabPreview].forEach(btn => {
