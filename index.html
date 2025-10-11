@@ -41,9 +41,22 @@
       border-top-color: var(--color-primary);
     }
 
+    #generatedImage {
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.7);
+    }
+
     body.light-mode {
       background: #f3f4f6;
       color: #1f2937;
+    }
+
+    @media (max-width: 767px) {
+      #sidebar, #imageArea {
+        display: none;
+      }
+      #sidebar.active, #imageArea.active {
+        display: flex !important;
+      }
     }
   </style>
 </head>
@@ -94,7 +107,7 @@
     </div>
   </main>
 
-  <!-- 👋 Public Landing Page -->
+  <!-- Landing Page -->
   <div id="landing-page" class="flex flex-col items-center justify-center flex-1 text-center p-8">
     <h1 class="text-5xl font-extrabold text-white mb-4">Welcome to <span class="text-purple-400">Askaio</span></h1>
     <p class="text-gray-400 mb-8 text-lg max-w-xl">
@@ -109,45 +122,50 @@
       </button>
     </div>
 
-    <!-- Where Clerk will mount -->
     <div id="auth-container" class="mt-8 hidden"></div>
   </div>
 
   <script>
-    // Clerk Authentication + Landing Page Logic
+    // Clerk Landing Page Logic
     window.addEventListener("load", async () => {
       await Clerk.load();
 
-      const protectedContent = document.getElementById("protected-content");
       const landingPage = document.getElementById("landing-page");
+      const protectedContent = document.getElementById("protected-content");
       const authContainer = document.getElementById("auth-container");
       const loginBtn = document.getElementById("loginBtn");
       const signupBtn = document.getElementById("signupBtn");
 
-      // When user clicks Login
-      loginBtn.addEventListener("click", () => {
+      // Login button
+      loginBtn.addEventListener("click", async () => {
         landingPage.classList.add("hidden");
         authContainer.classList.remove("hidden");
-        Clerk.mountSignIn(authContainer);
+        authContainer.style.minHeight = "500px"; // ensures Clerk renders properly
+        await Clerk.load();
+        Clerk.mountSignIn(authContainer, {
+          appearance: { variables: { colorPrimary: "#a855f7" } }
+        });
       });
 
-      // When user clicks Sign Up
-      signupBtn.addEventListener("click", () => {
+      // Signup button
+      signupBtn.addEventListener("click", async () => {
         landingPage.classList.add("hidden");
         authContainer.classList.remove("hidden");
-        Clerk.mountSignUp(authContainer);
+        authContainer.style.minHeight = "500px";
+        await Clerk.load();
+        Clerk.mountSignUp(authContainer, {
+          appearance: { variables: { colorPrimary: "#3b82f6" } }
+        });
       });
 
-      // If already logged in
+      // If user already logged in
       if (Clerk.user) {
         protectedContent.classList.remove("hidden");
         landingPage.classList.add("hidden");
       }
 
-      // Mount user button in header
       Clerk.mountUserButton(document.getElementById("clerk-user-button"));
 
-      // Listen for auth changes
       Clerk.addListener(({ user }) => {
         if (user) {
           protectedContent.classList.remove("hidden");
@@ -161,7 +179,7 @@
   </script>
 
   <script>
-    // Image generation logic
+    // AI Image Generator Logic
     const apiKey = "AIzaSyD8xBXpp0FYeV0nCxZ9V_VtVjKwoo6_BUw";
     const sidebar = document.getElementById('sidebar');
     const imageArea = document.getElementById('imageArea');
@@ -174,7 +192,7 @@
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
 
-    // ✅ Create Download Button
+    // Download Button
     const downloadBtn = document.createElement('button');
     downloadBtn.id = "downloadImageBtn";
     downloadBtn.textContent = "DOWNLOAD IMAGE";
@@ -239,7 +257,6 @@
       }
     }
 
-    // ✅ Download feature
     downloadBtn.addEventListener('click', () => {
       const imgSrc = generatedImageDisplay.src;
       if (!imgSrc) return;
@@ -250,6 +267,10 @@
     });
 
     generateBtn.addEventListener('click', generateImage);
+
+    promptInput.addEventListener('input', () => {
+      generateBtn.disabled = promptInput.value.trim() === '';
+    });
   </script>
 </body>
 </html>
