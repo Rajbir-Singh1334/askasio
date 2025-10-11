@@ -16,14 +16,13 @@
 
   <style>
     :root {
-      --color-dark-bg: #181622;
-      --color-panel-bg: #242132;
-      --color-primary: #c084fc;
+      --color-dark-bg: #211e2f;
+      --color-panel-bg: #2b283d;
+      --color-primary: #ecddfa;
       --color-primary-dark: #9333ea;
-      --color-text-light: #e5e7eb;
-      --color-border: #3f3a56;
+      --color-text-light: #d1d5db;
+      --color-border: #4b4864;
       --transition-fast: 0.3s ease;
-      --transition-slow: 0.6s ease;
     }
 
     body {
@@ -31,75 +30,22 @@
       background: var(--color-dark-bg);
       color: var(--color-text-light);
       margin: 0;
-      padding: 0;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      overflow-x: hidden;
-    }
-
-    header {
-      backdrop-filter: blur(10px);
-      background: rgba(36, 33, 50, 0.85);
-      box-shadow: 0 2px 20px rgba(147, 51, 234, 0.1);
-    }
-
-    .sidebar {
-      background: linear-gradient(145deg, #29263b, #1f1d2e);
-      border: 1px solid var(--color-border);
-      box-shadow: 0 0 25px rgba(147, 51, 234, 0.15);
-    }
-
-    #generateBtn {
-      background: linear-gradient(90deg, #9333ea, #a855f7, #ec4899);
-      transition: transform 0.25s ease, box-shadow 0.3s ease;
-    }
-
-    #generateBtn:hover {
-      transform: scale(1.03);
-      box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
-    }
-
-    #promptInput {
-      background: #1e1b2a;
-      border-color: var(--color-primary-dark);
-      transition: all 0.3s ease;
-    }
-
-    #promptInput:focus {
-      border-color: var(--color-primary);
-      box-shadow: 0 0 12px rgba(147, 51, 234, 0.4);
-    }
-
-    #imageArea {
-      background: linear-gradient(145deg, #1c1a27, #211e2f);
-      border: 1px solid var(--color-border);
-    }
-
-    #generatedImage {
-      border-radius: 1rem;
-      box-shadow: 0 0 30px rgba(147, 51, 234, 0.25);
-      transition: all 0.6s ease;
-    }
-
-    #themeToggle {
-      background: #3b3661;
-      transition: all 0.3s ease;
-    }
-
-    #themeToggle:hover {
-      background: #4f46e5;
-      color: white;
     }
 
     .loading-spinner {
       border-width: 6px;
       border-style: solid;
-      border-color: rgba(255,255,255,0.15);
+      border-color: rgba(255,255,255,0.2);
       border-top-color: var(--color-primary);
     }
 
-    /* Light Mode Styles */
+    #generatedImage {
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.7);
+    }
+
     body.light-mode {
       background: #f3f4f6;
       color: #1f2937;
@@ -107,7 +53,6 @@
 
     body.light-mode .sidebar {
       background: #ffffff;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
     }
 
     body.light-mode #promptInput {
@@ -116,25 +61,18 @@
       border-color: #d1d5db;
     }
 
-    body.light-mode #generateBtn {
-      background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
-    }
-
     body.light-mode #imageArea {
       background: #ffffff;
       border-color: #d1d5db;
     }
 
-    .bottom-tabs {
-      background: rgba(36, 33, 50, 0.9);
-      backdrop-filter: blur(10px);
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    body.light-mode header {
+      background: #ffffff;
     }
 
-    .bottom-tabs button.active {
-      background: var(--color-primary);
-      color: white !important;
-      border-radius: 8px;
+    body.light-mode #themeToggle {
+      background: #e5e7eb;
+      color: #1f2937;
     }
 
     @media (max-width: 767px) {
@@ -150,8 +88,8 @@
 
 <body>
   <!-- Header -->
-  <header class="flex justify-between items-center p-4">
-    <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">Askaio</h1>
+  <header class="flex justify-between items-center p-4 bg-[var(--color-panel-bg)]">
+    <h1 class="text-xl font-bold">Askaio</h1>
     <div class="flex items-center gap-4">
       <div id="clerk-sign-in"></div>
       <div id="clerk-user-button"></div>
@@ -160,34 +98,45 @@
 
   <!-- Protected Content -->
   <main id="protected-content" class="flex-1 hidden">
-    <div class="main-layout flex flex-col md:flex-row gap-6 p-4 md:p-8">
-      <!-- Sidebar (Prompt Panel) -->
-      <aside class="sidebar flex flex-col gap-4 rounded-2xl p-6 w-full md:w-[400px]" id="sidebar">
-        <div class="sidebar-header flex justify-between items-center mb-2">
-          <h1 class="text-4xl font-extrabold tracking-wide drop-shadow-lg text-[var(--color-primary)]">Askaio</h1>
-          <button id="themeToggle" aria-label="Toggle Theme" class="w-12 h-12 flex items-center justify-center rounded-full text-2xl">☀️</button>
+    <div class="main-layout flex flex-col md:flex-row gap-4 p-4 md:p-8">
+
+      <!-- Sidebar -->
+      <aside class="sidebar flex flex-col gap-4 bg-[var(--color-panel-bg)] rounded-2xl shadow-lg p-6 w-full md:w-[400px]" id="sidebar">
+        <div class="sidebar-header flex justify-between items-center mb-4">
+          <h1 class="text-4xl font-extrabold tracking-wide drop-shadow-lg">Askaio</h1>
+          <button id="themeToggle" class="w-12 h-12 flex items-center justify-center rounded-full bg-gray-700 hover:bg-gray-600 text-2xl transition-all">☀️</button>
         </div>
-        <p class="text-gray-400 leading-relaxed">Describe your imagination — Askaio will turn it into an AI-generated masterpiece.</p>
-        <textarea id="promptInput" placeholder="e.g., A serene mountain lake under a galaxy-filled sky" class="w-full h-40 p-4 rounded-xl border-2 resize-none focus:outline-none"></textarea>
-        <button id="generateBtn" disabled class="w-full py-3 rounded-xl font-semibold text-white shadow-md">Generate Image</button>
+
+        <p class="text-gray-400 leading-relaxed">
+          Enter a descriptive prompt to generate a stunning AI-powered image.
+        </p>
+
+        <textarea id="promptInput" placeholder="e.g., A futuristic neon city skyline at night with flying cars"
+          class="w-full h-40 p-4 rounded-xl border-2 border-[var(--color-primary-dark)] bg-gray-800 text-white resize-none focus:outline-none focus:ring-4 focus:ring-purple-400 transition-all"></textarea>
+
+        <button id="generateBtn" disabled
+          class="w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all">
+          GENERATE IMAGE
+        </button>
       </aside>
 
       <!-- Main Image Display -->
-      <main class="image-area flex-1 flex justify-center items-center rounded-2xl shadow-lg overflow-hidden relative p-4" id="imageArea">
+      <main class="image-area flex-1 flex justify-center items-center bg-[var(--color-panel-bg)] rounded-2xl shadow-lg overflow-hidden relative p-4" id="imageArea">
         <div class="image-display w-full h-full flex justify-center items-center border-2 border-dashed border-[var(--color-border)] rounded-xl relative">
           <div id="loadingState" class="hidden flex flex-col items-center gap-4">
-            <div class="loading-spinner border-6 rounded-full w-14 h-14 animate-spin"></div>
-            <p class="loading-message text-gray-400 italic">Creating your vision...</p>
+            <div class="loading-spinner border-6 border-gray-600 border-t-[var(--color-primary)] rounded-full w-14 h-14 animate-spin"></div>
+            <p class="text-gray-400 italic">Generating your masterpiece...</p>
           </div>
-          <img id="generatedImage" src="" alt="Generated Image" class="hidden max-w-full max-h-full rounded-lg transition-opacity duration-700">
+
+          <img id="generatedImage" src="" alt="Generated Image" class="hidden max-w-full max-h-full rounded-lg shadow-lg transition-opacity duration-700">
           <p id="placeholderText" class="text-gray-500 italic">Your generated image will appear here.</p>
-          <p id="errorMessage" class="error-message text-red-400 font-semibold hidden"></p>
+          <p id="errorMessage" class="text-red-400 font-semibold hidden"></p>
         </div>
       </main>
     </div>
 
-    <!-- Mobile Tabs -->
-    <div class="bottom-tabs fixed bottom-0 left-0 w-full flex justify-around p-2 md:hidden">
+    <!-- Mobile bottom tabs -->
+    <div class="bottom-tabs fixed bottom-0 left-0 w-full flex justify-around bg-[var(--color-panel-bg)] p-2 md:hidden">
       <button id="tabPrompt" class="flex-1 py-2 text-center active">Prompt</button>
       <button id="tabPreview" class="flex-1 py-2 text-center">Preview</button>
     </div>
@@ -198,172 +147,160 @@
     <div id="clerk-sign-in-form"></div>
   </div>
 
-  <!-- ===================== JAVASCRIPT ===================== -->
-<script>
-window.addEventListener("load", async () => {
-  await Clerk.load();
+  <script>
+    window.addEventListener("load", async () => {
+      await Clerk.load();
 
-  if (!Clerk.user) {
-    document.getElementById("protected-content").classList.add("hidden");
-    document.getElementById("public-auth").classList.remove("hidden");
+      if (!Clerk.user) {
+        document.getElementById("protected-content").classList.add("hidden");
+        document.getElementById("public-auth").classList.remove("hidden");
+        Clerk.mountSignIn(document.getElementById("clerk-sign-in-form"));
+      } else {
+        document.getElementById("protected-content").classList.remove("hidden");
+        document.getElementById("public-auth").classList.add("hidden");
+      }
 
-    Clerk.mountSignIn(document.getElementById("clerk-sign-in-form"), {
-      appearance: {
-        elements: {
-          card: "bg-gradient-to-br from-[#1a102b] to-[#0b0f24] border border-purple-700/40 shadow-xl rounded-2xl p-6",
-          headerTitle: "text-3xl font-extrabold text-purple-400 tracking-wide drop-shadow-lg",
-          headerSubtitle: "text-gray-400 italic",
-          formButtonPrimary:
-            "bg-gradient-to-r from-purple-500 via-fuchsia-600 to-pink-600 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:scale-[1.05] transition-all",
-          formFieldInput:
-            "bg-[#0f172a] border border-purple-600/40 text-white placeholder-gray-400 rounded-lg px-3 py-2 focus:ring-2 focus:ring-fuchsia-500",
-          footerActionLink:
-            "text-purple-400 hover:text-fuchsia-300 font-semibold transition-colors",
-        },
-        layout: { socialButtonsPlacement: "bottom" },
-      },
+      Clerk.mountUserButton(document.getElementById("clerk-user-button"));
+      Clerk.addListener(({ user }) => {
+        if (user) {
+          document.getElementById("protected-content").classList.remove("hidden");
+          document.getElementById("public-auth").classList.add("hidden");
+        } else {
+          document.getElementById("protected-content").classList.add("hidden");
+          document.getElementById("public-auth").classList.remove("hidden");
+        }
+      });
     });
-  } else {
-    document.getElementById("protected-content").classList.remove("hidden");
-    document.getElementById("public-auth").classList.add("hidden");
-  }
+  </script>
 
-  Clerk.mountUserButton(document.getElementById("clerk-user-button"), {
-    appearance: {
-      elements: {
-        avatarBox: "ring-2 ring-purple-500 hover:ring-fuchsia-400 transition-all shadow-md",
-        userButtonPopoverCard: "bg-gradient-to-br from-[#1a102b] to-[#0b0f24] border border-purple-700/40 rounded-xl shadow-2xl",
-      },
-    },
-  });
+  <script>
+    const apiKey = "AIzaSyD8xBXpp0FYeV0nCxZ9V_VtVjKwoo6_BUw";
+    const sidebar = document.getElementById('sidebar');
+    const imageArea = document.getElementById('imageArea');
+    const promptInput = document.getElementById('promptInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const generatedImageDisplay = document.getElementById('generatedImage');
+    const loadingState = document.getElementById('loadingState');
+    const placeholderText = document.getElementById('placeholderText');
+    const errorMessage = document.getElementById('errorMessage');
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+    const tabPrompt = document.getElementById('tabPrompt');
+    const tabPreview = document.getElementById('tabPreview');
 
-  Clerk.addListener(({ user }) => {
-    if (user) {
-      document.getElementById("protected-content").classList.remove("hidden");
-      document.getElementById("public-auth").classList.add("hidden");
-    } else {
-      document.getElementById("protected-content").classList.add("hidden");
-      document.getElementById("public-auth").classList.remove("hidden");
-      Clerk.mountSignIn(document.getElementById("clerk-sign-in-form"));
+    // ✅ Create Download Button
+    const downloadBtn = document.createElement('button');
+    downloadBtn.id = "downloadImageBtn";
+    downloadBtn.textContent = "DOWNLOAD IMAGE";
+    downloadBtn.className =
+      "w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-green-500 to-green-700 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all hidden";
+    sidebar.appendChild(downloadBtn);
+
+    function showLoading(show) {
+      if (show) {
+        loadingState.classList.remove('hidden');
+        generatedImageDisplay.classList.add('hidden');
+        placeholderText.classList.add('hidden');
+        errorMessage.classList.add('hidden');
+        downloadBtn.classList.add('hidden');
+      } else {
+        loadingState.classList.add('hidden');
+      }
     }
-  });
-});
 
-// ================= IMAGE GENERATION LOGIC =================
-const apiKey = "AIzaSyD8xBXpp0FYeV0nCxZ9V_VtVjKwoo6_BUw";
-const promptInput = document.getElementById('promptInput');
-const generateBtn = document.getElementById('generateBtn');
-const generatedImageDisplay = document.getElementById('generatedImage');
-const loadingState = document.getElementById('loadingState');
-const placeholderText = document.getElementById('placeholderText');
-const errorMessage = document.getElementById('errorMessage');
-const themeToggle = document.getElementById('themeToggle');
-const body = document.body;
+    function toggleGenerateButton(disabled) {
+      generateBtn.disabled = disabled || promptInput.value.trim() === '';
+      generateBtn.textContent = disabled ? "GENERATING..." : "GENERATE IMAGE";
+      generateBtn.style.opacity = disabled ? "0.7" : "1";
+    }
 
-const sidebar = document.getElementById('sidebar');
-const imageArea = document.getElementById('imageArea');
-const tabPrompt = document.getElementById('tabPrompt');
-const tabPreview = document.getElementById('tabPreview');
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('theme');
+      if (!savedTheme || savedTheme === 'light') {
+        body.classList.add('light-mode');
+        themeToggle.textContent = '🌙';
+        localStorage.setItem('theme', 'light');
+      } else {
+        themeToggle.textContent = '☀️';
+      }
 
-function showLoading(show) {
-  if (show) {
-    loadingState.classList.remove('hidden');
-    generatedImageDisplay.classList.add('hidden');
-    placeholderText.classList.add('hidden');
-    errorMessage.classList.add('hidden');
-  } else {
-    loadingState.classList.add('hidden');
-  }
-}
+      promptInput.addEventListener('input', () => {
+        generateBtn.disabled = promptInput.value.trim() === '';
+      });
 
-function toggleButtons(disabled) {
-  generateBtn.disabled = disabled || promptInput.value.trim() === '';
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const savedTheme = localStorage.getItem('theme');
-
-  if (!savedTheme || savedTheme === 'light') {
-    body.classList.add('light-mode');
-    themeToggle.textContent = '🌙';
-    localStorage.setItem('theme', 'light');
-  } else {
-    themeToggle.textContent = '☀️';
-  }
-
-  promptInput.addEventListener('input', () => {
-    generateBtn.disabled = promptInput.value.trim() === '';
-  });
-
-  if (window.innerWidth < 768) activateTab('prompt');
-});
-
-themeToggle.addEventListener('click', () => {
-  body.classList.toggle('light-mode');
-  const isLight = body.classList.contains('light-mode');
-  themeToggle.textContent = isLight ? '🌙' : '☀️';
-  localStorage.setItem('theme', isLight ? 'light' : 'dark');
-});
-
-async function generateImage() {
-  const prompt = promptInput.value.trim();
-  if (!prompt) return;
-
-  toggleButtons(true);
-  showLoading(true);
-
-  try {
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
-    const payload = {
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { responseModalities: ['TEXT','IMAGE'] }
-    };
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      if (window.innerWidth < 768) {
+        activateTab('prompt');
+      }
     });
-    const result = await response.json();
 
-    const base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
-    if (base64Data) {
-      generatedImageDisplay.src = `data:image/png;base64,${base64Data}`;
-      generatedImageDisplay.classList.remove('hidden');
-      placeholderText.classList.add('hidden');
-    } else {
-      errorMessage.textContent = "No image generated. Try a different prompt.";
-      errorMessage.classList.remove('hidden');
+    themeToggle.addEventListener('click', () => {
+      body.classList.toggle('light-mode');
+      const isLight = body.classList.contains('light-mode');
+      themeToggle.textContent = isLight ? '🌙' : '☀️';
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    });
+
+    async function generateImage() {
+      const prompt = promptInput.value.trim();
+      if (!prompt) return;
+
+      toggleGenerateButton(true);
+      showLoading(true);
+
+      try {
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
+        const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseModalities: ['TEXT','IMAGE'] } };
+        const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const result = await response.json();
+
+        const base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+        if (base64Data) {
+          generatedImageDisplay.src = `data:image/png;base64,${base64Data}`;
+          generatedImageDisplay.classList.remove('hidden');
+          placeholderText.classList.add('hidden');
+          downloadBtn.classList.remove('hidden');
+        } else {
+          errorMessage.textContent = "No image generated. Try a different prompt.";
+          errorMessage.classList.remove('hidden');
+        }
+      } catch (err) {
+        errorMessage.textContent = "Error: " + err.message;
+        errorMessage.classList.remove('hidden');
+      } finally {
+        toggleGenerateButton(false);
+        showLoading(false);
+      }
     }
-  } catch (err) {
-    errorMessage.textContent = "Error: " + err.message;
-    errorMessage.classList.remove('hidden');
-  } finally {
-    toggleButtons(false);
-    showLoading(false);
-  }
-}
 
-generateBtn.addEventListener('click', generateImage);
+    // ✅ Download Feature
+    downloadBtn.addEventListener('click', () => {
+      const imgSrc = generatedImageDisplay.src;
+      if (!imgSrc) return;
+      const link = document.createElement('a');
+      link.href = imgSrc;
+      link.download = 'askaio-generated.png';
+      link.click();
+    });
 
-// Mobile tab switching
-function activateTab(tab) {
-  tabPrompt.classList.remove('active');
-  tabPreview.classList.remove('active');
-  sidebar.classList.remove('active');
-  imageArea.classList.remove('active');
+    generateBtn.addEventListener('click', generateImage);
 
-  if (tab === 'prompt') {
-    tabPrompt.classList.add('active');
-    sidebar.classList.add('active');
-  } else {
-    tabPreview.classList.add('active');
-    imageArea.classList.add('active');
-  }
-}
+    function activateTab(tab) {
+      tabPrompt.classList.remove('active');
+      tabPreview.classList.remove('active');
+      sidebar.classList.remove('active');
+      imageArea.classList.remove('active');
 
-tabPrompt.addEventListener('click', () => activateTab('prompt'));
-tabPreview.addEventListener('click', () => activateTab('preview'));
-</script>
+      if (tab === 'prompt') {
+        tabPrompt.classList.add('active');
+        sidebar.classList.add('active');
+      } else {
+        tabPreview.classList.add('active');
+        imageArea.classList.add('active');
+      }
+    }
 
+    tabPrompt.addEventListener('click', () => activateTab('prompt'));
+    tabPreview.addEventListener('click', () => activateTab('preview'));
+  </script>
 </body>
 </html>
