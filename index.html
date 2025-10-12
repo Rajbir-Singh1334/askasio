@@ -15,20 +15,21 @@
   </script>
 
   <style>
+    /* Default (Light) Mode - Simple, bright, and colorful */
     :root {
-      --color-dark-bg: #211e2f;
-      --color-panel-bg: #2b283d;
-      --color-primary: #ecddfa;
-      --color-primary-dark: #9333ea;
-      --color-text-light: #d1d5db;
-      --color-border: #4b4864;
+      --color-light-bg: #f7f9fb; /* Very light, soft background */
+      --color-panel-bg: #ffffff; /* White panels for content */
+      --color-primary: #9333ea;   /* Vibrant Purple */
+      --color-primary-light: #d8b4fe; /* Light purple for text/accent */
+      --color-text-dark: #1f2937; /* Dark text */
+      --color-border: #e5e7eb;    /* Light border color */
       --transition-fast: 0.3s ease;
     }
 
     body {
       font-family: 'Inter', sans-serif;
-      background: var(--color-dark-bg);
-      color: var(--color-text-light);
+      background: var(--color-light-bg);
+      color: var(--color-text-dark);
       margin: 0;
       min-height: 100vh;
       display: flex;
@@ -38,60 +39,66 @@
     .loading-spinner {
       border-width: 6px;
       border-style: solid;
-      border-color: rgba(255,255,255,0.2);
+      border-color: rgba(147, 51, 234, 0.2);
       border-top-color: var(--color-primary);
       border-radius: 50%;
     }
 
+    /* Vibrant image shadow for the colorful feel */
     #generatedImage {
-      box-shadow: 0 0 20px rgba(168, 85, 247, 0.7);
+      box-shadow: 0 0 20px rgba(147, 51, 234, 0.9);
+      border: 4px solid var(--color-primary-light);
     }
 
-    body.light-mode {
-      background: #f3f4f6;
-      color: #1f2937;
+    .sidebar, .image-area {
+        background: var(--color-panel-bg);
     }
 
-    body.light-mode .sidebar {
+    #promptInput {
       background: #ffffff;
+      color: var(--color-text-dark);
+      border-color: var(--color-border);
     }
 
-    body.light-mode #promptInput {
-      background: #ffffff;
-      color: #111827;
-      border-color: #d1d5db;
+    header {
+      background: var(--color-panel-bg);
     }
 
-    body.light-mode #imageArea {
-      background: #ffffff;
-      border-color: #d1d5db;
+    #themeToggle {
+        background: #f3f4f6;
+        color: var(--color-text-dark);
+        border: 1px solid var(--color-border);
     }
 
-    body.light-mode header {
-      background: #ffffff;
+    /* Dark Mode (toggled) */
+    body.dark-mode {
+      background: #1f1b2c;
+      color: #e5e7eb;
     }
 
-    body.light-mode #themeToggle {
-      background: #e5e7eb;
-      color: #1f2937;
+    body.dark-mode .sidebar,
+    body.dark-mode .image-area,
+    body.dark-mode header,
+    body.dark-mode .bottom-tabs {
+      background: #2c273e;
+    }
+
+    body.dark-mode #promptInput {
+      background: #3a3350;
+      color: #e5e7eb;
+      border-color: #554e6b;
+    }
+
+    body.dark-mode #themeToggle {
+      background: #3a3350;
+      color: #e5e7eb;
     }
     
-    /* Landing page colors for light mode */
-    body.light-mode #landing-page h2,
-    body.light-mode #landing-page h3,
-    body.light-mode #landing-page h4 {
-        color: var(--color-primary-dark);
-    }
-    
-    body.light-mode #landing-page p {
-        color: #4b5563;
+    body.dark-mode #landing-page h2 {
+        color: var(--color-primary-light);
     }
 
-    body.light-mode #landing-page .feature-card {
-        background: #ffffff;
-        border-color: #d1d5db;
-    }
-
+    /* Responsive/Mobile styles */
     @media (max-width: 767px) {
       #sidebar, #imageArea {
         display: none;
@@ -105,27 +112,25 @@
     .bottom-tabs {
       transition: background var(--transition-fast), color var(--transition-fast);
       z-index: 10;
+      background: var(--color-panel-bg);
+      border-top: 1px solid var(--color-border);
     }
 
     .bottom-tabs button {
       transition: background var(--transition-fast), color var(--transition-fast);
       border-radius: 6px;
+      color: var(--color-text-dark);
     }
 
     .bottom-tabs button.active {
       color: white !important;
-      background-color: var(--color-primary-dark); /* Changed to dark primary for contrast */
+      background-color: var(--color-primary); 
     }
-
-    /* Light mode bottom tabs */
-    body.light-mode .bottom-tabs {
-      background-color: #f3f4f6;
+    
+    body.dark-mode .bottom-tabs button {
+      color: #e5e7eb;
     }
-
-    body.light-mode .bottom-tabs button {
-      color: black;
-    }
-
+    
     .cl-internal-b1hrv3d { /* Targeted Clerk wrapper for aesthetics */
         border-radius: 1rem !important;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -134,10 +139,10 @@
   </style>
 </head>
 
-<body>
+<body class="light-mode">
   <!-- Header -->
-  <header class="flex justify-between items-center p-4 bg-[var(--color-panel-bg)] z-20">
-    <h1 class="text-xl font-bold">Askaio</h1>
+  <header class="flex justify-between items-center p-4 bg-[var(--color-panel-bg)] z-20 shadow-md">
+    <h1 class="text-xl font-bold text-[var(--color-primary)]">Askaio</h1>
     <div class="flex items-center gap-4">
       <!-- Hidden auth button used to switch to AUTH view from landing page header -->
       <div id="clerk-user-button"></div>
@@ -150,43 +155,43 @@
       <div class="main-layout flex flex-col md:flex-row gap-4 p-4 md:p-8 flex-1">
 
         <!-- Sidebar -->
-        <aside class="sidebar flex flex-col gap-4 bg-[var(--color-panel-bg)] rounded-2xl shadow-lg p-6 w-full md:w-[400px]" id="sidebar">
+        <aside class="sidebar flex flex-col gap-4 rounded-2xl shadow-xl p-6 w-full md:w-[400px]" id="sidebar">
           <div class="sidebar-header flex justify-between items-center mb-4">
-            <h1 class="text-4xl font-extrabold tracking-wide drop-shadow-lg">Askaio</h1>
-            <button id="themeToggle" class="w-12 h-12 flex items-center justify-center rounded-full bg-gray-700 hover:bg-gray-600 text-2xl transition-all">☀️</button>
+            <h1 class="text-4xl font-extrabold tracking-wide text-[var(--color-primary)] drop-shadow-sm">Askaio</h1>
+            <button id="themeToggle" class="w-12 h-12 flex items-center justify-center rounded-full text-2xl transition-all">🌙</button>
           </div>
 
-          <p class="text-gray-400 leading-relaxed">
+          <p class="text-gray-600 dark:text-gray-400 leading-relaxed">
             Enter a descriptive prompt to generate a stunning AI-powered image.
           </p>
 
           <textarea id="promptInput" placeholder="e.g., A futuristic neon city skyline at night with flying cars"
-            class="w-full h-40 p-4 rounded-xl border-2 border-[var(--color-primary-dark)] bg-gray-800 text-white resize-none focus:outline-none focus:ring-4 focus:ring-purple-400 transition-all"></textarea>
+            class="w-full h-40 p-4 rounded-xl border-2 border-[var(--color-primary)] resize-none focus:outline-none focus:ring-4 focus:ring-purple-400 transition-all"></textarea>
 
           <button id="generateBtn" disabled
-            class="w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all">
+            class="w-full py-3 rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all">
             GENERATE IMAGE
           </button>
           <!-- Download Button will be inserted here by JS -->
         </aside>
 
         <!-- Main Image Display -->
-        <main class="image-area flex-1 flex justify-center items-center bg-[var(--color-panel-bg)] rounded-2xl shadow-lg overflow-hidden relative p-4" id="imageArea">
-          <div class="image-display w-full h-full flex justify-center items-center border-2 border-dashed border-[var(--color-border)] rounded-xl relative">
+        <main class="image-area flex-1 flex justify-center items-center rounded-2xl shadow-xl overflow-hidden relative p-4" id="imageArea">
+          <div class="image-display w-full h-full flex justify-center items-center border-2 border-dashed border-gray-300 rounded-xl relative">
             <div id="loadingState" class="hidden flex flex-col items-center gap-4">
               <div class="loading-spinner w-14 h-14 animate-spin"></div>
-              <p class="text-gray-400 italic">Generating your masterpiece...</p>
+              <p class="text-gray-500 italic">Generating your masterpiece...</p>
             </div>
 
             <img id="generatedImage" src="" alt="Generated Image" class="hidden max-w-full max-h-full rounded-lg shadow-lg transition-opacity duration-700">
-            <p id="placeholderText" class="text-gray-500 italic">Your generated image will appear here.</p>
-            <p id="errorMessage" class="text-red-400 font-semibold hidden text-center p-4"></p>
+            <p id="placeholderText" class="text-gray-400 italic">Your generated image will appear here.</p>
+            <p id="errorMessage" class="text-red-600 font-semibold hidden text-center p-4"></p>
           </div>
         </main>
       </div>
 
       <!-- Mobile bottom tabs -->
-      <div id="mobileTabs" class="bottom-tabs fixed bottom-0 left-0 w-full flex justify-around bg-[var(--color-panel-bg)] p-2 md:hidden">
+      <div id="mobileTabs" class="bottom-tabs fixed bottom-0 left-0 w-full flex justify-around p-2 md:hidden">
         <button id="tabPrompt" class="flex-1 py-2 text-center active">Prompt</button>
         <button id="tabPreview" class="flex-1 py-2 text-center">Preview</button>
       </div>
@@ -204,14 +209,14 @@
             <h2 class="text-5xl md:text-7xl font-extrabold text-[var(--color-primary)] mb-6 tracking-tight">
               Visualize Your Next Idea.
             </h2>
-            <p class="text-lg md:text-2xl text-gray-300 mb-8 max-w-lg md:max-w-none mx-auto md:mx-0 leading-relaxed">
+            <p class="text-lg md:text-2xl text-gray-700 dark:text-gray-300 mb-8 max-w-lg md:max-w-none mx-auto md:mx-0 leading-relaxed">
               **Askaio** is an advanced AI image generation studio. Describe any scene, concept, or style, and instantly receive a high-quality, unique image, powered by Google's latest models.
             </p>
-            <button id="getStartedBtn" class="w-full md:w-auto px-10 py-4 text-xl rounded-xl font-bold bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all">
+            <button id="getStartedBtn" class="w-full md:w-auto px-10 py-4 text-xl rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all">
               Start Creating Now &rarr;
             </button>
-            <p class="text-sm text-gray-400 mt-4 md:mt-6">Already a user? 
-              <a href="#" id="landingSignInLink" class="text-[var(--color-primary-dark)] font-semibold hover:underline transition-colors">Sign In</a> to access your gallery.
+            <p class="text-sm text-gray-500 mt-4 md:mt-6">Already a user? 
+              <a href="#" id="landingSignInLink" class="text-[var(--color-primary)] font-semibold hover:underline transition-colors">Sign In</a> to access your gallery.
             </p>
           </div>
           
@@ -220,9 +225,9 @@
             <div class="w-full max-w-md aspect-square bg-[var(--color-panel-bg)] rounded-3xl shadow-2xl border border-[var(--color-border)] p-6 flex flex-col items-center justify-center">
               <!-- Using a placeholder image with primary colors -->
               <div class="w-full aspect-square bg-cover bg-center rounded-2xl" 
-                   style="background-image: url('https://placehold.co/500x500/9333ea/ecddfa?text=AI+Generated+Preview'); border: 4px solid var(--color-primary-dark);">
+                   style="background-image: url('https://placehold.co/500x500/9333ea/ffffff?text=AI+Generated+Preview'); border: 4px solid var(--color-primary);">
               </div>
-              <p class="text-sm text-gray-400 mt-4 italic text-center">Prompt: "A majestic griffin soaring over a cyberpunk city, highly detailed digital art."</p>
+              <p class="text-sm text-gray-500 mt-4 italic text-center">Prompt: "A majestic griffin soaring over a cyberpunk city, highly detailed digital art."</p>
             </div>
           </div>
         </div>
@@ -232,19 +237,19 @@
             <h3 class="text-3xl font-bold text-center mb-10 text-[var(--color-primary)]">Key Features</h3>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
                 <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
-                    <div class="text-3xl text-[var(--color-primary-dark)] mb-3">✨</div>
-                    <h4 class="text-xl font-semibold mb-2">High Fidelity Output</h4>
-                    <p class="text-gray-400 text-sm">Create stunning, photorealistic, or artistic images using the latest AI models for exceptional quality.</p>
+                    <div class="text-3xl text-[var(--color-primary)] mb-3">✨</div>
+                    <h4 class="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-200">High Fidelity Output</h4>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">Create stunning, photorealistic, or artistic images using the latest AI models for exceptional quality.</p>
                 </div>
                 <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
-                    <div class="text-3xl text-[var(--color-primary-dark)] mb-3">🚀</div>
-                    <h4 class="text-xl font-semibold mb-2">Lightning Fast Generation</h4>
-                    <p class="text-gray-400 text-sm">Turn your descriptive prompt into a visual in seconds, ready for download and sharing.</p>
+                    <div class="text-3xl text-[var(--color-primary)] mb-3">🚀</div>
+                    <h4 class="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-200">Lightning Fast Generation</h4>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">Turn your descriptive prompt into a visual in seconds, ready for download and sharing.</p>
                 </div>
                 <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
-                    <div class="text-3xl text-[var(--color-primary-dark)] mb-3">🎨</div>
-                    <h4 class="text-xl font-semibold mb-2">Limitless Creativity</h4>
-                    <p class="text-gray-400 text-sm">Explore infinite styles—from abstract expressionism to cinematic 4K renders—all with a simple text prompt.</p>
+                    <div class="text-3xl text-[var(--color-primary)] mb-3">🎨</div>
+                    <h4 class="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-200">Limitless Creativity</h4>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">Explore infinite styles—from abstract expressionism to cinematic 4K renders—all with a simple text prompt.</p>
                 </div>
             </div>
         </div>
@@ -287,7 +292,7 @@
     downloadBtn.id = "downloadImageBtn";
     downloadBtn.textContent = "DOWNLOAD IMAGE";
     downloadBtn.className =
-      "w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-green-500 to-green-700 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all hidden mt-4";
+      "w-full py-3 rounded-xl font-bold bg-gradient-to-r from-green-500 to-green-700 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all hidden mt-4";
     sidebar.appendChild(downloadBtn);
 
     // --- Utility Functions ---
@@ -338,14 +343,8 @@
     // --- Theme and Mobile Tab Logic ---
 
     function updateTabColors() {
-      const isLight = body.classList.contains('light-mode');
-      [tabPrompt, tabPreview].forEach(btn => {
-        if (btn.classList.contains('active')) {
-          btn.style.color = 'white';
-        } else {
-          btn.style.color = isLight ? 'black' : 'white';
-        }
-      });
+      // Logic for dark mode styles is now encapsulated in the CSS classes
+      // No need for inline style overrides here, as CSS handles the dark-mode class
     }
 
     function activateTab(tab) {
@@ -374,57 +373,77 @@
       toggleGenerateButton(true);
       showLoading(true);
 
-      try {
-        // Using the preferred imagen-3.0-generate-002 model
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
-        const payload = { 
-            instances: [{ prompt: prompt }], 
-            parameters: { "sampleCount": 1 }
-        };
-        
-        const response = await fetch(apiUrl, { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify(payload) 
-        });
-        const result = await response.json();
+      // Simple retry mechanism for API calls
+      const maxRetries = 3;
+      let lastError = null;
 
-        // Extract base64 data specific to imagen-3.0-generate-002:predict response structure
-        const base64Data = result?.predictions?.[0]?.bytesBase64Encoded;
+      for (let i = 0; i < maxRetries; i++) {
+        try {
+          // Using the preferred imagen-3.0-generate-002 model
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+          const payload = { 
+              instances: [{ prompt: prompt }], 
+              parameters: { "sampleCount": 1 }
+          };
+          
+          const response = await fetch(apiUrl, { 
+              method: 'POST', 
+              headers: { 'Content-Type': 'application/json' }, 
+              body: JSON.stringify(payload) 
+          });
+          
+          if (!response.ok) {
+              const errorBody = await response.json();
+              throw new Error(`API returned status ${response.status}: ${errorBody.error?.message || response.statusText}`);
+          }
 
-        if (base64Data) {
-          generatedImageDisplay.src = `data:image/png;base64,${base64Data}`;
-          generatedImageDisplay.classList.remove('hidden');
-          placeholderText.classList.add('hidden');
-          downloadBtn.classList.remove('hidden');
-          // On mobile, automatically switch to preview tab after generation
-          if (window.innerWidth < 768) activateTab('preview'); 
-        } else {
-          errorMessage.textContent = "No image generated. Try a different prompt or check the API key.";
-          errorMessage.classList.remove('hidden');
+          const result = await response.json();
+
+          // Extract base64 data specific to imagen-3.0-generate-002:predict response structure
+          const base64Data = result?.predictions?.[0]?.bytesBase64Encoded;
+
+          if (base64Data) {
+            generatedImageDisplay.src = `data:image/png;base64,${base64Data}`;
+            generatedImageDisplay.classList.remove('hidden');
+            placeholderText.classList.add('hidden');
+            downloadBtn.classList.remove('hidden');
+            // On mobile, automatically switch to preview tab after generation
+            if (window.innerWidth < 768) activateTab('preview');
+            // Success, break the retry loop
+            lastError = null; 
+            break;
+          } else {
+            // No base64 data, this is an issue we might retry or handle as a final failure
+            throw new Error("API response missing image data.");
+          }
+        } catch (err) {
+          lastError = err;
+          console.error(`Attempt ${i + 1} failed:`, err);
+          if (i < maxRetries - 1) {
+            // Exponential backoff: 1s, 2s, 4s delay
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+          }
         }
-      } catch (err) {
-        console.error(err);
-        errorMessage.textContent = "Image generation failed. Please check console for details.";
-        errorMessage.classList.remove('hidden');
-      } finally {
-        toggleGenerateButton(false);
-        showLoading(false);
       }
+
+      if (lastError) {
+          errorMessage.textContent = `Image generation failed after ${maxRetries} attempts. Error: ${lastError.message}`;
+          errorMessage.classList.remove('hidden');
+      }
+
+      toggleGenerateButton(false);
+      showLoading(false);
     }
 
     // --- Event Listeners and Initial Load ---
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Initialize theme based on localStorage
-      const savedTheme = localStorage.getItem('theme');
-      if (!savedTheme || savedTheme === 'light') {
-        body.classList.add('light-mode');
-        themeToggle.textContent = '🌙';
-        localStorage.setItem('theme', 'light');
-      } else {
-        themeToggle.textContent = '☀️';
-      }
+      // 1. Force Light Mode as Default (Ignoring localStorage initial check)
+      // The body starts with 'light-mode' by default in the HTML class attribute now
+      body.classList.remove('dark-mode'); 
+      body.classList.add('light-mode');
+      themeToggle.textContent = '🌙'; 
+      localStorage.setItem('theme', 'light');
 
       promptInput.addEventListener('input', () => {
         generateBtn.disabled = promptInput.value.trim() === '';
@@ -473,9 +492,20 @@
 
     // Theme Toggle
     themeToggle.addEventListener('click', () => {
-      body.classList.toggle('light-mode');
-      themeToggle.textContent = body.classList.contains('light-mode') ? '🌙' : '☀️';
-      localStorage.setItem('theme', body.classList.contains('light-mode') ? 'light' : 'dark');
+      // Toggle between light-mode (default) and dark-mode
+      const isLight = body.classList.contains('light-mode');
+      
+      if (isLight) {
+          body.classList.remove('light-mode');
+          body.classList.add('dark-mode');
+          themeToggle.textContent = '☀️';
+          localStorage.setItem('theme', 'dark');
+      } else {
+          body.classList.remove('dark-mode');
+          body.classList.add('light-mode');
+          themeToggle.textContent = '🌙';
+          localStorage.setItem('theme', 'light');
+      }
       updateTabColors();
     });
 
