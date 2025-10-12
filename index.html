@@ -76,12 +76,20 @@
       color: #1f2937;
     }
     
-    body.light-mode #landing-page h2 {
+    /* Landing page colors for light mode */
+    body.light-mode #landing-page h2,
+    body.light-mode #landing-page h3,
+    body.light-mode #landing-page h4 {
         color: var(--color-primary-dark);
     }
     
     body.light-mode #landing-page p {
         color: #4b5563;
+    }
+
+    body.light-mode #landing-page .feature-card {
+        background: #ffffff;
+        border-color: #d1d5db;
     }
 
     @media (max-width: 767px) {
@@ -184,21 +192,63 @@
       </div>
     </main>
     
-    <!-- 2. Landing Page (New) -->
-    <div id="landing-page" class="flex-1 flex flex-col justify-center items-center p-8 text-center hidden">
-      <div class="max-w-xl p-8 rounded-3xl bg-[var(--color-panel-bg)] shadow-2xl">
-        <h2 class="text-5xl md:text-6xl font-extrabold text-[var(--color-primary)] mb-4 animate-in fade-in zoom-in duration-500">
-          Turn Words Into Art
-        </h2>
-        <p class="text-lg md:text-2xl text-gray-300 mb-8">
-          Unleash your imagination with Askaio's advanced AI Image Generator. Simply describe it, and we'll create it.
-        </p>
-        <button id="getStartedBtn" class="w-full px-10 py-4 text-xl rounded-xl font-bold bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all">
-          Try Our Image Generator
-        </button>
-        <p class="text-sm text-gray-400 mt-4">Already a user? 
-          <a href="#" id="landingSignInLink" class="text-[var(--color-primary-dark)] font-semibold hover:underline transition-colors">Sign In</a>
-        </p>
+    <!-- 2. Detailed Landing Page -->
+    <div id="landing-page" class="flex-1 flex flex-col justify-start items-center p-8 hidden overflow-y-auto">
+      <div class="w-full max-w-6xl">
+        
+        <!-- Hero Section -->
+        <div class="grid md:grid-cols-2 items-center gap-12 py-16">
+          
+          <!-- Text Content and CTA -->
+          <div class="text-center md:text-left">
+            <h2 class="text-5xl md:text-7xl font-extrabold text-[var(--color-primary)] mb-6 tracking-tight">
+              Visualize Your Next Idea.
+            </h2>
+            <p class="text-lg md:text-2xl text-gray-300 mb-8 max-w-lg md:max-w-none mx-auto md:mx-0 leading-relaxed">
+              **Askaio** is an advanced AI image generation studio. Describe any scene, concept, or style, and instantly receive a high-quality, unique image, powered by Google's latest models.
+            </p>
+            <button id="getStartedBtn" class="w-full md:w-auto px-10 py-4 text-xl rounded-xl font-bold bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all">
+              Start Creating Now &rarr;
+            </button>
+            <p class="text-sm text-gray-400 mt-4 md:mt-6">Already a user? 
+              <a href="#" id="landingSignInLink" class="text-[var(--color-primary-dark)] font-semibold hover:underline transition-colors">Sign In</a> to access your gallery.
+            </p>
+          </div>
+          
+          <!-- Image Mockup -->
+          <div class="flex justify-center items-center p-4">
+            <div class="w-full max-w-md aspect-square bg-[var(--color-panel-bg)] rounded-3xl shadow-2xl border border-[var(--color-border)] p-6 flex flex-col items-center justify-center">
+              <!-- Using a placeholder image with primary colors -->
+              <div class="w-full aspect-square bg-cover bg-center rounded-2xl" 
+                   style="background-image: url('https://placehold.co/500x500/9333ea/ecddfa?text=AI+Generated+Preview'); border: 4px solid var(--color-primary-dark);">
+              </div>
+              <p class="text-sm text-gray-400 mt-4 italic text-center">Prompt: "A majestic griffin soaring over a cyberpunk city, highly detailed digital art."</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="pt-12 pb-8 md:pb-16 border-t border-[var(--color-border)]">
+            <h3 class="text-3xl font-bold text-center mb-10 text-[var(--color-primary)]">Key Features</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
+                    <div class="text-3xl text-[var(--color-primary-dark)] mb-3">✨</div>
+                    <h4 class="text-xl font-semibold mb-2">High Fidelity Output</h4>
+                    <p class="text-gray-400 text-sm">Create stunning, photorealistic, or artistic images using the latest AI models for exceptional quality.</p>
+                </div>
+                <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
+                    <div class="text-3xl text-[var(--color-primary-dark)] mb-3">🚀</div>
+                    <h4 class="text-xl font-semibold mb-2">Lightning Fast Generation</h4>
+                    <p class="text-gray-400 text-sm">Turn your descriptive prompt into a visual in seconds, ready for download and sharing.</p>
+                </div>
+                <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
+                    <div class="text-3xl text-[var(--color-primary-dark)] mb-3">🎨</div>
+                    <h4 class="text-xl font-semibold mb-2">Limitless Creativity</h4>
+                    <p class="text-gray-400 text-sm">Explore infinite styles—from abstract expressionism to cinematic 4K renders—all with a simple text prompt.</p>
+                </div>
+            </div>
+        </div>
+
       </div>
     </div>
 
