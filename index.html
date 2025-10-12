@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Askaio</title>
+  <title>Askaio - AI Image Generator</title>
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Clerk Frontend SDK -->
@@ -40,6 +40,7 @@
       border-style: solid;
       border-color: rgba(255,255,255,0.2);
       border-top-color: var(--color-primary);
+      border-radius: 50%;
     }
 
     #generatedImage {
@@ -74,6 +75,14 @@
       background: #e5e7eb;
       color: #1f2937;
     }
+    
+    body.light-mode #landing-page h2 {
+        color: var(--color-primary-dark);
+    }
+    
+    body.light-mode #landing-page p {
+        color: #4b5563;
+    }
 
     @media (max-width: 767px) {
       #sidebar, #imageArea {
@@ -87,6 +96,7 @@
     /* Bottom tab styles */
     .bottom-tabs {
       transition: background var(--transition-fast), color var(--transition-fast);
+      z-index: 10;
     }
 
     .bottom-tabs button {
@@ -96,7 +106,7 @@
 
     .bottom-tabs button.active {
       color: white !important;
-      background-color: var(--color-primary);
+      background-color: var(--color-primary-dark); /* Changed to dark primary for contrast */
     }
 
     /* Light mode bottom tabs */
@@ -108,8 +118,9 @@
       color: black;
     }
 
-    body.light-mode .bottom-tabs button.active {
-      color: white !important;
+    .cl-internal-b1hrv3d { /* Targeted Clerk wrapper for aesthetics */
+        border-radius: 1rem !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     }
 
   </style>
@@ -117,91 +128,97 @@
 
 <body>
   <!-- Header -->
-  <header class="flex justify-between items-center p-4 bg-[var(--color-panel-bg)]">
+  <header class="flex justify-between items-center p-4 bg-[var(--color-panel-bg)] z-20">
     <h1 class="text-xl font-bold">Askaio</h1>
     <div class="flex items-center gap-4">
-      <div id="clerk-sign-in"></div>
+      <!-- Hidden auth button used to switch to AUTH view from landing page header -->
       <div id="clerk-user-button"></div>
     </div>
   </header>
+  
+  <div id="app-root" class="flex-1 flex flex-col">
+    <!-- 1. Protected Content (Main App) -->
+    <main id="protected-content" class="flex-1 hidden">
+      <div class="main-layout flex flex-col md:flex-row gap-4 p-4 md:p-8 flex-1">
 
-  <!-- Protected Content -->
-  <main id="protected-content" class="flex-1 hidden">
-    <div class="main-layout flex flex-col md:flex-row gap-4 p-4 md:p-8">
-
-      <!-- Sidebar -->
-      <aside class="sidebar flex flex-col gap-4 bg-[var(--color-panel-bg)] rounded-2xl shadow-lg p-6 w-full md:w-[400px]" id="sidebar">
-        <div class="sidebar-header flex justify-between items-center mb-4">
-          <h1 class="text-4xl font-extrabold tracking-wide drop-shadow-lg">Askaio</h1>
-          <button id="themeToggle" class="w-12 h-12 flex items-center justify-center rounded-full bg-gray-700 hover:bg-gray-600 text-2xl transition-all">☀️</button>
-        </div>
-
-        <p class="text-gray-400 leading-relaxed">
-          Enter a descriptive prompt to generate a stunning AI-powered image.
-        </p>
-
-        <textarea id="promptInput" placeholder="e.g., A futuristic neon city skyline at night with flying cars"
-          class="w-full h-40 p-4 rounded-xl border-2 border-[var(--color-primary-dark)] bg-gray-800 text-white resize-none focus:outline-none focus:ring-4 focus:ring-purple-400 transition-all"></textarea>
-
-        <button id="generateBtn" disabled
-          class="w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all">
-          GENERATE IMAGE
-        </button>
-      </aside>
-
-      <!-- Main Image Display -->
-      <main class="image-area flex-1 flex justify-center items-center bg-[var(--color-panel-bg)] rounded-2xl shadow-lg overflow-hidden relative p-4" id="imageArea">
-        <div class="image-display w-full h-full flex justify-center items-center border-2 border-dashed border-[var(--color-border)] rounded-xl relative">
-          <div id="loadingState" class="hidden flex flex-col items-center gap-4">
-            <div class="loading-spinner border-6 border-gray-600 border-t-[var(--color-primary)] rounded-full w-14 h-14 animate-spin"></div>
-            <p class="text-gray-400 italic">Generating your masterpiece...</p>
+        <!-- Sidebar -->
+        <aside class="sidebar flex flex-col gap-4 bg-[var(--color-panel-bg)] rounded-2xl shadow-lg p-6 w-full md:w-[400px]" id="sidebar">
+          <div class="sidebar-header flex justify-between items-center mb-4">
+            <h1 class="text-4xl font-extrabold tracking-wide drop-shadow-lg">Askaio</h1>
+            <button id="themeToggle" class="w-12 h-12 flex items-center justify-center rounded-full bg-gray-700 hover:bg-gray-600 text-2xl transition-all">☀️</button>
           </div>
 
-          <img id="generatedImage" src="" alt="Generated Image" class="hidden max-w-full max-h-full rounded-lg shadow-lg transition-opacity duration-700">
-          <p id="placeholderText" class="text-gray-500 italic">Your generated image will appear here.</p>
-          <p id="errorMessage" class="text-red-400 font-semibold hidden"></p>
-        </div>
-      </main>
+          <p class="text-gray-400 leading-relaxed">
+            Enter a descriptive prompt to generate a stunning AI-powered image.
+          </p>
+
+          <textarea id="promptInput" placeholder="e.g., A futuristic neon city skyline at night with flying cars"
+            class="w-full h-40 p-4 rounded-xl border-2 border-[var(--color-primary-dark)] bg-gray-800 text-white resize-none focus:outline-none focus:ring-4 focus:ring-purple-400 transition-all"></textarea>
+
+          <button id="generateBtn" disabled
+            class="w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all">
+            GENERATE IMAGE
+          </button>
+          <!-- Download Button will be inserted here by JS -->
+        </aside>
+
+        <!-- Main Image Display -->
+        <main class="image-area flex-1 flex justify-center items-center bg-[var(--color-panel-bg)] rounded-2xl shadow-lg overflow-hidden relative p-4" id="imageArea">
+          <div class="image-display w-full h-full flex justify-center items-center border-2 border-dashed border-[var(--color-border)] rounded-xl relative">
+            <div id="loadingState" class="hidden flex flex-col items-center gap-4">
+              <div class="loading-spinner w-14 h-14 animate-spin"></div>
+              <p class="text-gray-400 italic">Generating your masterpiece...</p>
+            </div>
+
+            <img id="generatedImage" src="" alt="Generated Image" class="hidden max-w-full max-h-full rounded-lg shadow-lg transition-opacity duration-700">
+            <p id="placeholderText" class="text-gray-500 italic">Your generated image will appear here.</p>
+            <p id="errorMessage" class="text-red-400 font-semibold hidden text-center p-4"></p>
+          </div>
+        </main>
+      </div>
+
+      <!-- Mobile bottom tabs -->
+      <div id="mobileTabs" class="bottom-tabs fixed bottom-0 left-0 w-full flex justify-around bg-[var(--color-panel-bg)] p-2 md:hidden">
+        <button id="tabPrompt" class="flex-1 py-2 text-center active">Prompt</button>
+        <button id="tabPreview" class="flex-1 py-2 text-center">Preview</button>
+      </div>
+    </main>
+    
+    <!-- 2. Landing Page (New) -->
+    <div id="landing-page" class="flex-1 flex flex-col justify-center items-center p-8 text-center hidden">
+      <div class="max-w-xl p-8 rounded-3xl bg-[var(--color-panel-bg)] shadow-2xl">
+        <h2 class="text-5xl md:text-6xl font-extrabold text-[var(--color-primary)] mb-4 animate-in fade-in zoom-in duration-500">
+          Turn Words Into Art
+        </h2>
+        <p class="text-lg md:text-2xl text-gray-300 mb-8">
+          Unleash your imagination with Askaio's advanced AI Image Generator. Simply describe it, and we'll create it.
+        </p>
+        <button id="getStartedBtn" class="w-full px-10 py-4 text-xl rounded-xl font-bold bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all">
+          Try Our Image Generator
+        </button>
+        <p class="text-sm text-gray-400 mt-4">Already a user? 
+          <a href="#" id="landingSignInLink" class="text-[var(--color-primary-dark)] font-semibold hover:underline transition-colors">Sign In</a>
+        </p>
+      </div>
     </div>
 
-    <!-- Mobile bottom tabs -->
-    <div class="bottom-tabs fixed bottom-0 left-0 w-full flex justify-around bg-[var(--color-panel-bg)] p-2 md:hidden">
-      <button id="tabPrompt" class="flex-1 py-2 text-center active">Prompt</button>
-      <button id="tabPreview" class="flex-1 py-2 text-center">Preview</button>
+    <!-- 3. Public Auth Page (Clerk Form) -->
+    <div id="public-auth" class="flex-1 hidden flex justify-center items-center p-8">
+      <div id="clerk-sign-in-form" class="w-full max-w-sm"></div>
     </div>
-  </main>
-
-  <!-- Public Auth Page -->
-  <div id="public-auth" class="flex-1 hidden flex justify-center items-center">
-    <div id="clerk-sign-in-form"></div>
   </div>
 
-  <script>
-    window.addEventListener("load", async () => {
-      await Clerk.load();
-      if (!Clerk.user) {
-        document.getElementById("protected-content").classList.add("hidden");
-        document.getElementById("public-auth").classList.remove("hidden");
-        Clerk.mountSignIn(document.getElementById("clerk-sign-in-form"));
-      } else {
-        document.getElementById("protected-content").classList.remove("hidden");
-        document.getElementById("public-auth").classList.add("hidden");
-      }
-      Clerk.mountUserButton(document.getElementById("clerk-user-button"));
-      Clerk.addListener(({ user }) => {
-        if (user) {
-          document.getElementById("protected-content").classList.remove("hidden");
-          document.getElementById("public-auth").classList.add("hidden");
-        } else {
-          document.getElementById("protected-content").classList.add("hidden");
-          document.getElementById("public-auth").classList.remove("hidden");
-        }
-      });
-    });
-  </script>
 
   <script>
+    // Constants and DOM Elements
     const apiKey = "AIzaSyD8xBXpp0FYeV0nCxZ9V_VtVjKwoo6_BUw";
+    const protectedContent = document.getElementById('protected-content');
+    const publicAuth = document.getElementById('public-auth');
+    const landingPage = document.getElementById('landing-page');
+    const getStartedBtn = document.getElementById('getStartedBtn');
+    const landingSignInLink = document.getElementById('landingSignInLink');
+    const mobileTabs = document.getElementById('mobileTabs');
+
     const sidebar = document.getElementById('sidebar');
     const imageArea = document.getElementById('imageArea');
     const promptInput = document.getElementById('promptInput');
@@ -215,13 +232,40 @@
     const tabPrompt = document.getElementById('tabPrompt');
     const tabPreview = document.getElementById('tabPreview');
 
-    // ✅ Download button
+    // ✅ Download button setup
     const downloadBtn = document.createElement('button');
     downloadBtn.id = "downloadImageBtn";
     downloadBtn.textContent = "DOWNLOAD IMAGE";
     downloadBtn.className =
-      "w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-green-500 to-green-700 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all hidden";
+      "w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-green-500 to-green-700 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all hidden mt-4";
     sidebar.appendChild(downloadBtn);
+
+    // --- Utility Functions ---
+
+    /**
+     * Controls which major view (APP, AUTH, LANDING) is displayed.
+     * @param {'APP'|'AUTH'|'LANDING'} state 
+     */
+    function showAppView(state) {
+        // Hide all containers and mobile tabs
+        protectedContent.classList.add('hidden');
+        publicAuth.classList.add('hidden');
+        landingPage.classList.add('hidden');
+        mobileTabs.classList.add('hidden');
+        
+        // Show the correct container based on state
+        if (state === 'APP') {
+            protectedContent.classList.remove('hidden');
+            if (window.innerWidth < 768) mobileTabs.classList.remove('hidden');
+        } else if (state === 'AUTH') {
+            publicAuth.classList.remove('hidden');
+            // Mount the Clerk sign-in form when switching to the AUTH state
+            Clerk.mountSignIn(document.getElementById("clerk-sign-in-form"));
+        } else { // LANDING
+            landingPage.classList.remove('hidden');
+        }
+    }
+
 
     function showLoading(show) {
       if (show) {
@@ -241,76 +285,19 @@
       generateBtn.style.opacity = disabled ? "0.7" : "1";
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const savedTheme = localStorage.getItem('theme');
-      if (!savedTheme || savedTheme === 'light') {
-        body.classList.add('light-mode');
-        themeToggle.textContent = '🌙';
-        localStorage.setItem('theme', 'light');
-      } else {
-        themeToggle.textContent = '☀️';
-      }
+    // --- Theme and Mobile Tab Logic ---
 
-      promptInput.addEventListener('input', () => {
-        generateBtn.disabled = promptInput.value.trim() === '';
-      });
-
-      updateTabColors();
-      if (window.innerWidth < 768) activateTab('prompt');
-    });
-
-    themeToggle.addEventListener('click', () => {
-      body.classList.toggle('light-mode');
-      themeToggle.textContent = body.classList.contains('light-mode') ? '🌙' : '☀️';
-      localStorage.setItem('theme', body.classList.contains('light-mode') ? 'light' : 'dark');
-      updateTabColors();
-    });
-
-    async function generateImage() {
-      const prompt = promptInput.value.trim();
-      if (!prompt) return;
-
-      toggleGenerateButton(true);
-      showLoading(true);
-
-      try {
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
-        const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseModalities: ['TEXT','IMAGE'] } };
-        const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        const result = await response.json();
-
-        const base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
-        if (base64Data) {
-          generatedImageDisplay.src = `data:image/png;base64,${base64Data}`;
-          generatedImageDisplay.classList.remove('hidden');
-          placeholderText.classList.add('hidden');
-          downloadBtn.classList.remove('hidden');
+    function updateTabColors() {
+      const isLight = body.classList.contains('light-mode');
+      [tabPrompt, tabPreview].forEach(btn => {
+        if (btn.classList.contains('active')) {
+          btn.style.color = 'white';
         } else {
-          errorMessage.textContent = "No image generated. Try a different prompt.";
-          errorMessage.classList.remove('hidden');
+          btn.style.color = isLight ? 'black' : 'white';
         }
-      } catch (err) {
-        errorMessage.textContent = "Error: " + err.message;
-        errorMessage.classList.remove('hidden');
-      } finally {
-        toggleGenerateButton(false);
-        showLoading(false);
-      }
+      });
     }
 
-    // Download
-    downloadBtn.addEventListener('click', () => {
-      const imgSrc = generatedImageDisplay.src;
-      if (!imgSrc) return;
-      const link = document.createElement('a');
-      link.href = imgSrc;
-      link.download = 'askaio-generated.png';
-      link.click();
-    });
-
-    generateBtn.addEventListener('click', generateImage);
-
-    // Mobile tabs
     function activateTab(tab) {
       tabPrompt.classList.remove('active');
       tabPreview.classList.remove('active');
@@ -328,20 +315,136 @@
       updateTabColors();
     }
 
+    // --- Main Logic: Image Generation ---
+
+    async function generateImage() {
+      const prompt = promptInput.value.trim();
+      if (!prompt) return;
+
+      toggleGenerateButton(true);
+      showLoading(true);
+
+      try {
+        // Using the preferred imagen-3.0-generate-002 model
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+        const payload = { 
+            instances: [{ prompt: prompt }], 
+            parameters: { "sampleCount": 1 }
+        };
+        
+        const response = await fetch(apiUrl, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(payload) 
+        });
+        const result = await response.json();
+
+        // Extract base64 data specific to imagen-3.0-generate-002:predict response structure
+        const base64Data = result?.predictions?.[0]?.bytesBase64Encoded;
+
+        if (base64Data) {
+          generatedImageDisplay.src = `data:image/png;base64,${base64Data}`;
+          generatedImageDisplay.classList.remove('hidden');
+          placeholderText.classList.add('hidden');
+          downloadBtn.classList.remove('hidden');
+          // On mobile, automatically switch to preview tab after generation
+          if (window.innerWidth < 768) activateTab('preview'); 
+        } else {
+          errorMessage.textContent = "No image generated. Try a different prompt or check the API key.";
+          errorMessage.classList.remove('hidden');
+        }
+      } catch (err) {
+        console.error(err);
+        errorMessage.textContent = "Image generation failed. Please check console for details.";
+        errorMessage.classList.remove('hidden');
+      } finally {
+        toggleGenerateButton(false);
+        showLoading(false);
+      }
+    }
+
+    // --- Event Listeners and Initial Load ---
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize theme based on localStorage
+      const savedTheme = localStorage.getItem('theme');
+      if (!savedTheme || savedTheme === 'light') {
+        body.classList.add('light-mode');
+        themeToggle.textContent = '🌙';
+        localStorage.setItem('theme', 'light');
+      } else {
+        themeToggle.textContent = '☀️';
+      }
+
+      promptInput.addEventListener('input', () => {
+        generateBtn.disabled = promptInput.value.trim() === '';
+      });
+
+      // Initial tab setup for mobile
+      updateTabColors();
+      if (window.innerWidth < 768) activateTab('prompt');
+    });
+
+    // Clerk Initialization and View Switching
+    window.addEventListener("load", async () => {
+        await Clerk.load();
+        
+        // Mount User Button (always visible in the header for signed-in users)
+        Clerk.mountUserButton(document.getElementById("clerk-user-button"));
+        
+        // Determine initial view state
+        if (Clerk.user) {
+            showAppView('APP');
+        } else {
+            showAppView('LANDING');
+        }
+
+        // Listener for authentication changes (login/logout)
+        Clerk.addListener(({ user }) => {
+            if (user) {
+                showAppView('APP');
+            } else {
+                // On logout, return to the landing page
+                showAppView('LANDING');
+            }
+        });
+
+        // Landing Page Button Handlers (Transition to Auth)
+        getStartedBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showAppView('AUTH');
+        });
+
+        landingSignInLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showAppView('AUTH');
+        });
+    });
+
+    // Theme Toggle
+    themeToggle.addEventListener('click', () => {
+      body.classList.toggle('light-mode');
+      themeToggle.textContent = body.classList.contains('light-mode') ? '🌙' : '☀️';
+      localStorage.setItem('theme', body.classList.contains('light-mode') ? 'light' : 'dark');
+      updateTabColors();
+    });
+
+    // Generate Button
+    generateBtn.addEventListener('click', generateImage);
+
+    // Download Button
+    downloadBtn.addEventListener('click', () => {
+      const imgSrc = generatedImageDisplay.src;
+      if (!imgSrc) return;
+      const link = document.createElement('a');
+      link.href = imgSrc;
+      link.download = 'askaio-generated.png';
+      link.click();
+    });
+
+    // Mobile tabs
     tabPrompt.addEventListener('click', () => activateTab('prompt'));
     tabPreview.addEventListener('click', () => activateTab('preview'));
-
-    // Update tab text colors dynamically
-    function updateTabColors() {
-      const isLight = body.classList.contains('light-mode');
-      [tabPrompt, tabPreview].forEach(btn => {
-        if (btn.classList.contains('active')) {
-          btn.style.color = 'white';
-        } else {
-          btn.style.color = isLight ? 'black' : 'white';
-        }
-      });
-    }
   </script>
 </body>
 </html>
