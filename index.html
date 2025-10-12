@@ -1,592 +1,592 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Askaio - AI Image Generator</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Askaio - AI Image Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Clerk Frontend SDK -->
-  <script
-    async
-    crossorigin="anonymous"
-    data-clerk-publishable-key="pk_test_ZXBpYy1haXJlZGFsZS02MS5jbGVyay5hY2NvdW50cy5kZXYk"
-    src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js">
-  </script>
+  <!-- Clerk Frontend SDK -->
+  <script
+    async
+    crossorigin="anonymous"
+    data-clerk-publishable-key="pk_test_ZXBpYy1haXJlZGFsZS02MS5jbGVyay5hY2NvdW50cy5kZXYk"
+    src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js">
+  </script>
 
-  <style>
-    /* Default (Light) Mode - Simple, bright, and colorful */
-    :root {
-      --color-light-bg: #f7f9fb; /* Very light, soft background */
-      --color-panel-bg: #ffffff; /* White panels for content */
-      --color-primary: #9333ea;   /* Vibrant Purple */
-      --color-primary-light: #d8b4fe; /* Light purple for text/accent */
-      --color-text-dark: #1f2937; /* Dark text */
-      --color-border: #e5e7eb;    /* Light border color */
-      --transition-fast: 0.3s ease;
-    }
+  <style>
+    /* Default (Light) Mode - Simple, bright, and colorful */
+    :root {
+      --color-light-bg: #f7f9fb; /* Very light, soft background */
+      --color-panel-bg: #ffffff; /* White panels for content */
+      --color-primary: #9333ea;   /* Vibrant Purple */
+      --color-primary-light: #d8b4fe; /* Light purple for text/accent */
+      --color-text-dark: #1f2937; /* Dark text */
+      --color-border: #e5e7eb;    /* Light border color */
+      --transition-fast: 0.3s ease;
+    }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--color-light-bg);
-      color: var(--color-text-dark); /* Base text color, overridden by utility classes */
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--color-light-bg);
+      color: var(--color-text-dark); /* Base text color, overridden by utility classes */
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-    .loading-spinner {
-      border-width: 6px;
-      border-style: solid;
-      border-color: rgba(147, 51, 234, 0.2);
-      border-top-color: var(--color-primary);
-      border-radius: 50%;
-    }
+    .loading-spinner {
+      border-width: 6px;
+      border-style: solid;
+      border-color: rgba(147, 51, 234, 0.2);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+    }
 
-    /* Vibrant image shadow for the colorful feel */
-    #generatedImage {
-      box-shadow: 0 0 20px rgba(147, 51, 234, 0.9);
-      border: 4px solid var(--color-primary-light);
-    }
+    /* Vibrant image shadow for the colorful feel */
+    #generatedImage {
+      box-shadow: 0 0 20px rgba(147, 51, 234, 0.9);
+      border: 4px solid var(--color-primary-light);
+    }
 
-    .sidebar, .image-area {
-        background: var(--color-panel-bg);
-    }
+    .sidebar, .image-area {
+        background: var(--color-panel-bg);
+    }
 
-    #promptInput {
-      background: #ffffff;
-      color: var(--color-text-dark);
-      border-color: var(--color-border);
-    }
+    #promptInput {
+      background: #ffffff;
+      color: var(--color-text-dark);
+      border-color: var(--color-border);
+    }
 
-    header {
-      background: var(--color-panel-bg);
-    }
+    header {
+      background: var(--color-panel-bg);
+    }
 
-    #themeToggle {
-        background: #f3f4f6;
-        color: var(--color-text-dark);
-        border: 1px solid var(--color-border);
-    }
+    #themeToggle {
+        background: #f3f4f6;
+        color: var(--color-text-dark);
+        border: 1px solid var(--color-border);
+    }
 
-    /* Dark Mode (toggled) */
-    body.dark-mode {
-      background: #1f1b2c;
-      color: #e5e7eb;
-    }
+    /* Dark Mode (toggled) */
+    body.dark-mode {
+      background: #1f1b2c;
+      color: #e5e7eb;
+    }
 
-    body.dark-mode .sidebar,
-    body.dark-mode .image-area,
-    body.dark-mode header,
-    body.dark-mode .bottom-tabs {
-      background: #2c273e;
-    }
+    body.dark-mode .sidebar,
+    body.dark-mode .image-area,
+    body.dark-mode header,
+    body.dark-mode .bottom-tabs {
+      background: #2c273e;
+    }
 
-    body.dark-mode #promptInput {
-      background: #3a3350;
-      color: #e5e7eb;
-      border-color: #554e6b;
-    }
+    body.dark-mode #promptInput {
+      background: #3a3350;
+      color: #e5e7eb;
+      border-color: #554e6b;
+    }
 
-    body.dark-mode #themeToggle {
-      background: #3a3350;
-      color: #e5e7eb;
-    }
-    
-    body.dark-mode #landing-page h2 {
-        color: var(--color-primary-light);
-    }
+    body.dark-mode #themeToggle {
+      background: #3a3350;
+      color: #e5e7eb;
+    }
+    
+    body.dark-mode #landing-page h2 {
+        color: var(--color-primary-light);
+    }
 
-    /* Responsive/Mobile styles */
-    @media (max-width: 767px) {
-      #sidebar, #imageArea {
-        display: none;
-      }
-      #sidebar.active, #imageArea.active {
-        display: flex !important;
-      }
-    }
+    /* Responsive/Mobile styles */
+    @media (max-width: 767px) {
+      #sidebar, #imageArea {
+        display: none;
+      }
+      #sidebar.active, #imageArea.active {
+        display: flex !important;
+      }
+    }
 
-    /* Bottom tab styles */
-    .bottom-tabs {
-      transition: background var(--transition-fast), color var(--transition-fast);
-      z-index: 10;
-      background: var(--color-panel-bg);
-      border-top: 1px solid var(--color-border);
-    }
+    /* Bottom tab styles */
+    .bottom-tabs {
+      transition: background var(--transition-fast), color var(--transition-fast);
+      z-index: 10;
+      background: var(--color-panel-bg);
+      border-top: 1px solid var(--color-border);
+    }
 
-    .bottom-tabs button {
-      transition: background var(--transition-fast), color var(--transition-fast);
-      border-radius: 6px;
-      color: var(--color-text-dark);
-    }
+    .bottom-tabs button {
+      transition: background var(--transition-fast), color var(--transition-fast);
+      border-radius: 6px;
+      color: var(--color-text-dark);
+    }
 
-    .bottom-tabs button.active {
-      color: white !important;
-      background-color: var(--color-primary); 
-    }
-    
-    body.dark-mode .bottom-tabs button {
-      color: #e5e7eb;
-    }
-    
-    .cl-internal-b1hrv3d { /* Targeted Clerk wrapper for aesthetics */
-        border-radius: 1rem !important;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    }
+    .bottom-tabs button.active {
+      color: white !important;
+      background-color: var(--color-primary); 
+    }
+    
+    body.dark-mode .bottom-tabs button {
+      color: #e5e7eb;
+    }
+    
+    .cl-internal-b1hrv3d { /* Targeted Clerk wrapper for aesthetics */
+        border-radius: 1rem !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
 
-  </style>
+  </style>
 </head>
 
 <body class="light-mode">
-  <!-- Header -->
-  <header class="flex justify-between items-center p-4 bg-[var(--color-panel-bg)] z-20 shadow-md">
-    <h1 class="text-xl font-bold text-[var(--color-primary)]">Askaio</h1>
-    <div class="flex items-center gap-4">
-      <!-- Hidden auth button used to switch to AUTH view from landing page header -->
-      <div id="clerk-user-button"></div>
-    </div>
-  </header>
-  
-  <div id="app-root" class="flex-1 flex flex-col">
-    <!-- 1. Protected Content (Main App) -->
-    <main id="protected-content" class="flex-1 hidden">
-      <div class="main-layout flex flex-col md:flex-row gap-4 p-4 md:p-8 flex-1">
+  <!-- Header -->
+  <header class="flex justify-between items-center p-4 bg-[var(--color-panel-bg)] z-20 shadow-md">
+    <h1 class="text-xl font-bold text-[var(--color-primary)]">Askaio</h1>
+    <div class="flex items-center gap-4">
+      <!-- Hidden auth button used to switch to AUTH view from landing page header -->
+      <div id="clerk-user-button"></div>
+    </div>
+  </header>
+  
+  <div id="app-root" class="flex-1 flex flex-col">
+    <!-- 1. Protected Content (Main App) -->
+    <main id="protected-content" class="flex-1 hidden">
+      <div class="main-layout flex flex-col md:flex-row gap-4 p-4 md:p-8 flex-1">
 
-        <!-- Sidebar -->
-        <aside class="sidebar flex flex-col gap-4 rounded-2xl shadow-xl p-6 w-full md:w-[400px]" id="sidebar">
-          <div class="sidebar-header flex justify-between items-center mb-4">
-            <h1 class="text-4xl font-extrabold tracking-wide text-[var(--color-primary)] drop-shadow-sm">Askaio</h1>
-            <button id="themeToggle" class="w-12 h-12 flex items-center justify-center rounded-full text-2xl transition-all">🌙</button>
-          </div>
+        <!-- Sidebar -->
+        <aside class="sidebar flex flex-col gap-4 rounded-2xl shadow-xl p-6 w-full md:w-[400px]" id="sidebar">
+          <div class="sidebar-header flex justify-between items-center mb-4">
+            <h1 class="text-4xl font-extrabold tracking-wide text-[var(--color-primary)] drop-shadow-sm">Askaio</h1>
+            <button id="themeToggle" class="w-12 h-12 flex items-center justify-center rounded-full text-2xl transition-all">🌙</button>
+          </div>
 
-          <!-- Changed to text-gray-900 (near black) -->
-          <p class="text-gray-900 dark:text-gray-400 leading-relaxed">
-            Enter a descriptive prompt to generate a stunning AI-powered image.
-          </p>
+          <!-- Changed to text-gray-900 (near black) -->
+          <p class="text-gray-900 dark:text-gray-400 leading-relaxed">
+            Enter a descriptive prompt to generate a stunning AI-powered image.
+          </p>
 
-          <textarea id="promptInput" placeholder="e.g., A futuristic neon city skyline at night with flying cars"
-            class="w-full h-40 p-4 rounded-xl border-2 border-[var(--color-primary)] resize-none focus:outline-none focus:ring-4 focus:ring-purple-400 transition-all"></textarea>
+          <textarea id="promptInput" placeholder="e.g., A futuristic neon city skyline at night with flying cars"
+            class="w-full h-40 p-4 rounded-xl border-2 border-[var(--color-primary)] resize-none focus:outline-none focus:ring-4 focus:ring-purple-400 transition-all"></textarea>
 
-          <button id="generateBtn" disabled
-            class="w-full py-3 rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all">
-            GENERATE IMAGE
-          </button>
-          <!-- Download Button will be inserted here by JS -->
-        </aside>
+          <button id="generateBtn" disabled
+            class="w-full py-3 rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all">
+            GENERATE IMAGE
+          </button>
+          <!-- Download Button will be inserted here by JS -->
+        </aside>
 
-        <!-- Main Image Display -->
-        <main class="image-area flex-1 flex justify-center items-center rounded-2xl shadow-xl overflow-hidden relative p-4" id="imageArea">
-          <div class="image-display w-full h-full flex justify-center items-center border-2 border-dashed border-gray-300 rounded-xl relative">
-            <div id="loadingState" class="hidden flex flex-col items-center gap-4">
-              <div class="loading-spinner w-14 h-14 animate-spin"></div>
-              <!-- Loading text remains slightly softer gray -->
-              <p class="text-gray-700 italic">Generating your masterpiece...</p>
-            </div>
+        <!-- Main Image Display -->
+        <main class="image-area flex-1 flex justify-center items-center rounded-2xl shadow-xl overflow-hidden relative p-4" id="imageArea">
+          <div class="image-display w-full h-full flex justify-center items-center border-2 border-dashed border-gray-300 rounded-xl relative">
+            <div id="loadingState" class="hidden flex flex-col items-center gap-4">
+              <div class="loading-spinner w-14 h-14 animate-spin"></div>
+              <!-- Loading text remains slightly softer gray -->
+              <p class="text-gray-700 italic">Generating your masterpiece...</p>
+            </div>
 
-            <img id="generatedImage" src="" alt="Generated Image" class="hidden max-w-full max-h-full rounded-lg shadow-lg transition-opacity duration-700">
-            <!-- Changed to text-gray-700 for better visibility than gray-400 -->
-            <p id="placeholderText" class="text-gray-700 italic">Your generated image will appear here.</p>
-            <p id="errorMessage" class="text-red-600 font-semibold hidden text-center p-4"></p>
-          </div>
-        </main>
-      </div>
+            <img id="generatedImage" src="" alt="Generated Image" class="hidden max-w-full max-h-full rounded-lg shadow-lg transition-opacity duration-700">
+            <!-- Changed to text-gray-700 for better visibility than gray-400 -->
+            <p id="placeholderText" class="text-gray-700 italic">Your generated image will appear here.</p>
+            <p id="errorMessage" class="text-red-600 font-semibold hidden text-center p-4"></p>
+          </div>
+        </main>
+      </div>
 
-      <!-- Mobile bottom tabs -->
-      <div id="mobileTabs" class="bottom-tabs fixed bottom-0 left-0 w-full flex justify-around p-2 md:hidden">
-        <button id="tabPrompt" class="flex-1 py-2 text-center active">Prompt</button>
-        <button id="tabPreview" class="flex-1 py-2 text-center">Preview</button>
-      </div>
-    </main>
-    
-    <!-- 2. Detailed Landing Page -->
-    <div id="landing-page" class="flex-1 flex flex-col justify-start items-center p-8 hidden overflow-y-auto">
-      <div class="w-full max-w-6xl">
-        
-        <!-- Hero Section -->
-        <div class="grid md:grid-cols-2 items-center gap-12 py-16">
-          
-          <!-- Text Content and CTA -->
-          <div class="text-center md:text-left">
-            <h2 class="text-5xl md:text-7xl font-extrabold text-[var(--color-primary)] mb-6 tracking-tight">
-              Visualize Your Next Idea.
-            </h2>
-            <!-- Changed to text-gray-900 (near black) -->
-            <p class="text-lg md:text-2xl text-gray-900 dark:text-gray-300 mb-8 max-w-lg md:max-w-none mx-auto md:mx-0 leading-relaxed">
-              <bold>Askaio</bold> is an advanced AI image generation studio. Describe any scene, concept, or style, and instantly receive a high-quality, unique image, powered by Google's latest models for exceptional detail and speed.
-            </p>
-            <button id="getStartedBtn" class="w-full md:w-auto px-10 py-4 text-xl rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all">
-              Start Creating Now &rarr;
-            </button>
-            <!-- Changed to text-gray-800 -->
-            <p class="text-sm text-gray-800 mt-4 md:mt-6">Already a user? 
-              <a href="#" id="landingSignInLink" class="text-[var(--color-primary)] font-semibold hover:underline transition-colors">Sign In</a> to access your gallery.
-            </p>
-          </div>
-          
-          <!-- Image Mockup -->
-          <div class="flex justify-center items-center p-4">
-            <div class="w-full max-w-md aspect-square bg-[var(--color-panel-bg)] rounded-3xl shadow-2xl border border-[var(--color-border)] p-6 flex flex-col items-center justify-center">
-              <!-- Using a placeholder image with primary colors -->
-              <div class="w-full aspect-square bg-cover bg-center rounded-2xl" 
-                   style="background-image: url('https://placehold.co/500x500/9333ea/ffffff?text=AI+Generated+Preview'); border: 4px solid var(--color-primary);">
-              </div>
-              <!-- Changed to text-gray-700 (still secondary, but high contrast) -->
-              <p class="text-sm text-gray-700 mt-4 italic text-center">Prompt: "A majestic griffin soaring over a cyberpunk city, highly detailed digital art."</p>
-            </div>
-          </div>
-        </div>
+      <!-- Mobile bottom tabs -->
+      <div id="mobileTabs" class="bottom-tabs fixed bottom-0 left-0 w-full flex justify-around p-2 md:hidden">
+        <button id="tabPrompt" class="flex-1 py-2 text-center active">Prompt</button>
+        <button id="tabPreview" class="flex-1 py-2 text-center">Preview</button>
+      </div>
+    </main>
+    
+    <!-- 2. Detailed Landing Page -->
+    <div id="landing-page" class="flex-1 flex flex-col justify-start items-center p-8 hidden overflow-y-auto">
+      <div class="w-full max-w-6xl">
+        
+        <!-- Hero Section -->
+        <div class="grid md:grid-cols-2 items-center gap-12 py-16">
+          
+          <!-- Text Content and CTA -->
+          <div class="text-center md:text-left">
+            <h2 class="text-5xl md:text-7xl font-extrabold text-[var(--color-primary)] mb-6 tracking-tight">
+              Visualize Your Next Idea.
+            </h2>
+            <!-- Changed to text-gray-900 (near black) -->
+            <p class="text-lg md:text-2xl text-gray-900 dark:text-gray-300 mb-8 max-w-lg md:max-w-none mx-auto md:mx-0 leading-relaxed">
+              <bold>Askaio</bold is an advanced AI image generation studio. Describe any scene, concept, or style, and instantly receive a high-quality, unique image, powered by Google's latest models for exceptional detail and speed.
+            </p>
+            <button id="getStartedBtn" class="w-full md:w-auto px-10 py-4 text-xl rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all">
+              Start Creating Now &rarr;
+            </button>
+            <!-- Changed to text-gray-800 -->
+            <p class="text-sm text-gray-800 mt-4 md:mt-6">Already a user? 
+              <a href="#" id="landingSignInLink" class="text-[var(--color-primary)] font-semibold hover:underline transition-colors">Sign In</a> to access your gallery.
+            </p>
+          </div>
+          
+          <!-- Image Mockup -->
+          <div class="flex justify-center items-center p-4">
+            <div class="w-full max-w-md aspect-square bg-[var(--color-panel-bg)] rounded-3xl shadow-2xl border border-[var(--color-border)] p-6 flex flex-col items-center justify-center">
+              <!-- Using a placeholder image with primary colors -->
+              <div class="w-full aspect-square bg-cover bg-center rounded-2xl" 
+                   style="background-image: url('https://placehold.co/500x500/9333ea/ffffff?text=AI+Generated+Preview'); border: 4px solid var(--color-primary);">
+              </div>
+              <!-- Changed to text-gray-700 (still secondary, but high contrast) -->
+              <p class="text-sm text-gray-700 mt-4 italic text-center">Prompt: "A majestic griffin soaring over a cyberpunk city, highly detailed digital art."</p>
+            </div>
+          </div>
+        </div>
 
-        <!-- Features Section -->
-        <div class="pt-12 pb-8 md:pb-16 border-t border-[var(--color-border)]">
-            <h3 class="text-3xl font-bold text-center mb-10 text-[var(--color-primary)]">Core Capabilities</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
-                <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
-                    <div class="text-3xl text-[var(--color-primary)] mb-3">✨</div>
-                    <!-- Changed to text-gray-900 (near black) -->
-                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">High Fidelity Output</h4>
-                    <!-- Changed to text-gray-800 -->
-                    <p class="text-gray-800 dark:text-gray-400 text-sm">Our models are tuned for exceptional detail, handling complex lighting, textures, and artistic styles for stunning results.</p>
-                </div>
-                <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
-                    <div class="text-3xl text-[var(--color-primary)] mb-3">🚀</div>
-                    <!-- Changed to text-gray-900 (near black) -->
-                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Ultra-Fast Generation</h4>
-                    <!-- Changed to text-gray-800 -->
-                    <p class="text-gray-800 dark:text-gray-400 text-sm">Turn your descriptive prompt into a professional-grade visual in a matter of seconds, minimizing wait times.</p>
-                </div>
-                <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
-                    <div class="text-3xl text-[var(--color-primary)] mb-3">🎨</div>
-                    <!-- Changed to text-gray-900 (near black) -->
-                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Limitless Creativity</h4>
-                    <!-- Changed to text-gray-800 -->
-                    <p class="text-gray-800 dark:text-gray-400 text-sm">Explore infinite possibilities, generating everything from abstract concepts to specific product visualizations.</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- How It Works Section (New Detailed Section) -->
-        <div class="pt-12 pb-16 md:pb-24 border-t border-[var(--color-border)] mt-12">
-            <h3 class="text-3xl font-bold text-center mb-12 text-[var(--color-primary)]">The Simple 3-Step Process</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                
-                <!-- Step 1 -->
-                <div class="p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
-                    <div class="w-12 h-12 flex items-center justify-center rounded-full bg-purple-100 text-[var(--color-primary)] font-extrabold text-2xl mx-auto mb-4 border border-[var(--color-primary)]">1</div>
-                    <!-- Changed to text-gray-900 (near black) -->
-                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Craft Your Prompt</h4>
-                    <!-- Changed to text-gray-800 -->
-                    <p class="text-gray-800 dark:text-gray-400 text-sm">Start with a detailed text prompt. Specify the subject, artistic style (e.g., oil painting, digital art), and scene elements.</p>
-                </div>
+        <!-- Features Section -->
+        <div class="pt-12 pb-8 md:pb-16 border-t border-[var(--color-border)]">
+            <h3 class="text-3xl font-bold text-center mb-10 text-[var(--color-primary)]">Core Capabilities</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
+                    <div class="text-3xl text-[var(--color-primary)] mb-3">✨</div>
+                    <!-- Changed to text-gray-900 (near black) -->
+                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">High Fidelity Output</h4>
+                    <!-- Changed to text-gray-800 -->
+                    <p class="text-gray-800 dark:text-gray-400 text-sm">Our models are tuned for exceptional detail, handling complex lighting, textures, and artistic styles for stunning results.</p>
+                </div>
+                <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
+                    <div class="text-3xl text-[var(--color-primary)] mb-3">🚀</div>
+                    <!-- Changed to text-gray-900 (near black) -->
+                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Ultra-Fast Generation</h4>
+                    <!-- Changed to text-gray-800 -->
+                    <p class="text-gray-800 dark:text-gray-400 text-sm">Turn your descriptive prompt into a professional-grade visual in a matter of seconds, minimizing wait times.</p>
+                </div>
+                <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
+                    <div class="text-3xl text-[var(--color-primary)] mb-3">🎨</div>
+                    <!-- Changed to text-gray-900 (near black) -->
+                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Limitless Creativity</h4>
+                    <!-- Changed to text-gray-800 -->
+                    <p class="text-gray-800 dark:text-gray-400 text-sm">Explore infinite possibilities, generating everything from abstract concepts to specific product visualizations.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- How It Works Section (New Detailed Section) -->
+        <div class="pt-12 pb-16 md:pb-24 border-t border-[var(--color-border)] mt-12">
+            <h3 class="text-3xl font-bold text-center mb-12 text-[var(--color-primary)]">The Simple 3-Step Process</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                
+                <!-- Step 1 -->
+                <div class="p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
+                    <div class="w-12 h-12 flex items-center justify-center rounded-full bg-purple-100 text-[var(--color-primary)] font-extrabold text-2xl mx-auto mb-4 border border-[var(--color-primary)]">1</div>
+                    <!-- Changed to text-gray-900 (near black) -->
+                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Craft Your Prompt</h4>
+                    <!-- Changed to text-gray-800 -->
+                    <p class="text-gray-800 dark:text-gray-400 text-sm">Start with a detailed text prompt. Specify the subject, artistic style (e.g., oil painting, digital art), and scene elements.</p>
+                </div>
 
-                <!-- Step 2 -->
-                <div class="p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
-                    <div class="w-12 h-12 flex items-center justify-center rounded-full bg-purple-100 text-[var(--color-primary)] font-extrabold text-2xl mx-auto mb-4 border border-[var(--color-primary)]">2</div>
-                    <!-- Changed to text-gray-900 (near black) -->
-                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">AI Renders Instantly</h4>
-                    <!-- Changed to text-gray-800 -->
-                    <p class="text-gray-800 dark:text-gray-400 text-sm">We submit your request to the Gemini API, which processes the description and synthesizes a unique image based on your input.</p>
-                </div>
+                <!-- Step 2 -->
+                <div class="p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
+                    <div class="w-12 h-12 flex items-center justify-center rounded-full bg-purple-100 text-[var(--color-primary)] font-extrabold text-2xl mx-auto mb-4 border border-[var(--color-primary)]">2</div>
+                    <!-- Changed to text-gray-900 (near black) -->
+                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">AI Renders Instantly</h4>
+                    <!-- Changed to text-gray-800 -->
+                    <p class="text-gray-800 dark:text-gray-400 text-sm">We submit your request to the Gemini API, which processes the description and synthesizes a unique image based on your input.</p>
+                </div>
 
-                <!-- Step 3 -->
-                <div class="p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
-                    <div class="w-12 h-12 flex items-center justify-center rounded-full bg-purple-100 text-[var(--color-primary)] font-extrabold text-2xl mx-auto mb-4 border border-[var(--color-primary)]">3</div>
-                    <!-- Changed to text-gray-900 (near black) -->
-                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Download High-Res</h4>
-                    <!-- Changed to text-gray-800 -->
-                    <p class="text-gray-800 dark:text-gray-400 text-sm">Receive your final image instantly, ready to be downloaded and used wherever your projects take you.</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Call to Action Footer (New Section) -->
-        <div class="text-center py-16 bg-purple-50 rounded-2xl mb-8 border border-[var(--color-primary-light)] shadow-lg">
-            <!-- Changed to text-gray-900 (near black) -->
-            <h3 class="text-3xl font-bold text-gray-900 mb-4">Ready to Transform Text into Art?</h3>
-            <!-- Changed to text-gray-800 -->
-            <p class="text-lg text-gray-800 mb-8 max-w-2xl mx-auto">
-                Join the beta today and explore the future of digital content creation. No limits, just creativity.
-            </p>
-            <button id="getStartedBtnFooter" class="px-12 py-4 text-xl rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all">
-                Access the Generator &rarr;
-            </button>
-        </div>
-        
-      </div>
-          </div>
+                <!-- Step 3 -->
+                <div class="p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
+                    <div class="w-12 h-12 flex items-center justify-center rounded-full bg-purple-100 text-[var(--color-primary)] font-extrabold text-2xl mx-auto mb-4 border border-[var(--color-primary)]">3</div>
+                    <!-- Changed to text-gray-900 (near black) -->
+                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Download High-Res</h4>
+                    <!-- Changed to text-gray-800 -->
+                    <p class="text-gray-800 dark:text-gray-400 text-sm">Receive your final image instantly, ready to be downloaded and used wherever your projects take you.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Call to Action Footer (New Section) -->
+        <div class="text-center py-16 bg-purple-50 rounded-2xl mb-8 border border-[var(--color-primary-light)] shadow-lg">
+            <!-- Changed to text-gray-900 (near black) -->
+            <h3 class="text-3xl font-bold text-gray-900 mb-4">Ready to Transform Text into Art?</h3>
+            <!-- Changed to text-gray-800 -->
+            <p class="text-lg text-gray-800 mb-8 max-w-2xl mx-auto">
+                Join the beta today and explore the future of digital content creation. No limits, just creativity.
+            </p>
+            <button id="getStartedBtnFooter" class="px-12 py-4 text-xl rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all">
+                Access the Generator &rarr;
+            </button>
+        </div>
+        
+      </div>
+    </div>
 
-    <!-- 3. Public Auth Page (Clerk Form) -->
-    <div id="public-auth" class="flex-1 hidden flex justify-center items-center p-8">
-      <div id="clerk-sign-in-form" class="w-full max-w-sm"></div>
-    </div>
-  </div>
-
-
-  <script>
-    // Constants and DOM Elements
-    const apiKey = "AIzaSyD8xBXpp0FYeV0nCxZ9V_VtVjKwoo6_BUw";
-    const protectedContent = document.getElementById('protected-content');
-    const publicAuth = document.getElementById('public-auth');
-    const landingPage = document.getElementById('landing-page');
-    // Updated to include the new footer button
-    const getStartedBtn = document.getElementById('getStartedBtn'); 
-    const getStartedBtnFooter = document.getElementById('getStartedBtnFooter');
-    const landingSignInLink = document.getElementById('landingSignInLink');
-    const mobileTabs = document.getElementById('mobileTabs');
-
-    const sidebar = document.getElementById('sidebar');
-    const imageArea = document.getElementById('imageArea');
-    const promptInput = document.getElementById('promptInput');
-    const generateBtn = document.getElementById('generateBtn');
-    const generatedImageDisplay = document.getElementById('generatedImage');
-    const loadingState = document.getElementById('loadingState');
-    const placeholderText = document.getElementById('placeholderText');
-    const errorMessage = document.getElementById('errorMessage');
-    const themeToggle = document.getElementById('themeToggle');
-    const body = document.body;
-    const tabPrompt = document.getElementById('tabPrompt');
-    const tabPreview = document.getElementById('tabPreview');
-
-    // ✅ Download button setup
-    const downloadBtn = document.createElement('button');
-    downloadBtn.id = "downloadImageBtn";
-    downloadBtn.textContent = "DOWNLOAD IMAGE";
-    downloadBtn.className =
-      "w-full py-3 rounded-xl font-bold bg-gradient-to-r from-green-500 to-green-700 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all hidden mt-4";
-    sidebar.appendChild(downloadBtn);
-
-    // --- Utility Functions ---
-
-    /**
-     * Controls which major view (APP, AUTH, LANDING) is displayed.
-     * @param {'APP'|'AUTH'|'LANDING'} state 
-     */
-    function showAppView(state) {
-        // Hide all containers and mobile tabs
-        protectedContent.classList.add('hidden');
-        publicAuth.classList.add('hidden');
-        landingPage.classList.add('hidden');
-        mobileTabs.classList.add('hidden');
-        
-        // Show the correct container based on state
-        if (state === 'APP') {
-            protectedContent.classList.remove('hidden');
-            if (window.innerWidth < 768) mobileTabs.classList.remove('hidden');
-        } else if (state === 'AUTH') {
-            publicAuth.classList.remove('hidden');
-            // Mount the Clerk sign-in form when switching to the AUTH state
-            Clerk.mountSignIn(document.getElementById("clerk-sign-in-form"));
-        } else { // LANDING
-            landingPage.classList.remove('hidden');
-        }
-    }
+    <!-- 3. Public Auth Page (Clerk Form) -->
+    <div id="public-auth" class="flex-1 hidden flex justify-center items-center p-8">
+      <div id="clerk-sign-in-form" class="w-full max-w-sm"></div>
+    </div>
+  </div>
 
 
-    function showLoading(show) {
-      if (show) {
-        loadingState.classList.remove('hidden');
-        generatedImageDisplay.classList.add('hidden');
-        placeholderText.classList.add('hidden');
-        errorMessage.classList.add('hidden');
-        downloadBtn.classList.add('hidden');
-      } else {
-        loadingState.classList.add('hidden');
-      }
-    }
+  <script>
+    // Constants and DOM Elements
+    const apiKey = "AIzaSyD8xBXpp0FYeV0nCxZ9V_VtVjKwoo6_BUw";
+    const protectedContent = document.getElementById('protected-content');
+    const publicAuth = document.getElementById('public-auth');
+    const landingPage = document.getElementById('landing-page');
+    // Updated to include the new footer button
+    const getStartedBtn = document.getElementById('getStartedBtn'); 
+    const getStartedBtnFooter = document.getElementById('getStartedBtnFooter');
+    const landingSignInLink = document.getElementById('landingSignInLink');
+    const mobileTabs = document.getElementById('mobileTabs');
 
-    function toggleGenerateButton(disabled) {
-      generateBtn.disabled = disabled || promptInput.value.trim() === '';
-      generateBtn.textContent = disabled ? "GENERATING..." : "GENERATE IMAGE";
-      generateBtn.style.opacity = disabled ? "0.7" : "1";
-    }
+    const sidebar = document.getElementById('sidebar');
+    const imageArea = document.getElementById('imageArea');
+    const promptInput = document.getElementById('promptInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const generatedImageDisplay = document.getElementById('generatedImage');
+    const loadingState = document.getElementById('loadingState');
+    const placeholderText = document.getElementById('placeholderText');
+    const errorMessage = document.getElementById('errorMessage');
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+    const tabPrompt = document.getElementById('tabPrompt');
+    const tabPreview = document.getElementById('tabPreview');
 
-    // --- Theme and Mobile Tab Logic ---
+    // ✅ Download button setup
+    const downloadBtn = document.createElement('button');
+    downloadBtn.id = "downloadImageBtn";
+    downloadBtn.textContent = "DOWNLOAD IMAGE";
+    downloadBtn.className =
+      "w-full py-3 rounded-xl font-bold bg-gradient-to-r from-green-500 to-green-700 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all hidden mt-4";
+    sidebar.appendChild(downloadBtn);
 
-    function updateTabColors() {
-      // Logic for dark mode styles is now encapsulated in the CSS classes
-      // No need for inline style overrides here, as CSS handles the dark-mode class
-    }
+    // --- Utility Functions ---
 
-    function activateTab(tab) {
-      tabPrompt.classList.remove('active');
-      tabPreview.classList.remove('active');
-      sidebar.classList.remove('active');
-      imageArea.classList.remove('active');
+    /**
+     * Controls which major view (APP, AUTH, LANDING) is displayed.
+     * @param {'APP'|'AUTH'|'LANDING'} state 
+     */
+    function showAppView(state) {
+        // Hide all containers and mobile tabs
+        protectedContent.classList.add('hidden');
+        publicAuth.classList.add('hidden');
+        landingPage.classList.add('hidden');
+        mobileTabs.classList.add('hidden');
+        
+        // Show the correct container based on state
+        if (state === 'APP') {
+            protectedContent.classList.remove('hidden');
+            if (window.innerWidth < 768) mobileTabs.classList.remove('hidden');
+        } else if (state === 'AUTH') {
+            publicAuth.classList.remove('hidden');
+            // Mount the Clerk sign-in form when switching to the AUTH state
+            Clerk.mountSignIn(document.getElementById("clerk-sign-in-form"));
+        } else { // LANDING
+            landingPage.classList.remove('hidden');
+        }
+    }
 
-      if (tab === 'prompt') {
-        tabPrompt.classList.add('active');
-        sidebar.classList.add('active');
-      } else {
-        tabPreview.classList.add('active');
-        imageArea.classList.add('active');
-      }
 
-      updateTabColors();
-    }
+    function showLoading(show) {
+      if (show) {
+        loadingState.classList.remove('hidden');
+        generatedImageDisplay.classList.add('hidden');
+        placeholderText.classList.add('hidden');
+        errorMessage.classList.add('hidden');
+        downloadBtn.classList.add('hidden');
+      } else {
+        loadingState.classList.add('hidden');
+      }
+    }
 
-    // --- Main Logic: Image Generation ---
+    function toggleGenerateButton(disabled) {
+      generateBtn.disabled = disabled || promptInput.value.trim() === '';
+      generateBtn.textContent = disabled ? "GENERATING..." : "GENERATE IMAGE";
+      generateBtn.style.opacity = disabled ? "0.7" : "1";
+    }
 
-    async function generateImage() {
-      const prompt = promptInput.value.trim();
-      if (!prompt) return;
+    // --- Theme and Mobile Tab Logic ---
 
-      toggleGenerateButton(true);
-      showLoading(true);
+    function updateTabColors() {
+      // Logic for dark mode styles is now encapsulated in the CSS classes
+      // No need for inline style overrides here, as CSS handles the dark-mode class
+    }
 
-      // Simple retry mechanism for API calls
-      const maxRetries = 3;
-      let lastError = null;
+    function activateTab(tab) {
+      tabPrompt.classList.remove('active');
+      tabPreview.classList.remove('active');
+      sidebar.classList.remove('active');
+      imageArea.classList.remove('active');
 
-      for (let i = 0; i < maxRetries; i++) {
-        try {
-          // Using the preferred imagen-3.0-generate-002 model
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
-          const payload = { 
-              instances: [{ prompt: prompt }], 
-              parameters: { "sampleCount": 1 }
-          };
-          
-          const response = await fetch(apiUrl, { 
-              method: 'POST', 
-              headers: { 'Content-Type': 'application/json' }, 
-              body: JSON.stringify(payload) 
-          });
-          
-          if (!response.ok) {
-              const errorBody = await response.json();
-              throw new Error(`API returned status ${response.status}: ${errorBody.error?.message || response.statusText}`);
-          }
+      if (tab === 'prompt') {
+        tabPrompt.classList.add('active');
+        sidebar.classList.add('active');
+      } else {
+        tabPreview.classList.add('active');
+        imageArea.classList.add('active');
+      }
 
-          const result = await response.json();
+      updateTabColors();
+    }
 
-          // Extract base64 data specific to imagen-3.0-generate-002:predict response structure
-          const base64Data = result?.predictions?.[0]?.bytesBase64Encoded;
+    // --- Main Logic: Image Generation ---
 
-          if (base64Data) {
-            generatedImageDisplay.src = `data:image/png;base64,${base64Data}`;
-            generatedImageDisplay.classList.remove('hidden');
-            placeholderText.classList.add('hidden');
-            downloadBtn.classList.remove('hidden');
-            // On mobile, automatically switch to preview tab after generation
-            if (window.innerWidth < 768) activateTab('preview');
-            // Success, break the retry loop
-            lastError = null; 
-            break;
-          } else {
-            // No base64 data, this is an issue we might retry or handle as a final failure
-            throw new Error("API response missing image data.");
-          }
-        } catch (err) {
-          lastError = err;
-          console.error(`Attempt ${i + 1} failed:`, err);
-          if (i < maxRetries - 1) {
-            // Exponential backoff: 1s, 2s, 4s delay
-            await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
-          }
-        }
-      }
+    async function generateImage() {
+      const prompt = promptInput.value.trim();
+      if (!prompt) return;
 
-      if (lastError) {
-          errorMessage.textContent = `Image generation failed after ${maxRetries} attempts. Error: ${lastError.message}`;
-          errorMessage.classList.remove('hidden');
-      }
+      toggleGenerateButton(true);
+      showLoading(true);
 
-      toggleGenerateButton(false);
-      showLoading(false);
-    }
+      // Simple retry mechanism for API calls
+      const maxRetries = 3;
+      let lastError = null;
 
-    // --- Event Listeners and Initial Load ---
+      for (let i = 0; i < maxRetries; i++) {
+        try {
+          // Using the preferred imagen-3.0-generate-002 model
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+          const payload = { 
+              instances: [{ prompt: prompt }], 
+              parameters: { "sampleCount": 1 }
+          };
+          
+          const response = await fetch(apiUrl, { 
+              method: 'POST', 
+              headers: { 'Content-Type': 'application/json' }, 
+              body: JSON.stringify(payload) 
+          });
+          
+          if (!response.ok) {
+              const errorBody = await response.json();
+              throw new Error(`API returned status ${response.status}: ${errorBody.error?.message || response.statusText}`);
+          }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // 1. Force Light Mode as Default (Ignoring localStorage initial check)
-      // The body starts with 'light-mode' by default in the HTML class attribute now
-      body.classList.remove('dark-mode'); 
-      body.classList.add('light-mode');
-      themeToggle.textContent = '🌙'; 
-      localStorage.setItem('theme', 'light');
+          const result = await response.json();
 
-      promptInput.addEventListener('input', () => {
-        generateBtn.disabled = promptInput.value.trim() === '';
-      });
+          // Extract base64 data specific to imagen-3.0-generate-002:predict response structure
+          const base64Data = result?.predictions?.[0]?.bytesBase64Encoded;
 
-      // Initial tab setup for mobile
-      updateTabColors();
-      if (window.innerWidth < 768) activateTab('prompt');
-    });
+          if (base64Data) {
+            generatedImageDisplay.src = `data:image/png;base64,${base64Data}`;
+            generatedImageDisplay.classList.remove('hidden');
+            placeholderText.classList.add('hidden');
+            downloadBtn.classList.remove('hidden');
+            // On mobile, automatically switch to preview tab after generation
+            if (window.innerWidth < 768) activateTab('preview');
+            // Success, break the retry loop
+            lastError = null; 
+            break;
+          } else {
+            // No base64 data, this is an issue we might retry or handle as a final failure
+            throw new Error("API response missing image data.");
+          }
+        } catch (err) {
+          lastError = err;
+          console.error(`Attempt ${i + 1} failed:`, err);
+          if (i < maxRetries - 1) {
+            // Exponential backoff: 1s, 2s, 4s delay
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+          }
+        }
+      }
 
-    // Clerk Initialization and View Switching
-    window.addEventListener("load", async () => {
-        await Clerk.load();
-        
-        // Mount User Button (always visible in the header for signed-in users)
-        Clerk.mountUserButton(document.getElementById("clerk-user-button"));
-        
-        // Determine initial view state
-        if (Clerk.user) {
-            showAppView('APP');
-        } else {
-            showAppView('LANDING');
-        }
+      if (lastError) {
+          errorMessage.textContent = `Image generation failed after ${maxRetries} attempts. Error: ${lastError.message}`;
+          errorMessage.classList.remove('hidden');
+      }
 
-        // Listener for authentication changes (login/logout)
-        Clerk.addListener(({ user }) => {
-            if (user) {
-                showAppView('APP');
-            } else {
-                // On logout, return to the landing page
-                showAppView('LANDING');
-            }
-        });
-        
-        // Function to trigger auth view
-        const triggerAuthView = (e) => {
-            e.preventDefault();
-            showAppView('AUTH');
-        };
+      toggleGenerateButton(false);
+      showLoading(false);
+    }
 
-        // Landing Page Button Handlers (Transition to Auth)
-        getStartedBtn.addEventListener('click', triggerAuthView);
-        landingSignInLink.addEventListener('click', triggerAuthView);
-        // New Footer CTA Listener
-        getStartedBtnFooter.addEventListener('click', triggerAuthView);
-    });
+    // --- Event Listeners and Initial Load ---
 
-    // Theme Toggle
-    themeToggle.addEventListener('click', () => {
-      // Toggle between light-mode (default) and dark-mode
-      const isLight = body.classList.contains('light-mode');
-      
-      if (isLight) {
-          body.classList.remove('light-mode');
-          body.classList.add('dark-mode');
-          themeToggle.textContent = '☀️';
-          localStorage.setItem('theme', 'dark');
-      } else {
-          body.classList.remove('dark-mode');
-          body.classList.add('light-mode');
-          themeToggle.textContent = '🌙';
-          localStorage.setItem('theme', 'light');
-      }
-      updateTabColors();
-    });
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Force Light Mode as Default (Ignoring localStorage initial check)
+      // The body starts with 'light-mode' by default in the HTML class attribute now
+      body.classList.remove('dark-mode'); 
+      body.classList.add('light-mode');
+      themeToggle.textContent = '🌙'; 
+      localStorage.setItem('theme', 'light');
 
-    // Generate Button
-    generateBtn.addEventListener('click', generateImage);
+      promptInput.addEventListener('input', () => {
+        generateBtn.disabled = promptInput.value.trim() === '';
+      });
 
-    // Download Button
-    downloadBtn.addEventListener('click', () => {
-      const imgSrc = generatedImageDisplay.src;
-      if (!imgSrc) return;
-      const link = document.createElement('a');
-      link.href = imgSrc;
-      link.download = 'askaio-generated.png';
-      link.click();
-    });
+      // Initial tab setup for mobile
+      updateTabColors();
+      if (window.innerWidth < 768) activateTab('prompt');
+    });
 
-    // Mobile tabs
-    tabPrompt.addEventListener('click', () => activateTab('prompt'));
-    tabPreview.addEventListener('click', () => activateTab('preview'));
-  </script>
+    // Clerk Initialization and View Switching
+    window.addEventListener("load", async () => {
+        await Clerk.load();
+        
+        // Mount User Button (always visible in the header for signed-in users)
+        Clerk.mountUserButton(document.getElementById("clerk-user-button"));
+        
+        // Determine initial view state
+        if (Clerk.user) {
+            showAppView('APP');
+        } else {
+            showAppView('LANDING');
+        }
+
+        // Listener for authentication changes (login/logout)
+        Clerk.addListener(({ user }) => {
+            if (user) {
+                showAppView('APP');
+            } else {
+                // On logout, return to the landing page
+                showAppView('LANDING');
+            }
+        });
+        
+        // Function to trigger auth view
+        const triggerAuthView = (e) => {
+            e.preventDefault();
+            showAppView('AUTH');
+        };
+
+        // Landing Page Button Handlers (Transition to Auth)
+        getStartedBtn.addEventListener('click', triggerAuthView);
+        landingSignInLink.addEventListener('click', triggerAuthView);
+        // New Footer CTA Listener
+        getStartedBtnFooter.addEventListener('click', triggerAuthView);
+    });
+
+    // Theme Toggle
+    themeToggle.addEventListener('click', () => {
+      // Toggle between light-mode (default) and dark-mode
+      const isLight = body.classList.contains('light-mode');
+      
+      if (isLight) {
+          body.classList.remove('light-mode');
+          body.classList.add('dark-mode');
+          themeToggle.textContent = '☀️';
+          localStorage.setItem('theme', 'dark');
+      } else {
+          body.classList.remove('dark-mode');
+          body.classList.add('light-mode');
+          themeToggle.textContent = '🌙';
+          localStorage.setItem('theme', 'light');
+      }
+      updateTabColors();
+    });
+
+    // Generate Button
+    generateBtn.addEventListener('click', generateImage);
+
+    // Download Button
+    downloadBtn.addEventListener('click', () => {
+      const imgSrc = generatedImageDisplay.src;
+      if (!imgSrc) return;
+      const link = document.createElement('a');
+      link.href = imgSrc;
+      link.download = 'askaio-generated.png';
+      link.click();
+    });
+
+    // Mobile tabs
+    tabPrompt.addEventListener('click', () => activateTab('prompt'));
+    tabPreview.addEventListener('click', () => activateTab('preview'));
+  </script>
 </body>
 </html>
