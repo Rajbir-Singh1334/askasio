@@ -59,6 +59,12 @@
       color: var(--color-text-dark);
       border-color: var(--color-border);
     }
+    
+    /* Ensure placeholder text is very dark in light mode for max contrast */
+    #promptInput::placeholder {
+      color: #374151; /* Tailwind gray-700/800 equivalent */
+      opacity: 1; 
+    }
 
     header {
       background: var(--color-panel-bg);
@@ -181,13 +187,13 @@
           <div class="image-display w-full h-full flex justify-center items-center border-2 border-dashed border-gray-300 rounded-xl relative">
             <div id="loadingState" class="hidden flex flex-col items-center gap-4">
               <div class="loading-spinner w-14 h-14 animate-spin"></div>
-              <!-- Loading text remains slightly softer gray -->
-              <p class="text-gray-700 italic">Generating your masterpiece...</p>
+              <!-- Loading text changed to text-gray-800 for max contrast -->
+              <p class="text-gray-800 italic dark:text-gray-400">Generating your masterpiece...</p>
             </div>
 
             <img id="generatedImage" src="" alt="Generated Image" class="hidden max-w-full max-h-full rounded-lg shadow-lg transition-opacity duration-700">
-            <!-- Changed to text-gray-700 for better visibility than gray-400 -->
-            <p id="placeholderText" class="text-gray-700 italic">Your generated image will appear here.</p>
+            <!-- Placeholder text changed to text-gray-800 for max contrast -->
+            <p id="placeholderText" class="text-gray-800 italic dark:text-gray-400">Your generated image will appear here.</p>
             <p id="errorMessage" class="text-red-600 font-semibold hidden text-center p-4"></p>
           </div>
         </main>
@@ -212,9 +218,9 @@
             <h2 class="text-5xl md:text-7xl font-extrabold text-[var(--color-primary)] mb-6 tracking-tight">
               Visualize Your Next Idea.
             </h2>
-            <!-- Changed to text-gray-900 (near black) -->
+            <!-- Changed to text-gray-900 (near black) and replaced non-standard <bold> with <strong> -->
             <p class="text-lg md:text-2xl text-gray-900 dark:text-gray-300 mb-8 max-w-lg md:max-w-none mx-auto md:mx-0 leading-relaxed">
-              <b></b>Askaio</b> is an advanced AI image generation studio. Describe any scene, concept, or style, and instantly receive a high-quality, unique image, powered by Google's latest models for exceptional detail and speed.
+              <strong>Askaio</strong> is an advanced AI image generation studio. Describe any scene, concept, or style, and instantly receive a high-quality, unique image, powered by Google's latest models for exceptional detail and speed.
             </p>
             <button id="getStartedBtn" class="w-full md:w-auto px-10 py-4 text-xl rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all">
               Start Creating Now &rarr;
@@ -590,4 +596,3 @@
   </script>
 </body>
 </html>
-
