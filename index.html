@@ -6,7 +6,8 @@
   <title>Askaio - AI Image Generator</title>
   <script src="https://cdn.tailwindcss.com"></script>
 
-    <script
+  <!-- Clerk Frontend SDK -->
+  <script
     async
     crossorigin="anonymous"
     data-clerk-publishable-key="pk_test_ZXBpYy1haXJlZGFsZS02MS5jbGVyay5hY2NvdW50cy5kZXYk"
@@ -145,24 +146,29 @@
 </head>
 
 <body class="light-mode">
-    <header class="flex justify-between items-center p-4 bg-[var(--color-panel-bg)] z-20 shadow-md">
+  <!-- Header -->
+  <header class="flex justify-between items-center p-4 bg-[var(--color-panel-bg)] z-20 shadow-md">
     <h1 class="text-xl font-bold text-[var(--color-primary)]">Askaio</h1>
     <div class="flex items-center gap-4">
-            <div id="clerk-user-button"></div>
+      <!-- Hidden auth button used to switch to AUTH view from landing page header -->
+      <div id="clerk-user-button"></div>
     </div>
   </header>
   
   <div id="app-root" class="flex-1 flex flex-col">
-        <main id="protected-content" class="flex-1 hidden">
+    <!-- 1. Protected Content (Main App) -->
+    <main id="protected-content" class="flex-1 hidden">
       <div class="main-layout flex flex-col md:flex-row gap-4 p-4 md:p-8 flex-1">
 
-                <aside class="sidebar flex flex-col gap-4 rounded-2xl shadow-xl p-6 w-full md:w-[400px]" id="sidebar">
+        <!-- Sidebar -->
+        <aside class="sidebar flex flex-col gap-4 rounded-2xl shadow-xl p-6 w-full md:w-[400px]" id="sidebar">
           <div class="sidebar-header flex justify-between items-center mb-4">
             <h1 class="text-4xl font-extrabold tracking-wide text-[var(--color-primary)] drop-shadow-sm">Askaio</h1>
             <button id="themeToggle" class="w-12 h-12 flex items-center justify-center rounded-full text-2xl transition-all">🌙</button>
           </div>
 
-                    <p class="text-gray-900 dark:text-gray-400 leading-relaxed">
+          <!-- Changed to text-gray-900 (near black) -->
+          <p class="text-gray-900 dark:text-gray-400 leading-relaxed">
             Enter a descriptive prompt to generate a stunning AI-powered image.
           </p>
 
@@ -173,106 +179,139 @@
             class="w-full py-3 rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all">
             GENERATE IMAGE
           </button>
-                  </aside>
+          <!-- Download Button will be inserted here by JS -->
+        </aside>
 
-                <main class="image-area flex-1 flex justify-center items-center rounded-2xl shadow-xl overflow-hidden relative p-4" id="imageArea">
+        <!-- Main Image Display -->
+        <main class="image-area flex-1 flex justify-center items-center rounded-2xl shadow-xl overflow-hidden relative p-4" id="imageArea">
           <div class="image-display w-full h-full flex justify-center items-center border-2 border-dashed border-gray-300 rounded-xl relative">
             <div id="loadingState" class="hidden flex flex-col items-center gap-4">
               <div class="loading-spinner w-14 h-14 animate-spin"></div>
-                            <p class="text-gray-800 italic dark:text-gray-400">Generating your masterpiece...</p>
+              <!-- Loading text changed to text-gray-800 for max contrast -->
+              <p class="text-gray-800 italic dark:text-gray-400">Generating your masterpiece...</p>
             </div>
 
             <img id="generatedImage" src="" alt="Generated Image" class="hidden max-w-full max-h-full rounded-lg shadow-lg transition-opacity duration-700">
-                        <p id="placeholderText" class="text-gray-800 italic dark:text-gray-400">Your generated image will appear here.</p>
+            <!-- Placeholder text changed to text-gray-800 for max contrast -->
+            <p id="placeholderText" class="text-gray-800 italic dark:text-gray-400">Your generated image will appear here.</p>
             <p id="errorMessage" class="text-red-600 font-semibold hidden text-center p-4"></p>
           </div>
         </main>
       </div>
 
-            <div id="mobileTabs" class="bottom-tabs fixed bottom-0 left-0 w-full flex justify-around p-2 md:hidden">
+      <!-- Mobile bottom tabs -->
+      <div id="mobileTabs" class="bottom-tabs fixed bottom-0 left-0 w-full flex justify-around p-2 md:hidden">
         <button id="tabPrompt" class="flex-1 py-2 text-center active">Prompt</button>
         <button id="tabPreview" class="flex-1 py-2 text-center">Preview</button>
       </div>
     </main>
     
-        <div id="landing-page" class="flex-1 flex flex-col justify-start items-center p-8 hidden overflow-y-auto">
+    <!-- 2. Detailed Landing Page -->
+    <div id="landing-page" class="flex-1 flex flex-col justify-start items-center p-8 hidden overflow-y-auto">
       <div class="w-full max-w-6xl">
         
-                <div class="grid md:grid-cols-2 items-center gap-12 py-16">
+        <!-- Hero Section -->
+        <div class="grid md:grid-cols-2 items-center gap-12 py-16">
           
-                    <div class="text-center md:text-left">
+          <!-- Text Content and CTA -->
+          <div class="text-center md:text-left">
             <h2 class="text-5xl md:text-7xl font-extrabold text-[var(--color-primary)] mb-6 tracking-tight">
               Visualize Your Next Idea.
             </h2>
-                        <p class="text-lg md:text-2xl text-gray-900 dark:text-gray-300 mb-8 max-w-lg md:max-w-none mx-auto md:mx-0 leading-relaxed">
+            <!-- Changed to text-gray-900 (near black) and replaced non-standard <bold> with <strong> -->
+            <p class="text-lg md:text-2xl text-gray-900 dark:text-gray-300 mb-8 max-w-lg md:max-w-none mx-auto md:mx-0 leading-relaxed">
               <strong>Askaio</strong> is an advanced AI image generation studio. Describe any scene, concept, or style, and instantly receive a high-quality, unique image, powered by Google's latest models for exceptional detail and speed.
             </p>
             <button id="getStartedBtn" class="w-full md:w-auto px-10 py-4 text-xl rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all">
               Start Creating Now &rarr;
             </button>
-                        <p class="text-sm text-gray-800 mt-4 md:mt-6">Already a user? 
+            <!-- Changed to text-gray-800 -->
+            <p class="text-sm text-gray-800 mt-4 md:mt-6">Already a user? 
               <a href="#" id="landingSignInLink" class="text-[var(--color-primary)] font-semibold hover:underline transition-colors">Sign In</a> to access your gallery.
             </p>
           </div>
           
-                    <div class="flex justify-center items-center p-4">
+          <!-- Image Mockup -->
+          <div class="flex justify-center items-center p-4">
             <div class="w-full max-w-md aspect-square bg-[var(--color-panel-bg)] rounded-3xl shadow-2xl border border-[var(--color-border)] p-6 flex flex-col items-center justify-center">
-                            <div class="w-full aspect-square bg-cover bg-center rounded-2xl" 
+              <!-- Using a placeholder image with primary colors -->
+              <div class="w-full aspect-square bg-cover bg-center rounded-2xl" 
                    style="background-image: url('https://placehold.co/500x500/9333ea/ffffff?text=AI+Generated+Preview'); border: 4px solid var(--color-primary);">
               </div>
-                            <p class="text-sm text-gray-700 mt-4 italic text-center">Prompt: "A majestic griffin soaring over a cyberpunk city, highly detailed digital art."</p>
+              <!-- Changed to text-gray-700 (still secondary, but high contrast) -->
+              <p class="text-sm text-gray-700 mt-4 italic text-center">Prompt: "A majestic griffin soaring over a cyberpunk city, highly detailed digital art."</p>
             </div>
+          </div>
         </div>
-      </div>
 
-                <div class="pt-12 pb-8 md:pb-16 border-t border-[var(--color-border)]">
+        <!-- Features Section -->
+        <div class="pt-12 pb-8 md:pb-16 border-t border-[var(--color-border)]">
             <h3 class="text-3xl font-bold text-center mb-10 text-[var(--color-primary)]">Core Capabilities</h3>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
                 <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
                     <div class="text-3xl text-[var(--color-primary)] mb-3">✨</div>
-                                        <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">High Fidelity Output</h4>
-                                        <p class="text-gray-800 dark:text-gray-400 text-sm">Our models are tuned for exceptional detail, handling complex lighting, textures, and artistic styles for stunning results.</p>
+                    <!-- Changed to text-gray-900 (near black) -->
+                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">High Fidelity Output</h4>
+                    <!-- Changed to text-gray-800 -->
+                    <p class="text-gray-800 dark:text-gray-400 text-sm">Our models are tuned for exceptional detail, handling complex lighting, textures, and artistic styles for stunning results.</p>
                 </div>
                 <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
                     <div class="text-3xl text-[var(--color-primary)] mb-3">🚀</div>
-                                        <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Ultra-Fast Generation</h4>
-                                        <p class="text-gray-800 dark:text-gray-400 text-sm">Turn your descriptive prompt into a professional-grade visual in a matter of seconds, minimizing wait times.</p>
+                    <!-- Changed to text-gray-900 (near black) -->
+                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Ultra-Fast Generation</h4>
+                    <!-- Changed to text-gray-800 -->
+                    <p class="text-gray-800 dark:text-gray-400 text-sm">Turn your descriptive prompt into a professional-grade visual in a matter of seconds, minimizing wait times.</p>
                 </div>
                 <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
                     <div class="text-3xl text-[var(--color-primary)] mb-3">🎨</div>
-                                        <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Limitless Creativity</h4>
-                                        <p class="text-gray-800 dark:text-gray-400 text-sm">Explore infinite possibilities, generating everything from abstract concepts to specific product visualizations.</p>
+                    <!-- Changed to text-gray-900 (near black) -->
+                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Limitless Creativity</h4>
+                    <!-- Changed to text-gray-800 -->
+                    <p class="text-gray-800 dark:text-gray-400 text-sm">Explore infinite possibilities, generating everything from abstract concepts to specific product visualizations.</p>
                 </div>
             </div>
         </div>
         
-                <div class="pt-12 pb-16 md:pb-24 border-t border-[var(--color-border)] mt-12">
+        <!-- How It Works Section (New Detailed Section) -->
+        <div class="pt-12 pb-16 md:pb-24 border-t border-[var(--color-border)] mt-12">
             <h3 class="text-3xl font-bold text-center mb-12 text-[var(--color-primary)]">The Simple 3-Step Process</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
                 
-                                <div class="p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
+                <!-- Step 1 -->
+                <div class="p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
                     <div class="w-12 h-12 flex items-center justify-center rounded-full bg-purple-100 text-[var(--color-primary)] font-extrabold text-2xl mx-auto mb-4 border border-[var(--color-primary)]">1</div>
-                                        <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Craft Your Prompt</h4>
-                                        <p class="text-gray-800 dark:text-gray-400 text-sm">Start with a detailed text prompt. Specify the subject, artistic style (e.g., oil painting, digital art), and scene elements.</p>
+                    <!-- Changed to text-gray-900 (near black) -->
+                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Craft Your Prompt</h4>
+                    <!-- Changed to text-gray-800 -->
+                    <p class="text-gray-800 dark:text-gray-400 text-sm">Start with a detailed text prompt. Specify the subject, artistic style (e.g., oil painting, digital art), and scene elements.</p>
                 </div>
 
-                                <div class="p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
+                <!-- Step 2 -->
+                <div class="p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
                     <div class="w-12 h-12 flex items-center justify-center rounded-full bg-purple-100 text-[var(--color-primary)] font-extrabold text-2xl mx-auto mb-4 border border-[var(--color-primary)]">2</div>
-                                        <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">AI Renders Instantly</h4>
-                                        <p class="text-gray-800 dark:text-gray-400 text-sm">We submit your request to the Gemini API, which processes the description and synthesizes a unique image based on your input.</p>
+                    <!-- Changed to text-gray-900 (near black) -->
+                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">AI Renders Instantly</h4>
+                    <!-- Changed to text-gray-800 -->
+                    <p class="text-gray-800 dark:text-gray-400 text-sm">We submit your request to the Gemini API, which processes the description and synthesizes a unique image based on your input.</p>
                 </div>
 
-                                <div class="p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
+                <!-- Step 3 -->
+                <div class="p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
                     <div class="w-12 h-12 flex items-center justify-center rounded-full bg-purple-100 text-[var(--color-primary)] font-extrabold text-2xl mx-auto mb-4 border border-[var(--color-primary)]">3</div>
-                                        <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Download High-Res</h4>
-                                        <p class="text-gray-800 dark:text-gray-400 text-sm">Receive your final image instantly, ready to be downloaded and used wherever your projects take you.</p>
+                    <!-- Changed to text-gray-900 (near black) -->
+                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Download High-Res</h4>
+                    <!-- Changed to text-gray-800 -->
+                    <p class="text-gray-800 dark:text-gray-400 text-sm">Receive your final image instantly, ready to be downloaded and used wherever your projects take you.</p>
                 </div>
             </div>
         </div>
         
-                <div class="text-center py-16 bg-purple-50 rounded-2xl mb-8 border border-[var(--color-primary-light)] shadow-lg">
-                        <h3 class="text-3xl font-bold text-gray-900 mb-4">Ready to Transform Text into Art?</h3>
-                        <p class="text-lg text-gray-800 mb-8 max-w-2xl mx-auto">
+        <!-- Call to Action Footer (New Section) -->
+        <div class="text-center py-16 bg-purple-50 rounded-2xl mb-8 border border-[var(--color-primary-light)] shadow-lg">
+            <!-- Changed to text-gray-900 (near black) -->
+            <h3 class="text-3xl font-bold text-gray-900 mb-4">Ready to Transform Text into Art?</h3>
+            <!-- Changed to text-gray-800 -->
+            <p class="text-lg text-gray-800 mb-8 max-w-2xl mx-auto">
                 Join the beta today and explore the future of digital content creation. No limits, just creativity.
             </p>
             <button id="getStartedBtnFooter" class="px-12 py-4 text-xl rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all">
@@ -283,7 +322,8 @@
       </div>
     </div>
 
-        <div id="public-auth" class="flex-1 hidden flex justify-center items-center p-8">
+    <!-- 3. Public Auth Page (Clerk Form) -->
+    <div id="public-auth" class="flex-1 hidden flex justify-center items-center p-8">
       <div id="clerk-sign-in-form" class="w-full max-w-sm"></div>
     </div>
   </div>
@@ -555,4 +595,4 @@
     tabPreview.addEventListener('click', () => activateTab('preview'));
   </script>
 </body>
-</html>
+</html>.
