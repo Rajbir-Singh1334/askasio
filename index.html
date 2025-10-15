@@ -1,592 +1,1560 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html class="projects-index" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Askaio - AI Image Generator</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Clerk Frontend SDK -->
-  <script
-    async
-    crossorigin="anonymous"
-    data-clerk-publishable-key="pk_test_ZXBpYy1haXJlZGFsZS02MS5jbGVyay5hY2NvdW50cy5kZXYk"
-    src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js">
-  </script>
-
-  <style>
-    /* Default (Light) Mode - Simple, bright, and colorful */
-    :root {
-      --color-light-bg: #f7f9fb; /* Very light, soft background */
-      --color-panel-bg: #ffffff; /* White panels for content */
-      --color-primary: #9333ea;   /* Vibrant Purple */
-      --color-primary-light: #d8b4fe; /* Light purple for text/accent */
-      --color-text-dark: #1f2937; /* Dark text */
-      --color-border: #e5e7eb;    /* Light border color */
-      --transition-fast: 0.3s ease;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--color-light-bg);
-      color: var(--color-text-dark); /* Base text color, overridden by utility classes */
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .loading-spinner {
-      border-width: 6px;
-      border-style: solid;
-      border-color: rgba(147, 51, 234, 0.2);
-      border-top-color: var(--color-primary);
-      border-radius: 50%;
-    }
-
-    /* Vibrant image shadow for the colorful feel */
-    #generatedImage {
-      box-shadow: 0 0 20px rgba(147, 51, 234, 0.9);
-      border: 4px solid var(--color-primary-light);
-    }
-
-    .sidebar, .image-area {
-        background: var(--color-panel-bg);
-    }
-
-    #promptInput {
-      background: #ffffff;
-      color: var(--color-text-dark);
-      border-color: var(--color-border);
-    }
-
-    header {
-      background: var(--color-panel-bg);
-    }
-
-    #themeToggle {
-        background: #f3f4f6;
-        color: var(--color-text-dark);
-        border: 1px solid var(--color-border);
-    }
-
-    /* Dark Mode (toggled) */
-    body.dark-mode {
-      background: #1f1b2c;
-      color: #e5e7eb;
-    }
-
-    body.dark-mode .sidebar,
-    body.dark-mode .image-area,
-    body.dark-mode header,
-    body.dark-mode .bottom-tabs {
-      background: #2c273e;
-    }
-
-    body.dark-mode #promptInput {
-      background: #3a3350;
-      color: #e5e7eb;
-      border-color: #554e6b;
-    }
-
-    body.dark-mode #themeToggle {
-      background: #3a3350;
-      color: #e5e7eb;
-    }
-    
-    body.dark-mode #landing-page h2 {
-        color: var(--color-primary-light);
-    }
-
-    /* Responsive/Mobile styles */
-    @media (max-width: 767px) {
-      #sidebar, #imageArea {
-        display: none;
-      }
-      #sidebar.active, #imageArea.active {
-        display: flex !important;
-      }
-    }
-
-    /* Bottom tab styles */
-    .bottom-tabs {
-      transition: background var(--transition-fast), color var(--transition-fast);
-      z-index: 10;
-      background: var(--color-panel-bg);
-      border-top: 1px solid var(--color-border);
-    }
-
-    .bottom-tabs button {
-      transition: background var(--transition-fast), color var(--transition-fast);
-      border-radius: 6px;
-      color: var(--color-text-dark);
-    }
-
-    .bottom-tabs button.active {
-      color: white !important;
-      background-color: var(--color-primary); 
-    }
-    
-    body.dark-mode .bottom-tabs button {
-      color: #e5e7eb;
-    }
-    
-    .cl-internal-b1hrv3d { /* Targeted Clerk wrapper for aesthetics */
-        border-radius: 1rem !important;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    }
-
-  </style>
-</head>
-
-<body class="light-mode">
-  <!-- Header -->
-  <header class="flex justify-between items-center p-4 bg-[var(--color-panel-bg)] z-20 shadow-md">
-    <h1 class="text-xl font-bold text-[var(--color-primary)]">Askaio</h1>
-    <div class="flex items-center gap-4">
-      <!-- Hidden auth button used to switch to AUTH view from landing page header -->
-      <div id="clerk-user-button"></div>
-    </div>
-  </header>
-  
-  <div id="app-root" class="flex-1 flex flex-col">
-    <!-- 1. Protected Content (Main App) -->
-    <main id="protected-content" class="flex-1 hidden">
-      <div class="main-layout flex flex-col md:flex-row gap-4 p-4 md:p-8 flex-1">
-
-        <!-- Sidebar -->
-        <aside class="sidebar flex flex-col gap-4 rounded-2xl shadow-xl p-6 w-full md:w-[400px]" id="sidebar">
-          <div class="sidebar-header flex justify-between items-center mb-4">
-            <h1 class="text-4xl font-extrabold tracking-wide text-[var(--color-primary)] drop-shadow-sm">Askaio</h1>
-            <button id="themeToggle" class="w-12 h-12 flex items-center justify-center rounded-full text-2xl transition-all">🌙</button>
-          </div>
-
-          <!-- Changed to text-gray-900 (near black) -->
-          <p class="text-gray-900 dark:text-gray-400 leading-relaxed">
-            Enter a descriptive prompt to generate a stunning AI-powered image.
-          </p>
-
-          <textarea id="promptInput" placeholder="e.g., A futuristic neon city skyline at night with flying cars"
-            class="w-full h-40 p-4 rounded-xl border-2 border-[var(--color-primary)] resize-none focus:outline-none focus:ring-4 focus:ring-purple-400 transition-all"></textarea>
-
-          <button id="generateBtn" disabled
-            class="w-full py-3 rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all">
-            GENERATE IMAGE
-          </button>
-          <!-- Download Button will be inserted here by JS -->
-        </aside>
-
-        <!-- Main Image Display -->
-        <main class="image-area flex-1 flex justify-center items-center rounded-2xl shadow-xl overflow-hidden relative p-4" id="imageArea">
-          <div class="image-display w-full h-full flex justify-center items-center border-2 border-dashed border-gray-300 rounded-xl relative">
-            <div id="loadingState" class="hidden flex flex-col items-center gap-4">
-              <div class="loading-spinner w-14 h-14 animate-spin"></div>
-              <!-- Loading text remains slightly softer gray -->
-              <p class="text-gray-700 italic">Generating your masterpiece...</p>
-            </div>
-
-            <img id="generatedImage" src="" alt="Generated Image" class="hidden max-w-full max-h-full rounded-lg shadow-lg transition-opacity duration-700">
-            <!-- Changed to text-gray-700 for better visibility than gray-400 -->
-            <p id="placeholderText" class="text-gray-700 italic">Your generated image will appear here.</p>
-            <p id="errorMessage" class="text-red-600 font-semibold hidden text-center p-4"></p>
-          </div>
-        </main>
-      </div>
-
-      <!-- Mobile bottom tabs -->
-      <div id="mobileTabs" class="bottom-tabs fixed bottom-0 left-0 w-full flex justify-around p-2 md:hidden">
-        <button id="tabPrompt" class="flex-1 py-2 text-center active">Prompt</button>
-        <button id="tabPreview" class="flex-1 py-2 text-center">Preview</button>
-      </div>
-    </main>
-    
-    <!-- 2. Detailed Landing Page -->
-    <div id="landing-page" class="flex-1 flex flex-col justify-start items-center p-8 hidden overflow-y-auto">
-      <div class="w-full max-w-6xl">
-        
-        <!-- Hero Section -->
-        <div class="grid md:grid-cols-2 items-center gap-12 py-16">
-          
-          <!-- Text Content and CTA -->
-          <div class="text-center md:text-left">
-            <h2 class="text-5xl md:text-7xl font-extrabold text-[var(--color-primary)] mb-6 tracking-tight">
-              Visualize Your Next Idea.
-            </h2>
-            <!-- Changed to text-gray-900 (near black) -->
-            <p class="text-lg md:text-2xl text-gray-900 dark:text-gray-300 mb-8 max-w-lg md:max-w-none mx-auto md:mx-0 leading-relaxed">
-              <bold>Askaio</bold> is an advanced AI image generation studio. Describe any scene, concept, or style, and instantly receive a high-quality, unique image, powered by Google's latest models for exceptional detail and speed.
-            </p>
-            <button id="getStartedBtn" class="w-full md:w-auto px-10 py-4 text-xl rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all">
-              Start Creating Now &rarr;
-            </button>
-            <!-- Changed to text-gray-800 -->
-            <p class="text-sm text-gray-800 mt-4 md:mt-6">Already a user? 
-              <a href="#" id="landingSignInLink" class="text-[var(--color-primary)] font-semibold hover:underline transition-colors">Sign In</a> to access your gallery.
-            </p>
-          </div>
-          
-          <!-- Image Mockup -->
-          <div class="flex justify-center items-center p-4">
-            <div class="w-full max-w-md aspect-square bg-[var(--color-panel-bg)] rounded-3xl shadow-2xl border border-[var(--color-border)] p-6 flex flex-col items-center justify-center">
-              <!-- Using a placeholder image with primary colors -->
-              <div class="w-full aspect-square bg-cover bg-center rounded-2xl" 
-                   style="background-image: url('https://placehold.co/500x500/9333ea/ffffff?text=AI+Generated+Preview'); border: 4px solid var(--color-primary);">
-              </div>
-              <!-- Changed to text-gray-700 (still secondary, but high contrast) -->
-              <p class="text-sm text-gray-700 mt-4 italic text-center">Prompt: "A majestic griffin soaring over a cyberpunk city, highly detailed digital art."</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Features Section -->
-        <div class="pt-12 pb-8 md:pb-16 border-t border-[var(--color-border)]">
-            <h3 class="text-3xl font-bold text-center mb-10 text-[var(--color-primary)]">Core Capabilities</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
-                <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
-                    <div class="text-3xl text-[var(--color-primary)] mb-3">✨</div>
-                    <!-- Changed to text-gray-900 (near black) -->
-                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">High Fidelity Output</h4>
-                    <!-- Changed to text-gray-800 -->
-                    <p class="text-gray-800 dark:text-gray-400 text-sm">Our models are tuned for exceptional detail, handling complex lighting, textures, and artistic styles for stunning results.</p>
-                </div>
-                <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
-                    <div class="text-3xl text-[var(--color-primary)] mb-3">🚀</div>
-                    <!-- Changed to text-gray-900 (near black) -->
-                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Ultra-Fast Generation</h4>
-                    <!-- Changed to text-gray-800 -->
-                    <p class="text-gray-800 dark:text-gray-400 text-sm">Turn your descriptive prompt into a professional-grade visual in a matter of seconds, minimizing wait times.</p>
-                </div>
-                <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
-                    <div class="text-3xl text-[var(--color-primary)] mb-3">🎨</div>
-                    <!-- Changed to text-gray-900 (near black) -->
-                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Limitless Creativity</h4>
-                    <!-- Changed to text-gray-800 -->
-                    <p class="text-gray-800 dark:text-gray-400 text-sm">Explore infinite possibilities, generating everything from abstract concepts to specific product visualizations.</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- How It Works Section (New Detailed Section) -->
-        <div class="pt-12 pb-16 md:pb-24 border-t border-[var(--color-border)] mt-12">
-            <h3 class="text-3xl font-bold text-center mb-12 text-[var(--color-primary)]">The Simple 3-Step Process</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                
-                <!-- Step 1 -->
-                <div class="p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
-                    <div class="w-12 h-12 flex items-center justify-center rounded-full bg-purple-100 text-[var(--color-primary)] font-extrabold text-2xl mx-auto mb-4 border border-[var(--color-primary)]">1</div>
-                    <!-- Changed to text-gray-900 (near black) -->
-                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Craft Your Prompt</h4>
-                    <!-- Changed to text-gray-800 -->
-                    <p class="text-gray-800 dark:text-gray-400 text-sm">Start with a detailed text prompt. Specify the subject, artistic style (e.g., oil painting, digital art), and scene elements.</p>
-                </div>
-
-                <!-- Step 2 -->
-                <div class="p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
-                    <div class="w-12 h-12 flex items-center justify-center rounded-full bg-purple-100 text-[var(--color-primary)] font-extrabold text-2xl mx-auto mb-4 border border-[var(--color-primary)]">2</div>
-                    <!-- Changed to text-gray-900 (near black) -->
-                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">AI Renders Instantly</h4>
-                    <!-- Changed to text-gray-800 -->
-                    <p class="text-gray-800 dark:text-gray-400 text-sm">We submit your request to the Gemini API, which processes the description and synthesizes a unique image based on your input.</p>
-                </div>
-
-                <!-- Step 3 -->
-                <div class="p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
-                    <div class="w-12 h-12 flex items-center justify-center rounded-full bg-purple-100 text-[var(--color-primary)] font-extrabold text-2xl mx-auto mb-4 border border-[var(--color-primary)]">3</div>
-                    <!-- Changed to text-gray-900 (near black) -->
-                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Download High-Res</h4>
-                    <!-- Changed to text-gray-800 -->
-                    <p class="text-gray-800 dark:text-gray-400 text-sm">Receive your final image instantly, ready to be downloaded and used wherever your projects take you.</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Call to Action Footer (New Section) -->
-        <div class="text-center py-16 bg-purple-50 rounded-2xl mb-8 border border-[var(--color-primary-light)] shadow-lg">
-            <!-- Changed to text-gray-900 (near black) -->
-            <h3 class="text-3xl font-bold text-gray-900 mb-4">Ready to Transform Text into Art?</h3>
-            <!-- Changed to text-gray-800 -->
-            <p class="text-lg text-gray-800 mb-8 max-w-2xl mx-auto">
-                Join the beta today and explore the future of digital content creation. No limits, just creativity.
-            </p>
-            <button id="getStartedBtnFooter" class="px-12 py-4 text-xl rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all">
-                Access the Generator &rarr;
-            </button>
-        </div>
-        
-      </div>
-    </div>
-
-    <!-- 3. Public Auth Page (Clerk Form) -->
-    <div id="public-auth" class="flex-1 hidden flex justify-center items-center p-8">
-      <div id="clerk-sign-in-form" class="w-full max-w-sm"></div>
-    </div>
-  </div>
+  <title>Learn to code HTML, CSS, and JavaScript with Dash</title>
+  <meta name="description" content="Dash is a fun and free online course from General Assembly that teaches you how to program with the basics of web development through projects you can do right in your browser. Get started today!">
+  <script src="https://cdn.optimizely.com/js/392850087.js"></script>
+    <link rel="stylesheet" media="screen" href="//ga-dash.s3.amazonaws.com/production/assets/application-5ef4bf18b2fbae55e2c057bd4e3e11fe5c653db28659d7c3839edf62dcf3fc65.css" />
+    <meta name="robots" content="noindex, nofollow" />
+  <meta name="csrf-param" content="authenticity_token" />
+<meta name="csrf-token" content="ACtAACPot8F7kRaA1kCunFyS6L2GbHuZm2D0tyN66onwIlVhJe1FTaxFyrpzVWc35mamnor0qfM5+/1FDsff7w==" />
+  <script src="//js.honeybadger.io/v0.4/honeybadger.min.js" type="text/javascript" data-api_key="f16da1ab" data-environment="production"></script>
 
 
   <script>
-    // Constants and DOM Elements
-    const apiKey = "AIzaSyD8xBXpp0FYeV0nCxZ9V_VtVjKwoo6_BUw";
-    const protectedContent = document.getElementById('protected-content');
-    const publicAuth = document.getElementById('public-auth');
-    const landingPage = document.getElementById('landing-page');
-    // Updated to include the new footer button
-    const getStartedBtn = document.getElementById('getStartedBtn'); 
-    const getStartedBtnFooter = document.getElementById('getStartedBtnFooter');
-    const landingSignInLink = document.getElementById('landingSignInLink');
-    const mobileTabs = document.getElementById('mobileTabs');
+//<![CDATA[
 
-    const sidebar = document.getElementById('sidebar');
-    const imageArea = document.getElementById('imageArea');
-    const promptInput = document.getElementById('promptInput');
-    const generateBtn = document.getElementById('generateBtn');
-    const generatedImageDisplay = document.getElementById('generatedImage');
-    const loadingState = document.getElementById('loadingState');
-    const placeholderText = document.getElementById('placeholderText');
-    const errorMessage = document.getElementById('errorMessage');
-    const themeToggle = document.getElementById('themeToggle');
-    const body = document.body;
-    const tabPrompt = document.getElementById('tabPrompt');
-    const tabPreview = document.getElementById('tabPreview');
+  if (!window.dataLayer) {
+    window.dataLayer = []
+  }
+  window.dataLayer.push({
+    'SNOWPLOW_APPLICATION': 'dash_client_v1_production',
+    'SNOWPLOW_COLLECTOR_URL': '',
+    'SNOWPLOW_DISABLE_FORM_TRACKING': 'false',
+    'SNOWPLOW_DISABLE_ERROR_TRACKING': 'false',
+    'VISITOR_ID_COOKIE_NAME': '_general_assembly_visitor_id',
+    'ONETRUST_DOMAIN_SCRIPT': 'f6196789-3737-41b9-a8f5-f8dd92ed627d',
+    'ONETRUST_SRC': 'https://cdn.cookielaw.org/scripttemplates/otSDKStub.js',
+    'GDPR_USE': 'false'
+  })
 
-    // ✅ Download button setup
-    const downloadBtn = document.createElement('button');
-    downloadBtn.id = "downloadImageBtn";
-    downloadBtn.textContent = "DOWNLOAD IMAGE";
-    downloadBtn.className =
-      "w-full py-3 rounded-xl font-bold bg-gradient-to-r from-green-500 to-green-700 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all hidden mt-4";
-    sidebar.appendChild(downloadBtn);
-
-    // --- Utility Functions ---
-
-    /**
-     * Controls which major view (APP, AUTH, LANDING) is displayed.
-     * @param {'APP'|'AUTH'|'LANDING'} state 
-     */
-    function showAppView(state) {
-        // Hide all containers and mobile tabs
-        protectedContent.classList.add('hidden');
-        publicAuth.classList.add('hidden');
-        landingPage.classList.add('hidden');
-        mobileTabs.classList.add('hidden');
-        
-        // Show the correct container based on state
-        if (state === 'APP') {
-            protectedContent.classList.remove('hidden');
-            if (window.innerWidth < 768) mobileTabs.classList.remove('hidden');
-        } else if (state === 'AUTH') {
-            publicAuth.classList.remove('hidden');
-            // Mount the Clerk sign-in form when switching to the AUTH state
-            Clerk.mountSignIn(document.getElementById("clerk-sign-in-form"));
-        } else { // LANDING
-            landingPage.classList.remove('hidden');
-        }
-    }
+//]]>
+</script>
 
 
-    function showLoading(show) {
-      if (show) {
-        loadingState.classList.remove('hidden');
-        generatedImageDisplay.classList.add('hidden');
-        placeholderText.classList.add('hidden');
-        errorMessage.classList.add('hidden');
-        downloadBtn.classList.add('hidden');
-      } else {
-        loadingState.classList.add('hidden');
-      }
-    }
+  <!-- Google Tag Manager -->
+  <script>
+//<![CDATA[
 
-    function toggleGenerateButton(disabled) {
-      generateBtn.disabled = disabled || promptInput.value.trim() === '';
-      generateBtn.textContent = disabled ? "GENERATING..." : "GENERATE IMAGE";
-      generateBtn.style.opacity = disabled ? "0.7" : "1";
-    }
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-NJGJ5C');
 
-    // --- Theme and Mobile Tab Logic ---
+//]]>
+</script>  <!-- End Google Tag Manager -->
 
-    function updateTabColors() {
-      // Logic for dark mode styles is now encapsulated in the CSS classes
-      // No need for inline style overrides here, as CSS handles the dark-mode class
-    }
 
-    function activateTab(tab) {
-      tabPrompt.classList.remove('active');
-      tabPreview.classList.remove('active');
-      sidebar.classList.remove('active');
-      imageArea.classList.remove('active');
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+</head>
+<body>
+    <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NJGJ5C"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
 
-      if (tab === 'prompt') {
-        tabPrompt.classList.add('active');
-        sidebar.classList.add('active');
-      } else {
-        tabPreview.classList.add('active');
-        imageArea.classList.add('active');
-      }
+  <!-- Flash notices -->
 
-      updateTabColors();
-    }
+  <div id="projects">
+  <div class='skill-details'>
+  <div class="skill-details-arrow"></div>
+  <div class="skill-details-content"></div>
+</div>
 
-    // --- Main Logic: Image Generation ---
 
-    async function generateImage() {
-      const prompt = promptInput.value.trim();
-      if (!prompt) return;
+  <header>
+  <a class="brand" href="/projects">Dash</a>
+  <a class="logout" href="/auth/sign_out">Logout</a>
+  <div class="current-user">
+    <p><span class="user-username">Rajbir</span></p>
+  </div>
+</header>
 
-      toggleGenerateButton(true);
-      showLoading(true);
 
-      // Simple retry mechanism for API calls
-      const maxRetries = 3;
-      let lastError = null;
+  <div class="container">
+    <div class="mobile-warning">
+  <h2>Mobile Preview</h2>
+  <p>Dash's lessons are designed for desktop use. Come back when you've got your laptop, and in the meantime check out the projects you'll build in Dash!</p>
+</div>
 
-      for (let i = 0; i < maxRetries; i++) {
-        try {
-          // Using the preferred imagen-3.0-generate-002 model
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
-          const payload = { 
-              instances: [{ prompt: prompt }], 
-              parameters: { "sampleCount": 1 }
-          };
-          
-          const response = await fetch(apiUrl, { 
-              method: 'POST', 
-              headers: { 'Content-Type': 'application/json' }, 
-              body: JSON.stringify(payload) 
-          });
-          
-          if (!response.ok) {
-              const errorBody = await response.json();
-              throw new Error(`API returned status ${response.status}: ${errorBody.error?.message || response.statusText}`);
-          }
+    <!-- Sidebar -->
+    <aside>
 
-          const result = await response.json();
+      <ul class="projects-tabs">
+  <li id="project-tab-announcement" class="index-tab">Announcements</li>
+</ul>
+<div class="announcement">
+    <h2>HTML, CSS &amp; Web Design Circuit</h2>
+    <p class="share">Check out our 10-week online HTML, CSS and web design course. Work one-on-one with a mentor and build your own site!<br><br>
+      <a class="button" href="https://generalassemb.ly/education/learn-html-css-web-design-online" target="_blank">Learn More</a>
+    </p>
+  <h2>Code with friends!</h2>
+  <p class="share">Do you like Dash? Share the coding love!<br>
+    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fdash.generalassemb.ly" target="_blank"></a>
+    <a class="twitter" href="https://twitter.com/intent/tweet?related=GA&amp;text=Learn%20to%20make%20awesome%20websites%3A%20https%3A%2F%2Fdash.generalassemb.ly" target="_blank"></a>
+    <a class="tumblr" href="http://www.tumblr.com/share/photo?source=https%3A%2F%2Fdash.generalassemb.ly%2Fassets%2Fdash-celebration.gif&caption=I%20just%20finished%20a%20lesson%20on%20GA%20Dash%21&clickthru="></a>
+  </p><br>
+</div>
 
-          // Extract base64 data specific to imagen-3.0-generate-002:predict response structure
-          const base64Data = result?.predictions?.[0]?.bytesBase64Encoded;
+      <ul class="projects-tabs">
+  <li id="project-tab-skills" class="index-tab">Skills</li>
+</ul>
+<div class="skills-tab">
+  <h1 class="skill-percent">
+    <sup class="skill-user-count">16</sup>
+    <span class="skill-of">/</span>
+    <sub class="skill-count">84</sub>
+  </h1>
+  <span class="skill-info">
+    <span class="skill-explanation">You can unlock skills by completing checkpoints in lessons.</span>
+  </span>
+  <div class="clearfix"></div>
+  <div class="skill-list">
+        <div class="skills skills-sidebar">
+          <div class="skill-container">
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="onclick"
+                data-description="An onclick function allows the programmer to execute a JavaScript&#39;s function when an element gets clicked.">
+                onclick
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="keyword">function</span> <span class="function">clickFunction</span>() {  document.getElementById(<span class="string"><span class="delimiter">'</span><span class="content">button</span><span class="delimiter">'</span></span>).style.color = <span class="string"><span class="delimiter">&quot;</span><span class="content">blue</span><span class="delimiter">&quot;</span></span>;}</pre></div>
+</div>
 
-          if (base64Data) {
-            generatedImageDisplay.src = `data:image/png;base64,${base64Data}`;
-            generatedImageDisplay.classList.remove('hidden');
-            placeholderText.classList.add('hidden');
-            downloadBtn.classList.remove('hidden');
-            // On mobile, automatically switch to preview tab after generation
-            if (window.innerWidth < 768) activateTab('preview');
-            // Success, break the retry loop
-            lastError = null; 
-            break;
-          } else {
-            // No base64 data, this is an issue we might retry or handle as a final failure
-            throw new Error("API response missing image data.");
-          }
-        } catch (err) {
-          lastError = err;
-          console.error(`Attempt ${i + 1} failed:`, err);
-          if (i < maxRetries - 1) {
-            // Exponential backoff: 1s, 2s, 4s delay
-            await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
-          }
-        }
-      }
+                </div>
+              </div>
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="event handler"
+                data-description="Event handlers are the JavaScript code that invokes a specific piece of code when a particular action happens on an HTML element.">
+                event handler
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre>document.getElementById(<span class="string"><span class="delimiter">'</span><span class="content">button</span><span class="delimiter">'</span></span>).onclick = clickFunction;</pre></div>
+</div>
 
-      if (lastError) {
-          errorMessage.textContent = `Image generation failed after ${maxRetries} attempts. Error: ${lastError.message}`;
-          errorMessage.classList.remove('hidden');
-      }
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="skills skills-sidebar">
+          <div class="skill-container">
+              <div class="skill
+                skill-type-html
+                has-skill-true"
+                data-name="h1-h6"
+                data-description="Document headings and sub-headings. The bigger the number, the smaller the size.">
+                h1-h6
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;h1&gt;</span>I’m a main heading<span class="tag">&lt;/h1&gt;</span><br><span class="tag">&lt;h2&gt;</span>I’m a subheading<span class="tag">&lt;/h2&gt;</span><br><span class="tag">&lt;h6&gt;</span>I’m the smallest<span class="tag">&lt;/h6&gt;</span></pre></div>
+</div>
 
-      toggleGenerateButton(false);
-      showLoading(false);
-    }
+                </div>
+              </div>
+              <div class="skill
+                skill-type-html
+                has-skill-true"
+                data-name="email input"
+                data-description="A type of input that takes user email addresses. New in HTML5.">
+                email input
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;input</span> <span class="attribute-name">type</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">email</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">placeholder</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">Your email</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span></pre></div>
+</div>
 
-    // --- Event Listeners and Initial Load ---
+                </div>
+              </div>
+              <div class="skill
+                skill-type-html
+                has-skill-true"
+                data-name="submit input"
+                data-description="Makes a button to submit information from a form to a server.">
+                submit input
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;input</span> <span class="attribute-name">type</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">submit</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span></pre></div>
+</div>
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // 1. Force Light Mode as Default (Ignoring localStorage initial check)
-      // The body starts with 'light-mode' by default in the HTML class attribute now
-      body.classList.remove('dark-mode'); 
-      body.classList.add('light-mode');
-      themeToggle.textContent = '🌙'; 
-      localStorage.setItem('theme', 'light');
+                </div>
+              </div>
+              <div class="skill
+                skill-type-html
+                has-skill-true"
+                data-name="p"
+                data-description="The p tag makes paragraph elements">
+                p
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;p&gt;</span>I am a cool paragraph, full of text<span class="tag">&lt;/p&gt;</span></pre></div>
+</div>
 
-      promptInput.addEventListener('input', () => {
-        generateBtn.disabled = promptInput.value.trim() === '';
-      });
+                </div>
+              </div>
+              <div class="skill
+                skill-type-html
+                has-skill-true"
+                data-name="placeholder"
+                data-description="Puts placeholder text in an input. The text will disappear when a user types their own content.">
+                placeholder
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;input</span> <span class="attribute-name">type</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">text</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">placeholder</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">Your name</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span></pre></div>
+</div>
 
-      // Initial tab setup for mobile
-      updateTabColors();
-      if (window.innerWidth < 768) activateTab('prompt');
-    });
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="skills skills-sidebar">
+          <div class="skill-container">
+              <div class="skill
+                skill-type-html
+                has-skill-true"
+                data-name="style"
+                data-description="An HTML tag that you can use to include CSS directly in your HTML file, rather than linking to an external CSS file.">
+                style
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;style&gt;</span><br>&nbsp;&nbsp;&nbsp;body {<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;color: black;<br>&nbsp;&nbsp;&nbsp;}<br><span class="tag">&lt;/style&gt;</span></pre></div>
+</div>
 
-    // Clerk Initialization and View Switching
-    window.addEventListener("load", async () => {
-        await Clerk.load();
-        
-        // Mount User Button (always visible in the header for signed-in users)
-        Clerk.mountUserButton(document.getElementById("clerk-user-button"));
-        
-        // Determine initial view state
-        if (Clerk.user) {
-            showAppView('APP');
-        } else {
-            showAppView('LANDING');
-        }
+                </div>
+              </div>
+              <div class="skill
+                skill-type-html
+                has-skill-true"
+                data-name="body"
+                data-description="The body tag goes around all the content that&#39;s visible on the page">
+                body
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;body&gt;</span><br>&nbsp;&nbsp;&nbsp;<span class="comment">&lt;!-- Content goes here --&gt;</span><br><span class="tag">&lt;/body&gt;</span></pre></div>
+</div>
 
-        // Listener for authentication changes (login/logout)
-        Clerk.addListener(({ user }) => {
-            if (user) {
-                showAppView('APP');
-            } else {
-                // On logout, return to the landing page
-                showAppView('LANDING');
-            }
-        });
-        
-        // Function to trigger auth view
-        const triggerAuthView = (e) => {
-            e.preventDefault();
-            showAppView('AUTH');
-        };
+                </div>
+              </div>
+              <div class="skill
+                skill-type-html
+                has-skill-true"
+                data-name="head"
+                data-description="The head tag holds all information about the page that isn&#39;t directly displayed on the page.">
+                head
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;head&gt;</span><br>&nbsp;&nbsp;&nbsp;<span class="tag">&lt;title&gt;</span>General Assembly<span class="tag">&lt;/title&gt;</span><br>&nbsp;&nbsp;&nbsp;<span class="tag">&lt;style&gt;</span><span class="tag">&lt;/style&gt;</span><br><span class="tag">&lt;/head&gt;</span></pre></div>
+</div>
 
-        // Landing Page Button Handlers (Transition to Auth)
-        getStartedBtn.addEventListener('click', triggerAuthView);
-        landingSignInLink.addEventListener('click', triggerAuthView);
-        // New Footer CTA Listener
-        getStartedBtnFooter.addEventListener('click', triggerAuthView);
-    });
+                </div>
+              </div>
+              <div class="skill
+                skill-type-html
+                has-skill-true"
+                data-name="title"
+                data-description="The title tag is used to give the webpage a title for browser tabs and search engines.">
+                title
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;title&gt;</span>General Assembly<span class="tag">&lt;/title&gt;</span></pre></div>
+</div>
 
-    // Theme Toggle
-    themeToggle.addEventListener('click', () => {
-      // Toggle between light-mode (default) and dark-mode
-      const isLight = body.classList.contains('light-mode');
-      
-      if (isLight) {
-          body.classList.remove('light-mode');
-          body.classList.add('dark-mode');
-          themeToggle.textContent = '☀️';
-          localStorage.setItem('theme', 'dark');
-      } else {
-          body.classList.remove('dark-mode');
-          body.classList.add('light-mode');
-          themeToggle.textContent = '🌙';
-          localStorage.setItem('theme', 'light');
-      }
-      updateTabColors();
-    });
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-true"
+                data-name="text-align"
+                data-description="Controls the alignment of all the text in an element. Can be left, right, centered, or justified.">
+                text-align
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="type">h1</span> {<span class="key"><br>&nbsp;&nbsp;&nbsp;</span> <span class="key">text-align</span>: <span class="value">center</span>;<span class="key"><br></span>}</pre></div>
+</div>
 
-    // Generate Button
-    generateBtn.addEventListener('click', generateImage);
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-true"
+                data-name="background"
+                data-description="This sets the background of an element to either a color or an image (or both)">
+                background
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="type">body</span> {<span class="key"><br>&nbsp;&nbsp;&nbsp;background</span>: <span class="color">#000</span> <span class="function"><span class="delimiter">url(</span><span class="content">&quot;/assets/bg.jpg&quot;</span><span class="delimiter">)</span></span>;<span class="key"><br></span>}</pre></div>
+</div>
 
-    // Download Button
-    downloadBtn.addEventListener('click', () => {
-      const imgSrc = generatedImageDisplay.src;
-      if (!imgSrc) return;
-      const link = document.createElement('a');
-      link.href = imgSrc;
-      link.download = 'askaio-generated.png';
-      link.click();
-    });
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-true"
+                data-name="font-family"
+                data-description="Sets the font used in an element.">
+                font-family
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="type">h1</span> {<span class="key"><br>&nbsp;&nbsp;&nbsp;font-family</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Helvetica Neue</span><span class="delimiter">&quot;</span></span>, <span class="value">helvetica</span>, <span class="value">sans-serif</span>;<span class="key"><br></span>}</pre></div>
+</div>
 
-    // Mobile tabs
-    tabPrompt.addEventListener('click', () => activateTab('prompt'));
-    tabPreview.addEventListener('click', () => activateTab('preview'));
-  </script>
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-true"
+                data-name="color"
+                data-description="Changes the text&#39;s color inside an element.">
+                color
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="type">body</span> {<span class="key"><br>&nbsp;&nbsp;&nbsp;color</span>: <span class="value">red</span>;<span class="key"><br></span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="skills skills-sidebar">
+          <div class="skill-container">
+              <div class="skill
+                skill-type-html
+                has-skill-true"
+                data-name="img"
+                data-description="Creates an image element on the page. The src should be equal to a URL pointing at an image file.">
+                img
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;img</span> <span class="attribute-name">src</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">/assets/anna.jpg</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span></pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-true"
+                data-name="background-size"
+                data-description="Changes the size of a background image. Can be set to a value in pixels, percent, or the keywords &quot;cover&quot; or &quot;contain&quot;.">
+                background-size
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">body</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tbackground-size</span>: <span class="float">50%</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-true"
+                data-name="background-position"
+                data-description="Controls where the background image is placed in an element. The unit can be set to a value in pixels, percent, or keywords such as left, top, center, etc.">
+                background-position
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">body</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tbackground-position</span>: <span class="float">10px</span> <span class="float">50px</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="font-size"
+                data-description="Controls the size of the font in an element.">
+                font-size
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">body</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tfont-size</span>: <span class="float">18px</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="border"
+                data-description="Controls the border of an element. It can take 3 options - width (in pixels), type (solid, dashed, etc), and color. Some elements, like inputs, come with a default border. Setting border to 0 resets it.">
+                border
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">h1</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tborder</span>: <span class="float">1px</span> <span class="value">solid</span> <span class="value">black</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="padding"
+                data-description="Controls the amount of space between the edge of an element and the stuff inside it.">
+                padding
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">input</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tpadding</span>: <span class="float">10px</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="attribute selectors"
+                data-description="A CSS selector that lets you choose elements based on the value of their attributes.">
+                attribute selectors
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">input</span>[<span class="attribute-name">type=&quot;submit&quot;</span>] {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tbackground</span>: <span class="value">red</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="skills skills-sidebar">
+          <div class="skill-container">
+              <div class="skill
+                skill-type-html
+                has-skill-false"
+                data-name="header"
+                data-description="The header tag is a container element that&#39;s used to group together everything that goes in a header section on the page.">
+                header
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;header&gt;</span><br>&nbsp;&nbsp;&nbsp;<span class="tag">&lt;h1&gt;</span>This is my site<span class="tag">&lt;/h1&gt;</span><br><span class="tag">&lt;/header&gt;</span></pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-html
+                has-skill-false"
+                data-name="li"
+                data-description="The list item tag can go in an ordered or unordered list. It&#39;s the individual list item in a list of things.">
+                li
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;ul&gt;</span><br>&nbsp;&nbsp;&nbsp;<span class="tag">&lt;li&gt;</span>Pickles<span class="tag">&lt;/li&gt;</span><br>&nbsp;&nbsp;&nbsp;<span class="tag">&lt;li&gt;</span>Mayo<span class="tag">&lt;/li&gt;</span><br>&nbsp;&nbsp;&nbsp;<span class="tag">&lt;li&gt;</span>Mustard<span class="tag">&lt;/li&gt;</span><br><span class="tag">&lt;/ul&gt;</span></pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-html
+                has-skill-false"
+                data-name="a"
+                data-description="The a tag makes links. It has an attribute called href that should be set to a URL you want the browser to open when clicked.">
+                a
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;a</span> <span class="attribute-name">href</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">http://www.google.com</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>Google<span class="tag">&lt;/a&gt;</span></pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-html
+                has-skill-false"
+                data-name="ul"
+                data-description="The unordered list tag makes bulleted lists. Used in conjunction with the &lt;li&gt; tag.">
+                ul
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;ul&gt;</span><br>&nbsp;&nbsp;&nbsp;<span class="tag">&lt;li&gt;</span>Ketchup<span class="tag">&lt;/li&gt;</span><br>&nbsp;&nbsp;&nbsp;<span class="tag">&lt;li&gt;</span>Mayo<span class="tag">&lt;/li&gt;</span><br>&nbsp;&nbsp;&nbsp;<span class="tag">&lt;li&gt;</span>Mustard<span class="tag">&lt;/li&gt;</span><br><span class="tag">&lt;/ul&gt;</span></pre></div>
+</div>
+
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="skills skills-sidebar">
+          <div class="skill-container">
+              <div class="skill
+                skill-type-html
+                has-skill-false"
+                data-name="link"
+                data-description="An HTML tag that lets you include external stylesheets in your webpage.">
+                link
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;link</span> <span class="attribute-name">href</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">style.css</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">rel</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">stylesheet</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span></pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="display"
+                data-description="The display property controls whether an element should be block (full width of page, on a new line) or inline (contained in text). ">
+                display
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">li</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tdisplay</span>: <span class="value">inline</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="margin"
+                data-description="Margin controls the amount of space between the outside of an element and other nearby elements.">
+                margin
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">h1</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tmargin</span>: <span class="float">40px</span> <span class="float">0px</span> <span class="float">0px</span> <span class="float">0px</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="border-radius"
+                data-description="Makes an element have rounded corners. Can take 1, 2, or 4 arguments (like padding).">
+                border-radius
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">img</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tborder-radius</span>: <span class="float">10px</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="padding 2"
+                data-description="You can control the padding of each side individually by passing 4 values - top, bottom, left, and right.">
+                padding 2
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">li</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tpadding</span>: <span class="float">10px</span> <span class="float">20px</span> <span class="float">30px</span> <span class="float">40px</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="skills skills-sidebar">
+          <div class="skill-container">
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="max-width"
+                data-description="Setting an element&#39;s max-width lets an element expand in width only up until a certain point. It can be any width smaller than the size you specify, though.">
+                max-width
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="type">article</span> {<span class="key"><br>&nbsp;&nbsp;&nbsp;max-width</span>: <span class="float">500px</span>;<span class="key"><br></span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-html
+                has-skill-false"
+                data-name="article"
+                data-description="The article tag is meant to go around blog posts, news articles, essays, and any other bit of content that could stand alone and is meant to be read.">
+                article
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;article&gt;</span><br>&nbsp;&nbsp;&nbsp;<span class="tag">&lt;h2&gt;</span>This is my blog post title<span class="tag">&lt;/h2&gt;</span><br>&nbsp;&nbsp;&nbsp;<span class="tag">&lt;p&gt;</span>Here is my text<span class="tag">&lt;/p&gt;</span><br><span class="tag">&lt;/article&gt;</span></pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="margin: 0 auto;"
+                data-description="The margin: 0 auto; trick lets you make a &quot;page&quot; on the screen by centering elements on the page without centering the text inside it. Must set a width for it to work.">
+                margin: 0 auto;
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="class">.container</span> {<span class="key"><br>&nbsp;&nbsp;&nbsp;margin</span>: <span class="float">0</span> <span class="value">auto</span>;<span class="key"><br></span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-html
+                has-skill-false"
+                data-name="script"
+                data-description="An HTML tag you can use to include javascript in your HTML file. Can come from an external source file or you can write the javascript right in the tag.">
+                script
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;script&gt;</span><span class="inline">alert(<span class="string"><span class="delimiter">'</span><span class="content">hi</span><span class="delimiter">'</span></span>);</span><span class="tag">&lt;/script&gt;</span></pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="on()"
+                data-description="The &quot;on&quot; function is provided by jQuery, and lets you listen to events on elements.">
+                on()
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="predefined">$</span>(<span class="string"><span class="delimiter">'</span><span class="content">h1</span><span class="delimiter">'</span></span>).on(<span class="string"><span class="delimiter">'</span><span class="content">mouseover</span><span class="delimiter">'</span></span>, <span class="keyword">function</span>() {<br>&nbsp;&nbsp;&nbsp;alert(<span class="string"><span class="delimiter">'</span><span class="content">mouseover!</span><span class="delimiter">'</span></span>);<br>});</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-html
+                has-skill-false"
+                data-name="button"
+                data-description="The button tag lets you make simple buttons. Pretty self explanatory ;)">
+                button
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;button&gt;</span>Press me<span class="tag">&lt;/button&gt;</span></pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="alert()"
+                data-description="The alert() function causes the browser to pop up a message with some text in it.">
+                alert()
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre>alert(<span class="string"><span class="delimiter">'</span><span class="content">Hi there!</span><span class="delimiter">'</span></span>);</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="hex color"
+                data-description="Hex color codes let you specify in more detail the exact color you want.">
+                hex color
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="type">body</span> {<span class="key"><br>&nbsp;&nbsp;&nbsp;background</span>: <span class="color">#f00</span>;<span class="key"><br></span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="media queries"
+                data-description="Media queries let you create CSS styles that are only activated under certain conditions (for example, if the browser is smaller than 500px wide).">
+                media queries
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="directive">@media</span> (<span class="type">max-width</span>: <span class="float">500px</span>) {<span class="type"><br>&nbsp;&nbsp;&nbsp;body</span> {<span class="key"><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;background</span>: <span class="value">red</span>;<span class="key"><br>&nbsp;&nbsp;&nbsp;</span>}<span class="type"><br></span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="rgba color"
+                data-description="RGBA colors are like hex colors, but they have a different syntax and let you control alpha (transparency).">
+                rgba color
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="type">body</span> {<span class="key"><br>&nbsp;&nbsp;&nbsp;background</span>: <span class="color">rgba(255,0,0,.5)</span>;<span class="key"><br></span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="skills skills-sidebar">
+          <div class="skill-container">
+              <div class="skill
+                skill-type-html
+                has-skill-false"
+                data-name="class"
+                data-description="Class specifies a style for a select group of HTML elements.	">
+                class
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;p</span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">fantastic</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>My format is special!<span class="tag">&lt;/p&gt;</span><br><span class="tag">&lt;p</span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">spectacular</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>I do not look like you.<span class="tag">&lt;/p&gt;</span></pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="position: relative"
+                data-description="Positions an element relative to where it&#39;s normally supposed to be on the screen. ">
+                position: relative
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">h2</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tposition</span>: <span class="value">relative</span>;<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tleft</span>:<span class="float">20px</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="height"
+                data-description="Sets the height of an element explicitly (rather than based on the height of the stuff inside it).">
+                height
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">div</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">theight</span>: <span class="float">300px</span>;<span class="error">\</span><span class="key">n</span>} </pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="bottom"
+                data-description="Sets an element&#39;s distance from the bottom of a page or container.">
+                bottom
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="class">.copyright</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tbottom</span>: <span class="float">0px</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-html
+                has-skill-false"
+                data-name="div"
+                data-description="A generic container element you can put other HTML elements inside.">
+                div
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;div&gt;</span><br>&nbsp;&nbsp;&nbsp;<span class="tag">&lt;h1&gt;</span>I'm contained!<span class="tag">&lt;/h1&gt;</span><br>&nbsp;&nbsp;&nbsp;<span class="tag">&lt;p&gt;</span>So am I<span class="tag">&lt;/p&gt;</span><br><span class="tag">&lt;/div&gt;</span></pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-html
+                has-skill-false"
+                data-name="small"
+                data-description="Makes any text a bit smaller than the text surrounding it.">
+                small
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;p&gt;</span>Be very, <span class="tag">&lt;small&gt;</span>very<span class="tag">&lt;/small&gt;</span> quiet.<span class="tag">&lt;/p&gt;</span></pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-html
+                has-skill-false"
+                data-name="line break"
+                data-description="Inserts a single line break within a larger section of text.">
+                line break
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;p&gt;</span>Twinkle twinkle, little star<span class="tag">&lt;br</span> <span class="tag">/&gt;</span><br>how I wonder what you are.<span class="tag">&lt;/p</span></pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-html
+                has-skill-false"
+                data-name="class"
+                data-description="Class specifies a style for a select group of HTML elements.	">
+                class
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;p</span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">fantastic</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>My format is special!<span class="tag">&lt;/p&gt;</span><br><span class="tag">&lt;p</span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">spectacular</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>I do not look like you.<span class="tag">&lt;/p&gt;</span></pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="position: absolute"
+                data-description="Allows you to style elements that will be ignored by, and will ignore, everything else on the page and will always stay where they are told.">
+                position: absolute
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="class">.sidebar</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tposition</span>: <span class="value">absolute</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="skills skills-sidebar">
+          <div class="skill-container">
+              <div class="skill
+                skill-type-html
+                has-skill-false"
+                data-name="span"
+                data-description="The span tag creates a generic inline container, and allows you to change the appearance of part of the tag that contains it.">
+                span
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;p&gt;</span>All of this text is very boring, except for <span class="tag">&lt;span</span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">fancy</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>this bit of completely different-looking text<span class="tag">&lt;/span&gt;</span>, which just ended. <span class="tag">&lt;/p&gt;</span></pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="float"
+                data-description="A float shifts content to the far-left or far-right within the current line. Content flows down the right side of a left-floated box and down the left side of a right-floated box.">
+                float
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="class">.sidebar</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tfloat</span>: <span class="value">left</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="gradient"
+                data-description="Gradients can transition between colors or between alphas. They require a start point, a start color, and an end color. You can set an angle to make diagonal gradients, or color-stops to create stripes. Currently, CSS gradients require vendor prefixes.">
+                gradient
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">body</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tbackground</span>: <span class="value">-webkit-linear-gradient</span> (<span class="value">top</span>, <span class="color">#bada55</span>, <span class="color">#c0ffee</span>);<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tbackground</span>: <span class="value">-moz-linear-gradient</span> (<span class="value">top</span>, <span class="color">#bada55</span>, <span class="color">#c0ffee</span>);<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tbackground</span>: <span class="value">-o-linear-gradient</span> (<span class="value">top</span>, <span class="color">#bada55</span>, <span class="color">#c0ffee</span>);}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-html
+                has-skill-false"
+                data-name="span"
+                data-description="The span tag creates a generic inline container, and allows you to change the appearance of part of the tag that contains it.">
+                span
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">&lt;p&gt;</span>All of this text is very boring, except for <span class="tag">&lt;span</span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">fancy</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>this bit of completely different-looking text<span class="tag">&lt;/span&gt;</span>, which just ended.<span class="tag">&lt;/p&gt;</span></pre></div>
+</div>
+
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="skills skills-sidebar">
+          <div class="skill-container">
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="transition"
+                data-description="Builds time-dependant behaviors into the transition between two different sets of CSS properties assigned to the same HTML element.">
+                transition
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="type">div</span> {<span class="key"><br>&nbsp;&nbsp;&nbsp;transition</span>: <span class="value">height</span> <span class="float">.5s</span>,<span class="value"><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;background</span> <span class="float">.2s</span> <span class="value">ease</span>;<span class="key"><br></span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="opacity"
+                data-description="Opacity allows you to set the transparency of an element AND everything inside of it, from 100% (1) to 0% (0). Not to be confused with alpha.">
+                opacity
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="type">img</span> {<span class="key"><br>&nbsp;&nbsp;&nbsp;opacity</span>: <span class="float">.6</span>;<span class="key"><br></span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="toggleClass"
+                data-description="This function is provided by jQuery, and detects the presence of a specified CSS class on an HTML element. If the class is present, toggleClass removes it; if the class is not detected, toggleClass adds it.">
+                toggleClass
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="predefined">$</span>(<span class="string"><span class="delimiter">'</span><span class="content">img</span><span class="delimiter">'</span></span>).on(<span class="string"><span class="delimiter">'</span><span class="content">click</span><span class="delimiter">'</span></span>,<span class="error">\</span>sfunction() {<br>&nbsp;&nbsp;&nbsp;(<span class="local-variable">this</span>).toggleClass(<span class="string"><span class="delimiter">'</span><span class="content">caption</span><span class="delimiter">'</span></span>);<br>&nbsp;&nbsp;&nbsp;}</pre></div>
+</div>
+
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="skills skills-sidebar">
+          <div class="skill-container">
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="radial-gradient"
+                data-description="Radial gradients can transition between colors or between alphas. The basic syntax wants shape (ellipse or circle), inner color, outer color. Currently, needs vendor prefixes.">
+                radial-gradient
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="type">body</span> {<span class="key"><br>&nbsp;&nbsp;&nbsp;background</span>: <span class="error">r</span><span class="error">a</span><span class="error">d</span><span class="error">i</span><span class="error">a</span><span class="error">l</span><span class="error">-</span><span class="error">g</span><span class="error">r</span><span class="error">a</span><span class="error">d</span><span class="error">i</span><span class="error">e</span><span class="error">n</span><span class="error">t</span>(<span class="value">circle</span>, <span class="color">#c0ffee</span>, <span class="color">#bada55</span>);<span class="key"><br>&nbsp;&nbsp;&nbsp;background</span>: <span class="error">-</span><span class="error">m</span><span class="error">o</span><span class="error">z</span><span class="error">-</span><span class="error">r</span><span class="error">a</span><span class="error">d</span><span class="error">i</span><span class="error">a</span><span class="error">l</span><span class="error">-</span><span class="error">g</span><span class="error">r</span><span class="error">a</span><span class="error">d</span><span class="error">i</span><span class="error">e</span><span class="error">n</span><span class="error">t</span>(<span class="value">circle</span>, <span class="color">#c0ffee</span>, <span class="color">#bada55</span>);<span class="key"><br>&nbsp;&nbsp;&nbsp;background</span>: <span class="error">-</span><span class="error">w</span><span class="error">e</span><span class="error">b</span><span class="error">k</span><span class="error">i</span><span class="error">t</span><span class="error">-</span><span class="error">r</span><span class="error">a</span><span class="error">d</span><span class="error">i</span><span class="error">a</span><span class="error">l</span><span class="error">-</span><span class="error">g</span><span class="error">r</span><span class="error">a</span><span class="error">d</span><span class="error">i</span><span class="error">e</span><span class="error">n</span><span class="error">t</span>(<span class="value">circle</span>, <span class="color">#c0ffee</span>, <span class="color">#bada55</span>);<span class="key"><br>&nbsp;&nbsp;&nbsp;</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="skills skills-sidebar">
+          <div class="skill-container">
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="top"
+                data-description="Allows you to specify the distance between the top of an element and the top of its container.">
+                top
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">div</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tposition</span>: <span class="value">relative</span>;<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">ttop</span>: <span class="float">20px</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="left"
+                data-description="Sets the distance a positioned element should be from the left-hand boundary of its containing element.">
+                left
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">div</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tposition</span>: <span class="value">relative</span>;<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tleft</span>:<span class="float">20px</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="transform: rotate"
+                data-description="Allows you to rotate an element clockwise by a specified number of degrees (out of 360). Use a negative value to rotate it counterclockwise.">
+                transform: rotate
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre></pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="z-index"
+                data-description="Allows you to &quot;stack&quot; HTML elements in front of or behind one another.">
+                z-index
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">div</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tposition</span>: <span class="value">relative</span>;<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tz-index</span>:<span class="float">10</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="font-weight"
+                data-description="Sets the weight of a font. Keywords are: normal, bold, bolder, and lighter. ">
+                font-weight
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">h2</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tfont-weight</span>: <span class="value">bolder</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="transform: scaleY"
+                data-description="Resizes an element horizontally by the specified amount. The number is &quot;x times the size it is now,&quot; so scale .5 is half the size and a scale of 2 is twice the size.">
+                transform: scaleY
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">img</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">ttransform</span>: <span class="error">s</span><span class="error">c</span><span class="error">a</span><span class="error">l</span><span class="error">e</span><span class="error">Y</span>(<span class="float">2</span>);<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="animation"
+                data-description="Connects a CSS style to a keyframe animation. You need to tell it the animation&#39;s name, duration in seconds, and how many times to repeat (from 1 to infinite).">
+                animation
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="tag">div</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">tanimation</span>: <span class="value">bounce</span> <span class="float">2s</span> <span class="float">10</span>;<span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-css
+                has-skill-false"
+                data-name="@keyframes"
+                data-description="Create keyframes for animations. You can say from/to if you have two keyframes, or you can set multiple keyframes by specifying percentages.">
+                @keyframes
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="directive">@keyframes</span> <span class="tag">flip</span> {<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">t</span><span class="error">\</span><span class="float">20%</span> {<span class="key">n</span><span class="error">\</span><span class="key">tcolor</span>: <span class="value">red</span>;<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">t</span>}<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">t</span><span class="error">\</span><span class="float">80%</span> {<span class="key">n</span><span class="error">\</span><span class="key">tcolor</span>: <span class="value">yellow</span>;<span class="error">\</span><span class="key">n</span><span class="error">\</span><span class="key">t</span><span class="error">\</span><span class="key">n</span>}</pre></div>
+</div>
+
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="skills skills-sidebar">
+          <div class="skill-container">
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="variable"
+                data-description="Variables capture and remember values. They always have names. Their names must be one word (no spaces). Names can contain letters or numbers but can’t start with a number. The only symbols allowed are $ and _. ">
+                variable
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="keyword">var</span> age = <span class="integer">28</span>;</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="Math.floor"
+                data-description="This is a function that rounds any number down to the nearest whole number.">
+                Math.floor
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre>Math.floor(<span class="float">3.14159265359</span>); <span class="comment">// 3</span></pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="Math.random"
+                data-description="This function will return a random number between 0 and 1.">
+                Math.random
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre>Math.random(); </pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="function"
+                data-description="A function is a piece of a program that either does something useful or produces a value. It is a busy little machine. Functions are one of six named types of values in Javascript.">
+                function
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="keyword">function</span> <span class="function">greeting</span> (name) {<br>&nbsp;&nbsp;&nbsp;alert(<span class="string"><span class="delimiter">&quot;</span><span class="content">hello, </span><span class="delimiter">&quot;</span></span> + name + <span class="string"><span class="delimiter">&quot;</span><span class="content">!</span><span class="delimiter">&quot;</span></span>);<br>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="javascript comments"
+                data-description="If you put two forward slashes in front of any line of script, JavaScript will ignore that line. Good for both explaining code to humans, and for debugging!">
+                javascript comments
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="comment">//JavaScript will ignore me, but people shouldn't</span></pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="click function"
+                data-description="The jQuery click function is a shorter, more concise way to do what on(‘click’) does.">
+                click function
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="predefined">$</span>(<span class="string"><span class="delimiter">'</span><span class="content">button</span><span class="delimiter">'</span></span>).click(<span class="keyword">function</span>() {<br>&nbsp;&nbsp;&nbsp;alert(<span class="string"><span class="delimiter">&quot;</span><span class="content">you clicked me!</span><span class="delimiter">&quot;</span></span>);<br>});</pre></div>
+</div>
+
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="skills skills-sidebar">
+          <div class="skill-container">
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="toggle"
+                data-description="The JQuery toggle function lets you turn an HTML element visible or invisible. It affects all instances of the element, so if you have a lot of paragraphs or pictures and only want to toggle one, give that one a class name and toggle the class.">
+                toggle
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre>hello</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="css function"
+                data-description="The css function in JQuery can be used in two ways. If you give it one value it &quot;returns&quot; a CSS property (basically, it finds it for you), and if you give it two values it “sets” a CSS property (changes the property before the comma to the value specified after the comma).">
+                css function
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre> <span class="predefined">$</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">body</span><span class="delimiter">&quot;</span></span>).css(<span class="string"><span class="delimiter">&quot;</span><span class="content">background</span><span class="delimiter">&quot;</span></span>);<br>&nbsp;&nbsp;&nbsp;alert(<span class="string"><span class="delimiter">&quot;</span><span class="content">background</span><span class="delimiter">&quot;</span></span>);<br><br> <span class="predefined">$</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">body</span><span class="delimiter">&quot;</span></span>).css(<span class="string"><span class="delimiter">&quot;</span><span class="content">background</span><span class="delimiter">&quot;</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="content">white</span><span class="delimiter">&quot;</span></span>);</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="strings"
+                data-description="A string is just a bunch of text, and is also one of six value types in Javascript. Strings can hold any character, including spaces, and are super-easy to spot because they’re always inside single or double quotation marks. You can put single or double quotation marks inside strings if you “escape” them with a backslash.">
+                strings
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre> <span class="keyword">var</span> string = <span class="string"><span class="delimiter">&quot;</span><span class="content">hello, I</span><span class="char">\'</span><span class="content">m a string!</span><span class="delimiter">&quot;</span></span><br> <span class="keyword">var</span> me_too = <span class="string"><span class="delimiter">'</span><span class="content">I</span><span class="char">\'</span><span class="content">m also a string.</span><span class="delimiter">'</span></span></pre></div>
+</div>
+
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="skills skills-sidebar">
+          <div class="skill-container">
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="array"
+                data-description="An array is a data type that can hold a list of items. Those items can be strings, numbers, etc. Arrays have lengths, and each item in them occupies a numerical position; the numbers start from zero.">
+                array
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="keyword">var</span> array = [thing, nextThing, anotherThing];</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="length"
+                data-description="Length is a JQuery function that tells you the number of elements (i.e. little data storage boxes) in an array. You can use it to count other things, too, like the number of characters in a string.">
+                length
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre>alert(list.length);</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="html function"
+                data-description="The jQuery html function allows you to move content that&#39;s generated or captured by your JavaScript into your HTML. It basically lets your JavaScript read and rewrite your HTML.">
+                html function
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="predefined">$</span>(<span class="string"><span class="delimiter">'</span><span class="content">button</span><span class="delimiter">'</span></span>).click(<span class="keyword">function</span>() {<br>&nbsp;&nbsp;&nbsp;(<span class="string"><span class="delimiter">'</span><span class="content">p</span><span class="delimiter">'</span></span>).html(<span class="string"><span class="delimiter">&quot;</span><span class="content">you clicked a button!</span><span class="delimiter">&quot;</span></span>);<br>});</pre></div>
+</div>
+
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="skills skills-sidebar">
+          <div class="skill-container">
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="if "
+                data-description="if is a conditional statement in JavaScript. It requires two parts: a condition (in parentheses), and an action, {in curly braces}. If the condition is true, the &quot;action&quot; code will run.">
+                if 
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="keyword">if</span> (something) {<br>&nbsp;&nbsp;&nbsp;do a thing;<br>}</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="else"
+                data-description="else is a conditional statement in JavaScript that only works if it immediately follows an if statement. It provides an alternative to the action contained in an if statement. The if statement says &quot;if X is true, do Y.&quot; The else statement says &quot;or else, do Z.&quot;">
+                else
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="keyword">if</span> (something) {<br>&nbsp;&nbsp;&nbsp;do a thing;<br>}<br>else {<br>&nbsp;&nbsp;&nbsp;do another thing;<br>}</pre></div>
+</div>
+
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="skills skills-sidebar">
+          <div class="skill-container">
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="!"
+                data-description="You can use an exclamation point as a shortcut method to negate almost anything in Javascript.">
+                !
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="integer">500</span> != <span class="integer">100</span>;<br>!<span class="predefined-constant">true</span> = <span class="predefined-constant">false</span>;<br>!<span class="predefined-constant">false</span> = <span class="predefined-constant">true</span>;</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="val()"
+                data-description="Val is a JQuery method. It’s used to grab values out of form elements &amp;lt;input&amp;gt;, &amp;lt;select&amp;gt;, and &amp;lt;textarea&amp;gt;. A less common use to to put content into forms.">
+                val()
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre>alert(<span class="predefined">$</span>(<span class="string"><span class="delimiter">'</span><span class="content">input</span><span class="delimiter">'</span></span>).val());</pre></div>
+</div>
+
+                </div>
+              </div>
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="push()"
+                data-description="Push is associated with arrays, and used to add values to an existing or empty array.">
+                push()
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="keyword">var</span> houses = []<br> houses(<span class="string"><span class="delimiter">&quot;</span><span class="content">stark</span><span class="delimiter">&quot;</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="content">lannister</span><span class="delimiter">&quot;</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="content">baratheon</span><span class="delimiter">&quot;</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="content">targaryen</span><span class="delimiter">&quot;</span></span>);</pre></div>
+</div>
+
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="skills skills-sidebar">
+          <div class="skill-container">
+              <div class="skill
+                skill-type-javascript
+                has-skill-false"
+                data-name="hide()"
+                data-description="Hide is the easiest way to make an element disappear! By default, the element you name vanishes immediately, but hide() also lets you add options like timing and easing to make it more animated.">
+                hide()
+                <div class="skill-example-holder">
+                  <div class="CodeRay">
+  <div class="code"><pre><span class="predefined">$</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">div</span><span class="delimiter">&quot;</span></span>).hide();</pre></div>
+</div>
+
+                </div>
+              </div>
+          </div>
+        </div>
+  </div>
+</div>
+
+
+    </aside>
+
+    <!-- Projects -->
+    <div class="projects-container">
+
+        <div class="project-category">
+
+    <h1>Project 1: Build a personal website</h1>
+    <h2 class="subtitle">Your friend Anna wants you to make a website for her</h2>
+
+    <div class="project-screenshot">
+      <div class="project-screenshot-chrome">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="project-screenshot-image" style="background: url(//ga-dash.s3.amazonaws.com/production/assets/anna-screenshot-97d7e95151899815d4547044a5b8b0b165ff151153412fa7d6fc3621c19f20ff.png)">
+      </div>
+    </div>
+
+    <div class="project-parts">
+        <a class="project-part
+          completed"
+          href="/projects/annas-website-1">
+          <span class="checkbox"></span>
+          <span class="project-part-name">1. Make the headline and inputs</span>
+        </a>
+        <a class="project-part
+          completed"
+          href="/projects/annas-website-2">
+          <span class="checkbox"></span>
+          <span class="project-part-name">2. Style the background and text</span>
+        </a>
+        <a class="project-part
+          "
+          href="/projects/annas-website-3">
+          <span class="checkbox"></span>
+          <span class="project-part-name">3. Add a background image and logo</span>
+        </a>
+        <a class="project-part
+          "
+          href="/projects/build-your-own-personal-website">
+          <span class="checkbox"></span>
+          <span class="project-part-name">4. Build your own personal website</span>
+            <span class="palette"></span>
+        </a>
+        <div class="clearfix"></div>
+        <a data-confirm="You will lose all progress for this project, are you sure?" class="button danger" href="/reset-project/annas-website">Restart</a>
+    </div>
+
+    <div class="clearfix"></div>
+  </div>
+  <div class="project-category">
+
+    <h1>Project 2: Build a responsive blog theme</h1>
+    <h2 class="subtitle">Anna&#39;s friend Jeff needs a custom theme for his poetry blog</h2>
+
+    <div class="project-screenshot">
+      <div class="project-screenshot-chrome">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="project-screenshot-image" style="background: url(//ga-dash.s3.amazonaws.com/production/assets/jeffs-blog-screenshot-f319d0921f833cb5721a70f9d7dd4b6e9b87f8b04082b8ddcca0f2428b02e8bb.png)">
+      </div>
+    </div>
+
+    <div class="project-parts">
+        <a class="project-part
+          "
+          href="/projects/jeffs-blog-1">
+          <span class="checkbox"></span>
+          <span class="project-part-name">1. Make the header and navigation HTML</span>
+        </a>
+        <a class="project-part
+          "
+          href="/projects/jeffs-blog-2">
+          <span class="checkbox"></span>
+          <span class="project-part-name">2. Style the header with CSS</span>
+        </a>
+        <a class="project-part
+          "
+          href="/projects/jeffs-blog-3">
+          <span class="checkbox"></span>
+          <span class="project-part-name">3. Add responsive design + &quot;like&quot; button</span>
+        </a>
+        <a class="project-part
+          "
+          href="/projects/build-your-own-blog-theme">
+          <span class="checkbox"></span>
+          <span class="project-part-name">4. Build your own blog theme</span>
+            <span class="palette"></span>
+        </a>
+    </div>
+
+    <div class="clearfix"></div>
+  </div>
+    <div id="tumblr-plug">
+      <p>Want to go further? Learn to make Tumblr themes from scratch!</p>
+      <a class="button" href="/projects/tumblr">Go to Dash for Tumblr &rarr;</a>
+    </div>
+  <div class="project-category">
+
+    <h1>Project 3: Build a small business website</h1>
+    <h2 class="subtitle">Rising star Chef Esha is opening a new restaurant and needs a website</h2>
+
+    <div class="project-screenshot">
+      <div class="project-screenshot-chrome">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="project-screenshot-image" style="background: url(//ga-dash.s3.amazonaws.com/production/assets/eshas-resteraunt-screenshot-605846ecbc986981f306536a1433dd697863004ab6589bae49169b2d86a97bb8.png)">
+      </div>
+    </div>
+
+    <div class="project-parts">
+        <a class="project-part
+          "
+          href="/projects/eshas-restaurant-1">
+          <span class="checkbox"></span>
+          <span class="project-part-name">1. Position images &amp; text</span>
+        </a>
+        <a class="project-part
+          "
+          href="/projects/eshas-restaurant-2">
+          <span class="checkbox"></span>
+          <span class="project-part-name">2. Add webfonts and color fades</span>
+        </a>
+        <a class="project-part
+          "
+          href="/projects/eshas-restaurant-3">
+          <span class="checkbox"></span>
+          <span class="project-part-name">3. Make it mobile and interactive</span>
+        </a>
+        <a class="project-part
+          "
+          href="/projects/build-your-own-business-website">
+          <span class="checkbox"></span>
+          <span class="project-part-name">4. Build your own business website</span>
+            <span class="palette"></span>
+        </a>
+    </div>
+
+    <div class="clearfix"></div>
+  </div>
+  <div class="project-category">
+
+    <h1>Project 4: Traffic Light Exercise</h1>
+    <h2 class="subtitle">A DOM manipulation coding challenge to put your skills to the test</h2>
+
+    <div class="project-screenshot">
+      <div class="project-screenshot-chrome">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="project-screenshot-image" style="background: url(//ga-dash.s3.amazonaws.com/production/assets/traffic-light-001f015b9841bbb729b7b3f317982c9cdcc531091c41ffe1aec159c3b16b3cd9.gif)">
+      </div>
+    </div>
+
+    <div class="project-parts">
+        <a class="project-part
+          "
+          href="/projects/update-the-javascript-code">
+          <span class="checkbox"></span>
+          <span class="project-part-name">1. Update the JavaScript code</span>
+        </a>
+    </div>
+
+    <div class="clearfix"></div>
+  </div>
+  <div class="project-category">
+
+    <h1>Project 5: Build a CSS Robot</h1>
+    <h2 class="subtitle">Eccentric millionaire Cotter Patrick needs a life-like companion</h2>
+
+    <div class="project-screenshot">
+      <div class="project-screenshot-chrome">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="project-screenshot-image" style="background: url(//ga-dash.s3.amazonaws.com/production/assets/cotbots-screenshot-2e560761ad8e77ecb908e1fa2cfa585119f9911ba6e7c0c1aaa642a390629b06.gif)">
+      </div>
+    </div>
+
+    <div class="project-parts">
+        <a class="project-part
+          "
+          href="/projects/cotbots-1">
+          <span class="checkbox"></span>
+          <span class="project-part-name">1. Make the foot, torso, and brain</span>
+        </a>
+        <a class="project-part
+          "
+          href="/projects/cotbots-2">
+          <span class="checkbox"></span>
+          <span class="project-part-name">2. Advanced positioning and animations</span>
+        </a>
+        <a class="project-part
+          "
+          href="/projects/cotbots-3">
+          <span class="checkbox"></span>
+          <span class="project-part-name">3. Advanced buttons with Javascript</span>
+        </a>
+        <a class="project-part
+          "
+          href="/projects/cotbots-4">
+          <span class="checkbox"></span>
+          <span class="project-part-name">4. Update your style with JQuery </span>
+        </a>
+    </div>
+
+    <div class="clearfix"></div>
+  </div>
+  <div class="project-category">
+
+    <h1>Project 6: Build a Madlibs Game</h1>
+    <h2 class="subtitle">Cotter&#39;s friend Lin wants you to build a Madlibs-style game for her!</h2>
+
+    <div class="project-screenshot">
+      <div class="project-screenshot-chrome">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="project-screenshot-image" style="background: url(//ga-dash.s3.amazonaws.com/production/assets/madlins-screenshot-90b4d6eb8ea9a3aa7286969fc41d589a03a44fe2289026e4f523e222bc12bc90.png)">
+      </div>
+    </div>
+
+    <div class="project-parts">
+        <a class="project-part
+          "
+          href="/projects/mad-libs-1">
+          <span class="checkbox"></span>
+          <span class="project-part-name">1. Build an array to hold your questions</span>
+        </a>
+        <a class="project-part
+          "
+          href="/projects/madlins-2">
+          <span class="checkbox"></span>
+          <span class="project-part-name">2. Make a button to move through the array</span>
+        </a>
+        <a class="project-part
+          "
+          href="/projects/madlins-3">
+          <span class="checkbox"></span>
+          <span class="project-part-name">3. Write your first if/else statement</span>
+        </a>
+        <a class="project-part
+          "
+          href="/projects/madlins-4">
+          <span class="checkbox"></span>
+          <span class="project-part-name">4. Make JavaScript capture and return answers</span>
+        </a>
+        <a class="project-part
+          "
+          href="/projects/madlins-5">
+          <span class="checkbox"></span>
+          <span class="project-part-name">5. Put it all together with JavaScript and CSS</span>
+        </a>
+    </div>
+
+    <div class="clearfix"></div>
+  </div>
+
+
+
+    </div>
+
+  </div><!-- /.container -->
+
+  <footer>
+  <p>
+    © 2019 General Assembly. All rights reserved.
+  </p>
+
+  <span>
+    <a href="https://generalassemb.ly/terms_of_service" target="_blank" rel="noopener noreferrer">Terms and Conditions</a>
+
+    <a href="https://generalassemb.ly/privacy_policy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+  </span>
+</footer>
+</div><!-- /#projects -->
+
+  <script src="//ga-dash.s3.amazonaws.com/production/assets/application-512cb4fb5a00a1eb153b93badb16792bf9b1798370a93905a1406cbeedc4471b.js"></script>
+  
 </body>
 </html>
