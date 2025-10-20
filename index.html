@@ -1,63 +1,651 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Voice AI Assistant</title>
-<style>
-  body { font-family: sans-serif; text-align: center; margin-top: 50px; }
-  #avatar { width: 200px; height: 200px; background: url('avatar.png') center/cover; margin: 20px auto; }
-  .talking { animation: talk 0.4s infinite; }
-  @keyframes talk { 0%,100%{transform:scaleY(1)}50%{transform:scaleY(0.9)} }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Color Magic 🎨</title>
+    <!-- Load Inter font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /*
+         * 1. BASE STYLES & MOBILE FIRST LAYOUT
+         */
+        :root {
+            --color-active: #FFD700; /* Gold/Yellow for active highlights */
+            --color-bg-light: #f0f4f8; /* Light blue-grey background */
+            --color-bg-dark: #333; /* Dark background for controls */
+            --color-button-primary: #4CAF50; /* Green for main buttons */
+            --color-button-danger: #f44336; /* Red for clear/undo */
+            --color-button-text: #fff;
+            --font-size-large: 1.5rem;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100dvh; /* Dynamic viewport height for full screen on mobile */
+            background-color: var(--color-bg-light);
+            overflow: hidden; /* Prevent scrolling */
+            user-select: none; /* Disable text selection for better touch experience */
+            touch-action: manipulation; /* Optimizes touch responsiveness */
+        }
+
+        /*
+         * 2. HEADER STYLES (Colorful Title)
+         */
+        #header {
+            padding: 1rem 0.5rem;
+            background: linear-gradient(135deg, #FF6F61, #FFC72C, #88B04B, #7C4DFF);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        #title {
+            font-size: 2.5rem; /* Large text for kids */
+            font-weight: 900;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            animation: rainbow-shift 10s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes rainbow-shift {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        /*
+         * 3. MAIN DRAWING AREA
+         */
+        #drawing-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            padding: 1rem;
+        }
+
+        #coloring-svg {
+            max-width: 100%;
+            max-height: 100%;
+            height: auto;
+            display: block;
+            touch-action: pan-x pan-y; /* Allow touch scrolling on the drawing if it's huge, but prevent tap interference */
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            background-color: white;
+        }
+
+        #coloring-svg * {
+            stroke: #333; /* Outline color */
+            stroke-width: 1;
+            cursor: pointer;
+            transition: fill 0.1s ease; /* Smooth color change */
+        }
+
+        /*
+         * 4. CONTROL AREAS
+         */
+        #controls-bottom {
+            background-color: var(--color-bg-dark);
+            padding: 0.75rem 0.5rem;
+            box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .button-row {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .action-button {
+            padding: 0.75rem 1rem;
+            font-size: var(--font-size-large);
+            font-weight: 700;
+            color: var(--color-button-text);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            flex-grow: 1;
+            max-width: 150px;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .action-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        /* Specific Button Colors */
+        #undo-btn { background-color: #f44336; } /* Red */
+        #save-btn { background-color: #2196F3; } /* Blue */
+        #clear-btn { background-color: #9C27B0; } /* Purple */
+
+        /*
+         * 5. COLOR PALETTE
+         */
+        #color-palette {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            padding: 0 0.5rem 0.75rem;
+            gap: 0.5rem;
+        }
+
+        .color-button {
+            width: 55px; /* Large touch target */
+            height: 55px;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s, border-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .color-button.active {
+            border-color: var(--color-active);
+            transform: scale(1.1);
+            box-shadow: 0 0 15px var(--color-active);
+        }
+
+        .color-button:active {
+            transform: scale(0.95);
+        }
+
+        /*
+         * 6. NAVIGATION & MUSIC TOGGLE
+         */
+        #nav-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 0.5rem 0.75rem;
+        }
+
+        .nav-button {
+            padding: 0.75rem;
+            font-size: var(--font-size-large);
+            font-weight: 700;
+            background-color: #FF9800; /* Orange */
+            color: var(--color-button-text);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .nav-button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        #music-toggle {
+            font-size: 1.25rem;
+            background-color: #00BCD4; /* Cyan */
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            color: var(--color-button-text);
+            border: none;
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
+            transition: background-color 0.2s;
+        }
+
+        #music-toggle.off {
+            background-color: #797979; /* Grey when off */
+        }
+
+        /*
+         * 7. SPARKLE ANIMATION
+         */
+        .sparkle-effect {
+            position: absolute;
+            font-size: 3rem; /* Big star */
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            animation: sparkle-fade 0.5s ease-out forwards;
+            color: var(--color-active); /* Star color */
+            text-shadow: 0 0 10px var(--color-active);
+        }
+
+        @keyframes sparkle-fade {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(0); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        }
+    </style>
 </head>
 <body>
 
-<h2>🎙️ Voice AI Assistant</h2>
-<div id="avatar"></div>
-<button id="startBtn">Start Talking</button>
+    <div id="header">
+        <h1 id="title">Color Magic 🎨</h1>
+    </div>
 
-<script>
-const OPENAI_API_KEY = "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";
+    <div id="drawing-container">
+        <!-- SVG Drawing will be inserted here by JavaScript -->
+        <svg id="coloring-svg" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+            <!-- Initial content placeholder -->
+        </svg>
+    </div>
 
-const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-recognition.lang = "en-US";
+    <div id="controls-bottom">
+        <!-- Action Buttons -->
+        <div class="button-row">
+            <!-- No text labels for core actions, use icons/symbols -->
+            <button id="undo-btn" class="action-button">↺ Undo</button>
+            <button id="clear-btn" class="action-button">🧽 Clear</button>
+            <button id="save-btn" class="action-button">💾 Save</button>
+        </div>
 
-document.getElementById("startBtn").onclick = () => {
-  recognition.start();
-  console.log("Listening...");
-};
+        <!-- Navigation and Music -->
+        <div id="nav-controls">
+            <button id="prev-btn" class="nav-button">◀</button>
+            <button id="music-toggle" class="nav-button" title="Background Music On/Off">🎶</button>
+            <button id="next-btn" class="nav-button">▶</button>
+        </div>
 
-recognition.onresult = async (event) => {
-  const userSpeech = event.results[0][0].transcript;
-  console.log("User:", userSpeech);
-  const aiReply = await askGPT(userSpeech);
-  speak(aiReply);
-};
+        <!-- Color Palette -->
+        <div id="color-palette">
+            <!-- Color buttons generated by JavaScript -->
+        </div>
+    </div>
 
-async function askGPT(text) {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: text }]
-    })
-  });
-  const data = await response.json();
-  return data.choices[0].message.content;
-}
+    <script>
+        // Use an IIFE for clean scope
+        (function() {
+            // --- GLOBAL CONFIGURATION ---
+            const COLORS = [
+                { name: 'red', hex: '#E74C3C' },
+                { name: 'orange', hex: '#E67E22' },
+                { name: 'yellow', hex: '#F1C40F' },
+                { name: 'green', hex: '#2ECC71' },
+                { name: 'blue', hex: '#3498DB' },
+                { name: 'purple', hex: '#9B59B6' },
+                { name: 'pink', hex: '#FF77AA' },
+                { name: 'brown', hex: '#795548' },
+                { name: 'white', hex: '#FFFFFF' }, // White/Erase
+            ];
 
-function speak(text) {
-  const avatar = document.getElementById("avatar");
-  avatar.classList.add("talking");
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.onend = () => avatar.classList.remove("talking");
-  speechSynthesis.speak(utter);
-}
-</script>
+            // Placeholder URLs for sounds - MUST BE VALID MP3 PATHS
+            const FILL_SOUND_URL = 'https://cdn.jsdelivr.net/gh/Tonejs/Tone.js/examples/assets/audio/pluck.mp3';
+            const MUSIC_URL = 'https://cdn.jsdelivr.net/gh/Tonejs/Tone.js/examples/assets/audio/samba.mp3';
 
+            // --- STATE MANAGEMENT ---
+            let currentColor = COLORS[0].hex;
+            let currentDrawingIndex = 0;
+            let drawings = [];
+            let drawingHistory = []; // Stores { elementId, oldColor } for undo
+            const MAX_HISTORY = 50;
+            let musicAudio;
+            let isMusicPlaying = false;
+
+            // --- DOM ELEMENTS ---
+            const svgContainer = document.getElementById('coloring-svg');
+            const paletteEl = document.getElementById('color-palette');
+            const musicToggleBtn = document.getElementById('music-toggle');
+            const undoBtn = document.getElementById('undo-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const saveBtn = document.getElementById('save-btn');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const sparkleContainer = document.getElementById('drawing-container');
+
+
+            // --- SVG DRAWING DEFINITIONS ---
+            // Each drawing object contains its unique ID and the SVG code.
+            const DRAWING_DATA = [
+                {
+                    id: 'flower',
+                    name: 'Flower',
+                    svg: `<g transform="translate(50, 50) scale(0.8)">
+                        <rect x="230" y="300" width="40" height="200" fill="#88B04B" id="flower-stem" class="colorable-part" />
+                        <circle cx="250" cy="250" r="70" fill="#F1C40F" id="flower-center" class="colorable-part" />
+                        <ellipse cx="250" cy="100" rx="60" ry="100" fill="#E74C3C" id="flower-petal-1" class="colorable-part" transform="rotate(0 250 250)"/>
+                        <ellipse cx="250" cy="100" rx="60" ry="100" fill="#E74C3C" id="flower-petal-2" class="colorable-part" transform="rotate(45 250 250)"/>
+                        <ellipse cx="250" cy="100" rx="60" ry="100" fill="#E74C3C" id="flower-petal-3" class="colorable-part" transform="rotate(90 250 250)"/>
+                        <ellipse cx="250" cy="100" rx="60" ry="100" fill="#E74C3C" id="flower-petal-4" class="colorable-part" transform="rotate(135 250 250)"/>
+                        <ellipse cx="250" cy="100" rx="60" ry="100" fill="#E74C3C" id="flower-petal-5" class="colorable-part" transform="rotate(180 250 250)"/>
+                        <ellipse cx="250" cy="100" rx="60" ry="100" fill="#E74C3C" id="flower-petal-6" class="colorable-part" transform="rotate(225 250 250)"/>
+                        <ellipse cx="250" cy="100" rx="60" ry="100" fill="#E74C3C" id="flower-petal-7" class="colorable-part" transform="rotate(270 250 250)"/>
+                        <ellipse cx="250" cy="100" rx="60" ry="100" fill="#E74C3C" id="flower-petal-8" class="colorable-part" transform="rotate(315 250 250)"/>
+                    </g>`
+                },
+                {
+                    id: 'elephant',
+                    name: 'Elephant',
+                    svg: `<g transform="translate(100, 100) scale(0.6)">
+                        <!-- Body - using a path for complexity -->
+                        <path d="M100,200 C50,250 50,350 150,400 L300,400 C350,350 350,250 300,200 Z" fill="#BBDEFB" id="elephant-body" class="colorable-part" />
+                        <!-- Ear -->
+                        <path d="M100,200 C0,100 100,50 150,150 Z" fill="#90CAF9" id="elephant-ear" class="colorable-part" />
+                        <!-- Head -->
+                        <circle cx="200" cy="200" r="70" fill="#BBDEFB" id="elephant-head" class="colorable-part" />
+                        <!-- Trunk -->
+                        <path d="M220,220 L240,280 L200,350 L180,300 Z" fill="#BBDEFB" id="elephant-trunk" class="colorable-part" />
+                        <!-- Legs -->
+                        <rect x="120" y="400" width="30" height="50" fill="#64B5F6" id="elephant-leg-1" class="colorable-part" />
+                        <rect x="250" y="400" width="30" height="50" fill="#64B5F6" id="elephant-leg-2" class="colorable-part" />
+                    </g>`
+                },
+                {
+                    id: 'rainbow',
+                    name: 'Rainbow',
+                    svg: `<g transform="translate(0, 0)">
+                        <!-- Arcs -->
+                        <path d="M 50 450 A 200 200 0 0 1 450 450 L 450 470 A 220 220 0 0 0 50 470 Z" fill="#E74C3C" id="rainbow-arc-red" class="colorable-part" />
+                        <path d="M 70 450 A 180 180 0 0 1 430 450 L 430 470 A 200 200 0 0 0 70 470 Z" fill="#E67E22" id="rainbow-arc-orange" class="colorable-part" />
+                        <path d="M 90 450 A 160 160 0 0 1 410 450 L 410 470 A 180 180 0 0 0 90 470 Z" fill="#F1C40F" id="rainbow-arc-yellow" class="colorable-part" />
+                        <path d="M 110 450 A 140 140 0 0 1 390 450 L 390 470 A 160 160 0 0 0 110 470 Z" fill="#2ECC71" id="rainbow-arc-green" class="colorable-part" />
+                        <path d="M 130 450 A 120 120 0 0 1 370 450 L 370 470 A 140 140 0 0 0 130 470 Z" fill="#3498DB" id="rainbow-arc-blue" class="colorable-part" />
+                        <path d="M 150 450 A 100 100 0 0 1 350 450 L 350 470 A 120 120 0 0 0 150 470 Z" fill="#9B59B6" id="rainbow-arc-purple" class="colorable-part" />
+                        <!-- Clouds -->
+                        <circle cx="80" cy="450" r="40" fill="#FFFFFF" id="rainbow-cloud-left-1" class="colorable-part" />
+                        <circle cx="120" cy="450" r="30" fill="#FFFFFF" id="rainbow-cloud-left-2" class="colorable-part" />
+                        <circle cx="420" cy="450" r="40" fill="#FFFFFF" id="rainbow-cloud-right-1" class="colorable-part" />
+                        <circle cx="380" cy="450" r="30" fill="#FFFFFF" id="rainbow-cloud-right-2" class="colorable-part" />
+                    </g>`
+                }
+            ];
+
+            // --- AUDIO FUNCTIONS ---
+
+            // Function to play a simple sound effect (fill sound or color name sound)
+            function playSound(url) {
+                try {
+                    const audio = new Audio(url);
+                    audio.play().catch(e => console.log('Audio play failed (maybe autoplay blocked or no valid URL):', e));
+                } catch (e) {
+                    console.warn('Error creating audio element:', e);
+                }
+            }
+
+            // Function to speak the color name using the Web Speech API
+            function speakColor(colorName) {
+                // Ensure the Web Speech API is available
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(colorName);
+                    // Use a fun voice/pitch if possible (browser dependent)
+                    utterance.pitch = 1.2;
+                    utterance.rate = 1.1;
+                    speechSynthesis.speak(utterance);
+                } else {
+                    console.log(`Speech not supported, saying: ${colorName}`);
+                }
+            }
+
+            // Function to toggle background music
+            function toggleMusic() {
+                if (!musicAudio) {
+                    musicAudio = new Audio(MUSIC_URL);
+                    musicAudio.loop = true;
+                    musicAudio.volume = 0.3; // Soft volume
+                    musicAudio.addEventListener('canplaythrough', () => {
+                        // Only try to play if we just created it and it's supposed to be ON
+                        if (isMusicPlaying) {
+                            musicAudio.play().catch(e => console.log('Music autoplay blocked, user needs to interact first:', e));
+                        }
+                    });
+                }
+
+                if (isMusicPlaying) {
+                    musicAudio.pause();
+                    isMusicPlaying = false;
+                    musicToggleBtn.classList.add('off');
+                    musicToggleBtn.textContent = '🔇';
+                } else {
+                    musicAudio.play().catch(e => console.log('Music play blocked after user interaction:', e));
+                    isMusicPlaying = true;
+                    musicToggleBtn.classList.remove('off');
+                    musicToggleBtn.textContent = '🎶';
+                }
+                localStorage.setItem('colorMagicMusicState', isMusicPlaying);
+            }
+
+            // --- LOCAL STORAGE AND STATE FUNCTIONS ---
+
+            // Mandatory: App ID for Firestore is not used here as the user explicitly asked for localStorage.
+            const STORAGE_PREFIX = 'colorMagicState_';
+
+            // Function to load all drawing states from localStorage
+            function loadAllStates() {
+                DRAWING_DATA.forEach(drawing => {
+                    const storedState = localStorage.getItem(STORAGE_PREFIX + drawing.id);
+                    // Initialize each drawing state with the initial SVG code
+                    drawings.push({
+                        ...drawing,
+                        state: storedState ? JSON.parse(storedState) : {},
+                        history: [], // History is transient and not saved across sessions
+                    });
+                });
+
+                // Load music state
+                const savedMusicState = localStorage.getItem('colorMagicMusicState');
+                if (savedMusicState === 'true') {
+                    isMusicPlaying = true;
+                } else {
+                    isMusicPlaying = false;
+                    musicToggleBtn.classList.add('off');
+                    musicToggleBtn.textContent = '🔇';
+                }
+            }
+
+            // Function to save the current drawing's state to localStorage
+            function saveCurrentState() {
+                const currentDrawing = drawings[currentDrawingIndex];
+                localStorage.setItem(STORAGE_PREFIX + currentDrawing.id, JSON.stringify(currentDrawing.state));
+                console.log(`State saved for: ${currentDrawing.name}`);
+            }
+
+            // --- UI RENDER FUNCTIONS ---
+
+            // Renders the current drawing into the SVG container
+            function renderDrawing() {
+                const currentDrawing = drawings[currentDrawingIndex];
+                // Insert the base SVG content
+                svgContainer.innerHTML = currentDrawing.svg;
+                svgContainer.dataset.drawingId = currentDrawing.id;
+
+                // Apply saved colors
+                const state = currentDrawing.state;
+                for (const id in state) {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.style.fill = state[id];
+                    }
+                }
+            }
+
+            // Creates and attaches the color palette buttons
+            function setupColorPalette() {
+                COLORS.forEach(color => {
+                    const button = document.createElement('button');
+                    button.className = 'color-button';
+                    button.style.backgroundColor = color.hex;
+                    button.dataset.hex = color.hex;
+                    button.dataset.name = color.name;
+                    button.addEventListener('click', () => selectColor(button, color.hex, color.name));
+                    paletteEl.appendChild(button);
+                });
+            }
+
+            // --- CORE INTERACTION LOGIC ---
+
+            // Handles selecting a new color from the palette
+            function selectColor(button, hex, name) {
+                currentColor = hex;
+                // Update active state on buttons
+                document.querySelectorAll('.color-button').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                // Provide voice feedback
+                speakColor(name);
+                console.log(`Color selected: ${name} (${hex})`);
+            }
+
+            // Handles the coloring action when an SVG part is tapped
+            function handleColoringTap(event) {
+                let target = event.target;
+
+                // Ensure the click is on a colorable part (not the main SVG)
+                if (!target || !target.classList.contains('colorable-part')) return;
+
+                const elementId = target.id;
+                const currentDrawing = drawings[currentDrawingIndex];
+
+                // Check if the color is actually changing to prevent history spamming
+                const oldColor = target.style.fill || target.getAttribute('fill');
+                if (oldColor === currentColor) return; // Color is the same, do nothing
+
+                // 1. Record for Undo
+                currentDrawing.history.push({ elementId, oldColor: oldColor || '#FFFFFF' });
+                // Keep history size manageable
+                if (currentDrawing.history.length > MAX_HISTORY) {
+                    currentDrawing.history.shift();
+                }
+
+                // 2. Apply New Color
+                target.style.fill = currentColor;
+
+                // 3. Update State (For Automatic Save)
+                currentDrawing.state[elementId] = currentColor;
+
+                // 4. Save to LocalStorage immediately
+                saveCurrentState();
+
+                // 5. Provide Feedback
+                playSound(FILL_SOUND_URL);
+                showSparkle(event.clientX, event.clientY);
+            }
+
+            // --- ACTION BUTTON LOGIC ---
+
+            function undoLastChange() {
+                const currentDrawing = drawings[currentDrawingIndex];
+                const lastAction = currentDrawing.history.pop();
+
+                if (lastAction) {
+                    const element = document.getElementById(lastAction.elementId);
+                    if (element) {
+                        // Revert the color
+                        element.style.fill = lastAction.oldColor;
+
+                        // Update state for persistent saving
+                        currentDrawing.state[lastAction.elementId] = lastAction.oldColor;
+                        saveCurrentState();
+                        speakColor("Undo!"); // Simple voice feedback
+                    }
+                } else {
+                    speakColor("Nothing to undo!");
+                }
+            }
+
+            function clearCurrentDrawing() {
+                // Confirm action (using a simple prompt instead of alert/confirm)
+                if (confirm("Are you sure you want to clear this drawing?")) {
+                    const currentDrawing = drawings[currentDrawingIndex];
+                    currentDrawing.state = {};
+                    currentDrawing.history = []; // Also clear history
+
+                    // Reset all colors in the SVG
+                    document.querySelectorAll('#coloring-svg .colorable-part').forEach(el => {
+                        el.style.fill = ''; // Reset inline style
+                    });
+
+                    saveCurrentState(); // Save the cleared state
+                    speakColor("Cleared!");
+                }
+            }
+
+            // --- NAVIGATION LOGIC ---
+
+            function changeDrawing(direction) {
+                // Save current state before switching
+                saveCurrentState();
+
+                currentDrawingIndex += direction;
+                if (currentDrawingIndex < 0) {
+                    currentDrawingIndex = drawings.length - 1; // Wrap around to the end
+                } else if (currentDrawingIndex >= drawings.length) {
+                    currentDrawingIndex = 0; // Wrap around to the beginning
+                }
+
+                // Render the new drawing
+                renderDrawing();
+                speakColor(drawings[currentDrawingIndex].name);
+            }
+
+            // --- VISUAL FEEDBACK (SPARKLE) ---
+
+            function showSparkle(x, y) {
+                // Create the sparkle element
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle-effect';
+                sparkle.textContent = '✨'; // Star emoji for sparkle
+                sparkle.style.left = `${x}px`;
+                sparkle.style.top = `${y}px`;
+
+                sparkleContainer.appendChild(sparkle);
+
+                // Remove the sparkle after animation completes
+                sparkle.addEventListener('animationend', () => {
+                    sparkle.remove();
+                });
+            }
+
+            // --- INITIALIZATION ---
+
+            function init() {
+                // 1. Load data from localStorage
+                loadAllStates();
+
+                // 2. Setup UI elements
+                setupColorPalette();
+
+                // 3. Render the initial drawing
+                renderDrawing();
+
+                // 4. Set initial active color (highlight first button)
+                const firstColorButton = paletteEl.querySelector('.color-button');
+                if (firstColorButton) {
+                    selectColor(firstColorButton, COLORS[0].hex, COLORS[0].name);
+                }
+
+                // 5. Attach event listeners
+                svgContainer.addEventListener('click', handleColoringTap);
+                undoBtn.addEventListener('click', undoLastChange);
+                clearBtn.addEventListener('click', clearCurrentDrawing);
+                saveBtn.addEventListener('click', saveCurrentState);
+                prevBtn.addEventListener('click', () => changeDrawing(-1));
+                nextBtn.addEventListener('click', () => changeDrawing(1));
+                musicToggleBtn.addEventListener('click', toggleMusic);
+
+                // 6. Initialize music if it was saved as ON
+                if (isMusicPlaying) {
+                    // This will handle creating and attempting to play the audio
+                    toggleMusic();
+                }
+
+                console.log("Color Magic Initialized!");
+            }
+
+            // Start the application when the DOM is fully loaded
+            document.addEventListener('DOMContentLoaded', init);
+
+        })();
+    </script>
 </body>
 </html>
