@@ -427,74 +427,83 @@
 
     // --- Main Logic: Image Generation ---
 
-    async function generateImage() {
-      const prompt = promptInput.value.trim();
-      if (!prompt) return;
+// --- Main Logic: Image Generation (Updated for Gemini 2.0 Flash) ---
+async function generateImage() {
+  const prompt = promptInput.value.trim();
+  if (!prompt) return;
 
-      toggleGenerateButton(true);
-      showLoading(true);
+  toggleGenerateButton(true);
+  showLoading(true);
 
-      // Simple retry mechanism for API calls
-      const maxRetries = 3;
-      let lastError = null;
+  const maxRetries = 3;
+  let lastError = null;
 
-      for (let i = 0; i < maxRetries; i++) {
-        try {
-          // Using the preferred imagen-3.0-generate-002 model
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
-          const payload = { 
-              instances: [{ prompt: prompt }], 
-              parameters: { "sampleCount": 1 }
-          };
-          
-          const response = await fetch(apiUrl, { 
-              method: 'POST', 
-              headers: { 'Content-Type': 'application/json' }, 
-              body: JSON.stringify(payload) 
-          });
-          
-          if (!response.ok) {
-              const errorBody = await response.json();
-              throw new Error(`API returned status ${response.status}: ${errorBody.error?.message || response.statusText}`);
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      // ✅ Gemini 2.0 Flash (Image generation preview endpoint)
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+      const payload = {
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }]
           }
-
-          const result = await response.json();
-
-          // Extract base64 data specific to imagen-3.0-generate-002:predict response structure
-          const base64Data = result?.predictions?.[0]?.bytesBase64Encoded;
-
-          if (base64Data) {
-            generatedImageDisplay.src = `data:image/png;base64,${base64Data}`;
-            generatedImageDisplay.classList.remove('hidden');
-            placeholderText.classList.add('hidden');
-            downloadBtn.classList.remove('hidden');
-            // On mobile, automatically switch to preview tab after generation
-            if (window.innerWidth < 768) activateTab('preview');
-            // Success, break the retry loop
-            lastError = null; 
-            break;
-          } else {
-            // No base64 data, this is an issue we might retry or handle as a final failure
-            throw new Error("API response missing image data.");
-          }
-        } catch (err) {
-          lastError = err;
-          console.error(`Attempt ${i + 1} failed:`, err);
-          if (i < maxRetries - 1) {
-            // Exponential backoff: 1s, 2s, 4s delay
-            await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
-          }
+        ],
+        generationConfig: {
+          response_mime_type: "image/png"
         }
+      };
+
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.json();
+        throw new Error(`API returned status ${response.status}: ${errorBody.error?.message || response.statusText}`);
       }
 
-      if (lastError) {
-          errorMessage.textContent = `Image generation failed after ${maxRetries} attempts. Error: ${lastError.message}`;
-          errorMessage.classList.remove('hidden');
-      }
+      const result = await response.json();
 
-      toggleGenerateButton(false);
-      showLoading(false);
+      // ⚡ Gemini returns base64 image bytes in this path
+      const base64Data =
+        result?.candidates?.[0]?.content?.parts?.[0]?.inline_data?.data ||
+        result?.candidates?.[0]?.content?.parts?.[0]?.data;
+
+      if (base64Data) {
+        generatedImageDisplay.src = `data:image/png;base64,${base64Data}`;
+        generatedImageDisplay.classList.remove("hidden");
+        placeholderText.classList.add("hidden");
+        downloadBtn.classList.remove("hidden");
+
+        // On mobile, switch to preview tab
+        if (window.innerWidth < 768) activateTab("preview");
+
+        lastError = null;
+        break;
+      } else {
+        throw new Error("API response missing image data.");
+      }
+    } catch (err) {
+      lastError = err;
+      console.error(`Attempt ${i + 1} failed:`, err);
+      if (i < maxRetries - 1) {
+        await new Promise((resolve) => setTimeout(resolve, Math.pow(2, i) * 1000));
+      }
     }
+  }
+
+  if (lastError) {
+    errorMessage.textContent = `Image generation failed after ${maxRetries} attempts. Error: ${lastError.message}`;
+    errorMessage.classList.remove("hidden");
+  }
+
+  toggleGenerateButton(false);
+  showLoading(false);
+}
 
     // --- Event Listeners and Initial Load ---
 
@@ -590,3 +599,4 @@
   </script>
 </body>
 </html>
+
