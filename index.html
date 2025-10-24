@@ -323,7 +323,7 @@
   </div>
 
 
- <script>
+<script>
   // Constants and DOM Elements
   const apiKey = "AIzaSyD8xBXpp0FYeV0nCxZ9V_VtVjKwoo6_BUw";
   const protectedContent = document.getElementById('protected-content');
@@ -361,7 +361,7 @@
     publicAuth.classList.add('hidden');
     landingPage.classList.add('hidden');
     mobileTabs.classList.add('hidden');
-    
+
     if (state === 'APP') {
       protectedContent.classList.remove('hidden');
       if (window.innerWidth < 768) mobileTabs.classList.remove('hidden');
@@ -406,7 +406,7 @@
     }
   }
 
-  // --- Main Logic: Image Generation (Gemini 2.0 Flash) ---
+  // --- Main Logic: Image Generation (Gemini 2.0 Flash Preview Image Generation) ---
   async function generateImage() {
     const prompt = promptInput.value.trim();
     if (!prompt) return;
@@ -419,14 +419,14 @@
 
     for (let i = 0; i < maxRetries; i++) {
       try {
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
 
         const payload = {
           contents: [
             { role: "user", parts: [{ text: prompt }] }
           ],
           generationConfig: {
-            response_mime_type: "image/png"
+            responseModalities: ["TEXT", "IMAGE"]
           }
         };
 
@@ -444,8 +444,8 @@
         const result = await response.json();
         const part = result?.candidates?.[0]?.content?.parts?.[0];
 
-        // 🧠 Fallback if model returns text instead of image
-        if (part?.text) {
+        // If model returned text only
+        if (part?.text && !part?.inline_data && !part?.data) {
           errorMessage.textContent = "Model returned text: " + part.text;
           errorMessage.classList.remove("hidden");
           showLoading(false);
@@ -453,6 +453,7 @@
           return;
         }
 
+        // Extract image data
         const base64Data = part?.inline_data?.data || part?.data;
         const mimeType = part?.inline_data?.mime_type || "image/png";
 
@@ -471,8 +472,9 @@
       } catch (err) {
         lastError = err;
         console.error(`Attempt ${i + 1} failed:`, err);
-        if (i < maxRetries - 1)
+        if (i < maxRetries - 1) {
           await new Promise(res => setTimeout(res, Math.pow(2, i) * 1000));
+        }
       }
     }
 
@@ -553,7 +555,9 @@
   tabPreview.addEventListener('click', () => activateTab('preview'));
 </script>
 
+
 </body>
 </html>
+
 
 
