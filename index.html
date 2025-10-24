@@ -323,280 +323,237 @@
   </div>
 
 
-  <script>
-    // Constants and DOM Elements
-    const apiKey = "AIzaSyD8xBXpp0FYeV0nCxZ9V_VtVjKwoo6_BUw";
-    const protectedContent = document.getElementById('protected-content');
-    const publicAuth = document.getElementById('public-auth');
-    const landingPage = document.getElementById('landing-page');
-    // Updated to include the new footer button
-    const getStartedBtn = document.getElementById('getStartedBtn'); 
-    const getStartedBtnFooter = document.getElementById('getStartedBtnFooter');
-    const landingSignInLink = document.getElementById('landingSignInLink');
-    const mobileTabs = document.getElementById('mobileTabs');
+ <script>
+  // Constants and DOM Elements
+  const apiKey = "AIzaSyD8xBXpp0FYeV0nCxZ9V_VtVjKwoo6_BUw";
+  const protectedContent = document.getElementById('protected-content');
+  const publicAuth = document.getElementById('public-auth');
+  const landingPage = document.getElementById('landing-page');
+  const getStartedBtn = document.getElementById('getStartedBtn');
+  const getStartedBtnFooter = document.getElementById('getStartedBtnFooter');
+  const landingSignInLink = document.getElementById('landingSignInLink');
+  const mobileTabs = document.getElementById('mobileTabs');
 
-    const sidebar = document.getElementById('sidebar');
-    const imageArea = document.getElementById('imageArea');
-    const promptInput = document.getElementById('promptInput');
-    const generateBtn = document.getElementById('generateBtn');
-    const generatedImageDisplay = document.getElementById('generatedImage');
-    const loadingState = document.getElementById('loadingState');
-    const placeholderText = document.getElementById('placeholderText');
-    const errorMessage = document.getElementById('errorMessage');
-    const themeToggle = document.getElementById('themeToggle');
-    const body = document.body;
-    const tabPrompt = document.getElementById('tabPrompt');
-    const tabPreview = document.getElementById('tabPreview');
+  const sidebar = document.getElementById('sidebar');
+  const imageArea = document.getElementById('imageArea');
+  const promptInput = document.getElementById('promptInput');
+  const generateBtn = document.getElementById('generateBtn');
+  const generatedImageDisplay = document.getElementById('generatedImage');
+  const loadingState = document.getElementById('loadingState');
+  const placeholderText = document.getElementById('placeholderText');
+  const errorMessage = document.getElementById('errorMessage');
+  const themeToggle = document.getElementById('themeToggle');
+  const body = document.body;
+  const tabPrompt = document.getElementById('tabPrompt');
+  const tabPreview = document.getElementById('tabPreview');
 
-    // ✅ Download button setup
-    const downloadBtn = document.createElement('button');
-    downloadBtn.id = "downloadImageBtn";
-    downloadBtn.textContent = "DOWNLOAD IMAGE";
-    downloadBtn.className =
-      "w-full py-3 rounded-xl font-bold bg-gradient-to-r from-green-500 to-green-700 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all hidden mt-4";
-    sidebar.appendChild(downloadBtn);
+  // ✅ Download button setup
+  const downloadBtn = document.createElement('button');
+  downloadBtn.id = "downloadImageBtn";
+  downloadBtn.textContent = "DOWNLOAD IMAGE";
+  downloadBtn.className =
+    "w-full py-3 rounded-xl font-bold bg-gradient-to-r from-green-500 to-green-700 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all hidden mt-4";
+  sidebar.appendChild(downloadBtn);
 
-    // --- Utility Functions ---
-
-    /**
-     * Controls which major view (APP, AUTH, LANDING) is displayed.
-     * @param {'APP'|'AUTH'|'LANDING'} state 
-     */
-    function showAppView(state) {
-        // Hide all containers and mobile tabs
-        protectedContent.classList.add('hidden');
-        publicAuth.classList.add('hidden');
-        landingPage.classList.add('hidden');
-        mobileTabs.classList.add('hidden');
-        
-        // Show the correct container based on state
-        if (state === 'APP') {
-            protectedContent.classList.remove('hidden');
-            if (window.innerWidth < 768) mobileTabs.classList.remove('hidden');
-        } else if (state === 'AUTH') {
-            publicAuth.classList.remove('hidden');
-            // Mount the Clerk sign-in form when switching to the AUTH state
-            Clerk.mountSignIn(document.getElementById("clerk-sign-in-form"));
-        } else { // LANDING
-            landingPage.classList.remove('hidden');
-        }
+  // --- Utility Functions ---
+  function showAppView(state) {
+    protectedContent.classList.add('hidden');
+    publicAuth.classList.add('hidden');
+    landingPage.classList.add('hidden');
+    mobileTabs.classList.add('hidden');
+    
+    if (state === 'APP') {
+      protectedContent.classList.remove('hidden');
+      if (window.innerWidth < 768) mobileTabs.classList.remove('hidden');
+    } else if (state === 'AUTH') {
+      publicAuth.classList.remove('hidden');
+      Clerk.mountSignIn(document.getElementById("clerk-sign-in-form"));
+    } else {
+      landingPage.classList.remove('hidden');
     }
+  }
 
-
-    function showLoading(show) {
-      if (show) {
-        loadingState.classList.remove('hidden');
-        generatedImageDisplay.classList.add('hidden');
-        placeholderText.classList.add('hidden');
-        errorMessage.classList.add('hidden');
-        downloadBtn.classList.add('hidden');
-      } else {
-        loadingState.classList.add('hidden');
-      }
+  function showLoading(show) {
+    if (show) {
+      loadingState.classList.remove('hidden');
+      generatedImageDisplay.classList.add('hidden');
+      placeholderText.classList.add('hidden');
+      errorMessage.classList.add('hidden');
+      downloadBtn.classList.add('hidden');
+    } else {
+      loadingState.classList.add('hidden');
     }
+  }
 
-    function toggleGenerateButton(disabled) {
-      generateBtn.disabled = disabled || promptInput.value.trim() === '';
-      generateBtn.textContent = disabled ? "GENERATING..." : "GENERATE IMAGE";
-      generateBtn.style.opacity = disabled ? "0.7" : "1";
+  function toggleGenerateButton(disabled) {
+    generateBtn.disabled = disabled || promptInput.value.trim() === '';
+    generateBtn.textContent = disabled ? "GENERATING..." : "GENERATE IMAGE";
+    generateBtn.style.opacity = disabled ? "0.7" : "1";
+  }
+
+  function activateTab(tab) {
+    tabPrompt.classList.remove('active');
+    tabPreview.classList.remove('active');
+    sidebar.classList.remove('active');
+    imageArea.classList.remove('active');
+
+    if (tab === 'prompt') {
+      tabPrompt.classList.add('active');
+      sidebar.classList.add('active');
+    } else {
+      tabPreview.classList.add('active');
+      imageArea.classList.add('active');
     }
+  }
 
-    // --- Theme and Mobile Tab Logic ---
+  // --- Main Logic: Image Generation (Gemini 2.0 Flash) ---
+  async function generateImage() {
+    const prompt = promptInput.value.trim();
+    if (!prompt) return;
 
-    function updateTabColors() {
-      // Logic for dark mode styles is now encapsulated in the CSS classes
-      // No need for inline style overrides here, as CSS handles the dark-mode class
-    }
+    toggleGenerateButton(true);
+    showLoading(true);
 
-    function activateTab(tab) {
-      tabPrompt.classList.remove('active');
-      tabPreview.classList.remove('active');
-      sidebar.classList.remove('active');
-      imageArea.classList.remove('active');
+    const maxRetries = 3;
+    let lastError = null;
 
-      if (tab === 'prompt') {
-        tabPrompt.classList.add('active');
-        sidebar.classList.add('active');
-      } else {
-        tabPreview.classList.add('active');
-        imageArea.classList.add('active');
-      }
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
-      updateTabColors();
-    }
-
-    // --- Main Logic: Image Generation ---
-
-// --- Main Logic: Image Generation (Updated for Gemini 2.0 Flash) ---
-async function generateImage() {
-  const prompt = promptInput.value.trim();
-  if (!prompt) return;
-
-  toggleGenerateButton(true);
-  showLoading(true);
-
-  const maxRetries = 3;
-  let lastError = null;
-
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      // ✅ Gemini 2.0 Flash (Image generation preview endpoint)
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-      const payload = {
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: prompt }]
+        const payload = {
+          contents: [
+            { role: "user", parts: [{ text: prompt }] }
+          ],
+          generationConfig: {
+            response_mime_type: "image/png"
           }
-        ],
-        generationConfig: {
-          response_mime_type: "image/png"
-        }
-      };
-
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        const errorBody = await response.json();
-        throw new Error(`API returned status ${response.status}: ${errorBody.error?.message || response.statusText}`);
-      }
-
-      const result = await response.json();
-
-      // ⚡ Gemini returns base64 image bytes in this path
-      const base64Data =
-        result?.candidates?.[0]?.content?.parts?.[0]?.inline_data?.data ||
-        result?.candidates?.[0]?.content?.parts?.[0]?.data;
-
-      if (base64Data) {
-        generatedImageDisplay.src = `data:image/png;base64,${base64Data}`;
-        generatedImageDisplay.classList.remove("hidden");
-        placeholderText.classList.add("hidden");
-        downloadBtn.classList.remove("hidden");
-
-        // On mobile, switch to preview tab
-        if (window.innerWidth < 768) activateTab("preview");
-
-        lastError = null;
-        break;
-      } else {
-        throw new Error("API response missing image data.");
-      }
-    } catch (err) {
-      lastError = err;
-      console.error(`Attempt ${i + 1} failed:`, err);
-      if (i < maxRetries - 1) {
-        await new Promise((resolve) => setTimeout(resolve, Math.pow(2, i) * 1000));
-      }
-    }
-  }
-
-  if (lastError) {
-    errorMessage.textContent = `Image generation failed after ${maxRetries} attempts. Error: ${lastError.message}`;
-    errorMessage.classList.remove("hidden");
-  }
-
-  toggleGenerateButton(false);
-  showLoading(false);
-}
-
-    // --- Event Listeners and Initial Load ---
-
-    document.addEventListener('DOMContentLoaded', () => {
-      // 1. Force Light Mode as Default (Ignoring localStorage initial check)
-      // The body starts with 'light-mode' by default in the HTML class attribute now
-      body.classList.remove('dark-mode'); 
-      body.classList.add('light-mode');
-      themeToggle.textContent = '🌙'; 
-      localStorage.setItem('theme', 'light');
-
-      promptInput.addEventListener('input', () => {
-        generateBtn.disabled = promptInput.value.trim() === '';
-      });
-
-      // Initial tab setup for mobile
-      updateTabColors();
-      if (window.innerWidth < 768) activateTab('prompt');
-    });
-
-    // Clerk Initialization and View Switching
-    window.addEventListener("load", async () => {
-        await Clerk.load();
-        
-        // Mount User Button (always visible in the header for signed-in users)
-        Clerk.mountUserButton(document.getElementById("clerk-user-button"));
-        
-        // Determine initial view state
-        if (Clerk.user) {
-            showAppView('APP');
-        } else {
-            showAppView('LANDING');
-        }
-
-        // Listener for authentication changes (login/logout)
-        Clerk.addListener(({ user }) => {
-            if (user) {
-                showAppView('APP');
-            } else {
-                // On logout, return to the landing page
-                showAppView('LANDING');
-            }
-        });
-        
-        // Function to trigger auth view
-        const triggerAuthView = (e) => {
-            e.preventDefault();
-            showAppView('AUTH');
         };
 
-        // Landing Page Button Handlers (Transition to Auth)
-        getStartedBtn.addEventListener('click', triggerAuthView);
-        landingSignInLink.addEventListener('click', triggerAuthView);
-        // New Footer CTA Listener
-        getStartedBtnFooter.addEventListener('click', triggerAuthView);
-    });
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
 
-    // Theme Toggle
-    themeToggle.addEventListener('click', () => {
-      // Toggle between light-mode (default) and dark-mode
-      const isLight = body.classList.contains('light-mode');
-      
-      if (isLight) {
-          body.classList.remove('light-mode');
-          body.classList.add('dark-mode');
-          themeToggle.textContent = '☀️';
-          localStorage.setItem('theme', 'dark');
-      } else {
-          body.classList.remove('dark-mode');
-          body.classList.add('light-mode');
-          themeToggle.textContent = '🌙';
-          localStorage.setItem('theme', 'light');
+        if (!response.ok) {
+          const errorBody = await response.json();
+          throw new Error(`API returned status ${response.status}: ${errorBody.error?.message || response.statusText}`);
+        }
+
+        const result = await response.json();
+        const part = result?.candidates?.[0]?.content?.parts?.[0];
+
+        // 🧠 Fallback if model returns text instead of image
+        if (part?.text) {
+          errorMessage.textContent = "Model returned text: " + part.text;
+          errorMessage.classList.remove("hidden");
+          showLoading(false);
+          toggleGenerateButton(false);
+          return;
+        }
+
+        const base64Data = part?.inline_data?.data || part?.data;
+        const mimeType = part?.inline_data?.mime_type || "image/png";
+
+        if (base64Data) {
+          generatedImageDisplay.src = `data:${mimeType};base64,${base64Data}`;
+          generatedImageDisplay.classList.remove("hidden");
+          placeholderText.classList.add("hidden");
+          downloadBtn.classList.remove("hidden");
+
+          if (window.innerWidth < 768) activateTab("preview");
+          lastError = null;
+          break;
+        } else {
+          throw new Error("API response missing image data.");
+        }
+      } catch (err) {
+        lastError = err;
+        console.error(`Attempt ${i + 1} failed:`, err);
+        if (i < maxRetries - 1)
+          await new Promise(res => setTimeout(res, Math.pow(2, i) * 1000));
       }
-      updateTabColors();
+    }
+
+    if (lastError) {
+      errorMessage.textContent = `Image generation failed after ${maxRetries} attempts. Error: ${lastError.message}`;
+      errorMessage.classList.remove("hidden");
+    }
+
+    toggleGenerateButton(false);
+    showLoading(false);
+  }
+
+  // --- Event Listeners ---
+  document.addEventListener('DOMContentLoaded', () => {
+    body.classList.remove('dark-mode');
+    body.classList.add('light-mode');
+    themeToggle.textContent = '🌙';
+    localStorage.setItem('theme', 'light');
+
+    promptInput.addEventListener('input', () => {
+      generateBtn.disabled = promptInput.value.trim() === '';
     });
 
-    // Generate Button
-    generateBtn.addEventListener('click', generateImage);
+    if (window.innerWidth < 768) activateTab('prompt');
+  });
 
-    // Download Button
-    downloadBtn.addEventListener('click', () => {
-      const imgSrc = generatedImageDisplay.src;
-      if (!imgSrc) return;
-      const link = document.createElement('a');
-      link.href = imgSrc;
-      link.download = 'askaio-generated.png';
-      link.click();
+  // --- Clerk Auth Setup ---
+  window.addEventListener("load", async () => {
+    await Clerk.load();
+    Clerk.mountUserButton(document.getElementById("clerk-user-button"));
+
+    if (Clerk.user) showAppView('APP');
+    else showAppView('LANDING');
+
+    Clerk.addListener(({ user }) => {
+      if (user) showAppView('APP');
+      else showAppView('LANDING');
     });
 
-    // Mobile tabs
-    tabPrompt.addEventListener('click', () => activateTab('prompt'));
-    tabPreview.addEventListener('click', () => activateTab('preview'));
-  </script>
+    const triggerAuthView = (e) => {
+      e.preventDefault();
+      showAppView('AUTH');
+    };
+
+    getStartedBtn.addEventListener('click', triggerAuthView);
+    landingSignInLink.addEventListener('click', triggerAuthView);
+    getStartedBtnFooter.addEventListener('click', triggerAuthView);
+  });
+
+  // --- Theme Toggle ---
+  themeToggle.addEventListener('click', () => {
+    const isLight = body.classList.contains('light-mode');
+    if (isLight) {
+      body.classList.remove('light-mode');
+      body.classList.add('dark-mode');
+      themeToggle.textContent = '☀️';
+      localStorage.setItem('theme', 'dark');
+    } else {
+      body.classList.remove('dark-mode');
+      body.classList.add('light-mode');
+      themeToggle.textContent = '🌙';
+      localStorage.setItem('theme', 'light');
+    }
+  });
+
+  // --- Generate + Download + Mobile Tabs ---
+  generateBtn.addEventListener('click', generateImage);
+  downloadBtn.addEventListener('click', () => {
+    const imgSrc = generatedImageDisplay.src;
+    if (!imgSrc) return;
+    const link = document.createElement('a');
+    link.href = imgSrc;
+    link.download = 'askaio-generated.png';
+    link.click();
+  });
+
+  tabPrompt.addEventListener('click', () => activateTab('prompt'));
+  tabPreview.addEventListener('click', () => activateTab('preview'));
+</script>
+
 </body>
 </html>
+
 
