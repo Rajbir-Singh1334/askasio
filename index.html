@@ -1,652 +1,592 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Color Magic 🎨</title>
-    <!-- Load Inter font from Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>
-        /*
-         * 1. BASE STYLES & MOBILE FIRST LAYOUT
-         */
-        :root {
-            --color-active: #FFD700; /* Gold/Yellow for active highlights */
-            --color-bg-light: #f0f4f8; /* Light blue-grey background */
-            --color-bg-dark: #333; /* Dark background for controls */
-            --color-button-primary: #4CAF50; /* Green for main buttons */
-            --color-button-danger: #f44336; /* Red for clear/undo */
-            --color-button-text: #fff;
-            --font-size-large: 1.5rem;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Askaio - India's AI Image Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100dvh; /* Dynamic viewport height for full screen on mobile */
-            background-color: var(--color-bg-light);
-            overflow: hidden; /* Prevent scrolling */
-            user-select: none; /* Disable text selection for better touch experience */
-            touch-action: manipulation; /* Optimizes touch responsiveness */
-        }
+  <!-- Clerk Frontend SDK -->
+  <script
+    async
+    crossorigin="anonymous"
+    data-clerk-publishable-key="pk_test_ZXBpYy1haXJlZGFsZS02MS5jbGVyay5hY2NvdW50cy5kZXYk"
+    src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js">
+  </script>
 
-        /*
-         * 2. HEADER STYLES (Colorful Title)
-         */
-        #header {
-            padding: 1rem 0.5rem;
-            background: linear-gradient(135deg, #FF6F61, #FFC72C, #88B04B, #7C4DFF);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            position: relative;
-            z-index: 10;
-        }
+  <style>
+    /* Default (Light) Mode - Simple, bright, and colorful */
+    :root {
+      --color-light-bg: #f7f9fb; /* Very light, soft background */
+      --color-panel-bg: #ffffff; /* White panels for content */
+      --color-primary: #9333ea;   /* Vibrant Purple */
+      --color-primary-light: #d8b4fe; /* Light purple for text/accent */
+      --color-text-dark: #1f2937; /* Dark text */
+      --color-border: #e5e7eb;    /* Light border color */
+      --transition-fast: 0.3s ease;
+    }
 
-        #title {
-            font-size: 2.5rem; /* Large text for kids */
-            font-weight: 900;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-            animation: rainbow-shift 10s linear infinite;
-            display: inline-block;
-        }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--color-light-bg);
+      color: var(--color-text-dark); /* Base text color, overridden by utility classes */
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-        @keyframes rainbow-shift {
-            0% { filter: hue-rotate(0deg); }
-            100% { filter: hue-rotate(360deg); }
-        }
+    .loading-spinner {
+      border-width: 6px;
+      border-style: solid;
+      border-color: rgba(147, 51, 234, 0.2);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+    }
 
-        /*
-         * 3. MAIN DRAWING AREA
-         */
-        #drawing-container {
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            position: relative;
-            padding: 1rem;
-        }
+    /* Vibrant image shadow for the colorful feel */
+    #generatedImage {
+      box-shadow: 0 0 20px rgba(147, 51, 234, 0.9);
+      border: 4px solid var(--color-primary-light);
+    }
 
-        #coloring-svg {
-            max-width: 100%;
-            max-height: 100%;
-            height: auto;
-            display: block;
-            touch-action: pan-x pan-y; /* Allow touch scrolling on the drawing if it's huge, but prevent tap interference */
-            border-radius: 12px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-            background-color: white;
-        }
+    .sidebar, .image-area {
+        background: var(--color-panel-bg);
+    }
 
-        #coloring-svg * {
-            stroke: #333; /* Outline color */
-            stroke-width: 1;
-            cursor: pointer;
-            transition: fill 0.1s ease; /* Smooth color change */
-        }
+    #promptInput {
+      background: #ffffff;
+      color: var(--color-text-dark);
+      border-color: var(--color-border);
+    }
 
-        /*
-         * 4. CONTROL AREAS
-         */
-        #controls-bottom {
-            background-color: var(--color-bg-dark);
-            padding: 0.75rem 0.5rem;
-            box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
-            z-index: 10;
-        }
+    header {
+      background: var(--color-panel-bg);
+    }
 
-        .button-row {
-            display: flex;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-bottom: 0.75rem;
-        }
+    #themeToggle {
+        background: #f3f4f6;
+        color: var(--color-text-dark);
+        border: 1px solid var(--color-border);
+    }
 
-        .action-button {
-            padding: 0.75rem 1rem;
-            font-size: var(--font-size-large);
-            font-weight: 700;
-            color: var(--color-button-text);
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            flex-grow: 1;
-            max-width: 150px;
-            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
-            transition: transform 0.1s, box-shadow 0.1s;
-        }
+    /* Dark Mode (toggled) */
+    body.dark-mode {
+      background: #1f1b2c;
+      color: #e5e7eb;
+    }
 
-        .action-button:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
-        }
+    body.dark-mode .sidebar,
+    body.dark-mode .image-area,
+    body.dark-mode header,
+    body.dark-mode .bottom-tabs {
+      background: #2c273e;
+    }
 
-        /* Specific Button Colors */
-        #undo-btn { background-color: #f44336; } /* Red */
-        #save-btn { background-color: #2196F3; } /* Blue */
-        #clear-btn { background-color: #9C27B0; } /* Purple */
+    body.dark-mode #promptInput {
+      background: #3a3350;
+      color: #e5e7eb;
+      border-color: #554e6b;
+    }
 
-        /*
-         * 5. COLOR PALETTE
-         */
-        #color-palette {
-            display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            padding: 0 0.5rem 0.75rem;
-            gap: 0.5rem;
-        }
+    body.dark-mode #themeToggle {
+      background: #3a3350;
+      color: #e5e7eb;
+    }
+    
+    body.dark-mode #landing-page h2 {
+        color: var(--color-primary-light);
+    }
 
-        .color-button {
-            width: 55px; /* Large touch target */
-            height: 55px;
-            border-radius: 50%;
-            border: 4px solid transparent;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-            transition: transform 0.1s, border-color 0.2s;
-            flex-shrink: 0;
-        }
+    /* Responsive/Mobile styles */
+    @media (max-width: 767px) {
+      #sidebar, #imageArea {
+        display: none;
+      }
+      #sidebar.active, #imageArea.active {
+        display: flex !important;
+      }
+    }
 
-        .color-button.active {
-            border-color: var(--color-active);
-            transform: scale(1.1);
-            box-shadow: 0 0 15px var(--color-active);
-        }
+    /* Bottom tab styles */
+    .bottom-tabs {
+      transition: background var(--transition-fast), color var(--transition-fast);
+      z-index: 10;
+      background: var(--color-panel-bg);
+      border-top: 1px solid var(--color-border);
+    }
 
-        .color-button:active {
-            transform: scale(0.95);
-        }
+    .bottom-tabs button {
+      transition: background var(--transition-fast), color var(--transition-fast);
+      border-radius: 6px;
+      color: var(--color-text-dark);
+    }
 
-        /*
-         * 6. NAVIGATION & MUSIC TOGGLE
-         */
-        #nav-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 0.5rem 0.75rem;
-        }
+    .bottom-tabs button.active {
+      color: white !important;
+      background-color: var(--color-primary); 
+    }
+    
+    body.dark-mode .bottom-tabs button {
+      color: #e5e7eb;
+    }
+    
+    .cl-internal-b1hrv3d { /* Targeted Clerk wrapper for aesthetics */
+        border-radius: 1rem !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
 
-        .nav-button {
-            padding: 0.75rem;
-            font-size: var(--font-size-large);
-            font-weight: 700;
-            background-color: #FF9800; /* Orange */
-            color: var(--color-button-text);
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
-            transition: transform 0.1s, box-shadow 0.1s;
-        }
-
-        .nav-button:active {
-            transform: translateY(1px);
-            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
-        }
-
-        #music-toggle {
-            font-size: 1.25rem;
-            background-color: #00BCD4; /* Cyan */
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            color: var(--color-button-text);
-            border: none;
-            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
-            transition: background-color 0.2s;
-        }
-
-        #music-toggle.off {
-            background-color: #797979; /* Grey when off */
-        }
-
-        /*
-         * 7. SPARKLE ANIMATION
-         */
-        .sparkle-effect {
-            position: absolute;
-            font-size: 3rem; /* Big star */
-            opacity: 0;
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            animation: sparkle-fade 0.5s ease-out forwards;
-            color: var(--color-active); /* Star color */
-            text-shadow: 0 0 10px var(--color-active);
-        }
-
-        @keyframes sparkle-fade {
-            0% { opacity: 1; transform: translate(-50%, -50%) scale(0); }
-            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
-        }
-    </style>
+  </style>
 </head>
-<body>
 
-    <div id="header">
-        <h1 id="title">Color Magic 🎨</h1>
+<body class="light-mode">
+  <!-- Header -->
+  <header class="flex justify-between items-center p-4 bg-[var(--color-panel-bg)] z-20 shadow-md">
+    <h1 class="text-xl font-bold text-[var(--color-primary)]">Askaio</h1>
+    <div class="flex items-center gap-4">
+      <!-- Hidden auth button used to switch to AUTH view from landing page header -->
+      <div id="clerk-user-button"></div>
     </div>
+  </header>
+  
+  <div id="app-root" class="flex-1 flex flex-col">
+    <!-- 1. Protected Content (Main App) -->
+    <main id="protected-content" class="flex-1 hidden">
+      <div class="main-layout flex flex-col md:flex-row gap-4 p-4 md:p-8 flex-1">
 
-    <div id="drawing-container">
-        <!-- SVG Drawing will be inserted here by JavaScript -->
-        <svg id="coloring-svg" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
-            <!-- Initial content placeholder -->
-        </svg>
-    </div>
+        <!-- Sidebar -->
+        <aside class="sidebar flex flex-col gap-4 rounded-2xl shadow-xl p-6 w-full md:w-[400px]" id="sidebar">
+          <div class="sidebar-header flex justify-between items-center mb-4">
+            <h1 class="text-4xl font-extrabold tracking-wide text-[var(--color-primary)] drop-shadow-sm">Askaio</h1>
+            <button id="themeToggle" class="w-12 h-12 flex items-center justify-center rounded-full text-2xl transition-all">🌙</button>
+          </div>
 
-    <div id="controls-bottom">
-        <!-- Action Buttons -->
-        <div class="button-row">
-            <!-- No text labels for core actions, use icons/symbols -->
-            <button id="undo-btn" class="action-button">↺ Undo</button>
-            <button id="clear-btn" class="action-button">🧽 Clear</button>
-            <button id="save-btn" class="action-button">💾 Save</button>
+          <!-- Changed to text-gray-900 (near black) -->
+          <p class="text-gray-900 dark:text-gray-400 leading-relaxed">
+            Enter a descriptive prompt to generate a stunning AI-powered image.
+          </p>
+
+          <textarea id="promptInput" placeholder="e.g., A futuristic neon city skyline at night with flying cars"
+            class="w-full h-40 p-4 rounded-xl border-2 border-[var(--color-primary)] resize-none focus:outline-none focus:ring-4 focus:ring-purple-400 transition-all"></textarea>
+
+          <button id="generateBtn" disabled
+            class="w-full py-3 rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all">
+            GENERATE IMAGE
+          </button>
+          <!-- Download Button will be inserted here by JS -->
+        </aside>
+
+        <!-- Main Image Display -->
+        <main class="image-area flex-1 flex justify-center items-center rounded-2xl shadow-xl overflow-hidden relative p-4" id="imageArea">
+          <div class="image-display w-full h-full flex justify-center items-center border-2 border-dashed border-gray-300 rounded-xl relative">
+            <div id="loadingState" class="hidden flex flex-col items-center gap-4">
+              <div class="loading-spinner w-14 h-14 animate-spin"></div>
+              <!-- Loading text remains slightly softer gray -->
+              <p class="text-gray-700 italic">Generating your masterpiece...</p>
+            </div>
+
+            <img id="generatedImage" src="" alt="Generated Image" class="hidden max-w-full max-h-full rounded-lg shadow-lg transition-opacity duration-700">
+            <!-- Changed to text-gray-700 for better visibility than gray-400 -->
+            <p id="placeholderText" class="text-gray-700 italic">Your generated image will appear here.</p>
+            <p id="errorMessage" class="text-red-600 font-semibold hidden text-center p-4"></p>
+          </div>
+        </main>
+      </div>
+
+      <!-- Mobile bottom tabs -->
+      <div id="mobileTabs" class="bottom-tabs fixed bottom-0 left-0 w-full flex justify-around p-2 md:hidden">
+        <button id="tabPrompt" class="flex-1 py-2 text-center active">Prompt</button>
+        <button id="tabPreview" class="flex-1 py-2 text-center">Preview</button>
+      </div>
+    </main>
+    
+    <!-- 2. Detailed Landing Page -->
+    <div id="landing-page" class="flex-1 flex flex-col justify-start items-center p-8 hidden overflow-y-auto">
+      <div class="w-full max-w-6xl">
+        
+        <!-- Hero Section -->
+        <div class="grid md:grid-cols-2 items-center gap-12 py-16">
+          
+          <!-- Text Content and CTA -->
+          <div class="text-center md:text-left">
+            <h2 class="text-5xl md:text-7xl font-extrabold text-[var(--color-primary)] mb-6 tracking-tight">
+              Visualize Your Next Idea.
+            </h2>
+            <!-- Changed to text-gray-900 (near black) -->
+            <p class="text-lg md:text-2xl text-gray-900 dark:text-gray-300 mb-8 max-w-lg md:max-w-none mx-auto md:mx-0 leading-relaxed">
+              <bold>Askaio</bold> is an advanced AI image generation studio. Describe any scene, concept, or style, and instantly receive a high-quality, unique image, powered by Google's latest models for exceptional detail and speed.
+            </p>
+            <button id="getStartedBtn" class="w-full md:w-auto px-10 py-4 text-xl rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all">
+              Start Creating Now &rarr;
+            </button>
+            <!-- Changed to text-gray-800 -->
+            <p class="text-sm text-gray-800 mt-4 md:mt-6">Already a user? 
+              <a href="#" id="landingSignInLink" class="text-[var(--color-primary)] font-semibold hover:underline transition-colors">Sign In</a> to access your gallery.
+            </p>
+          </div>
+          
+          <!-- Image Mockup -->
+          <div class="flex justify-center items-center p-4">
+            <div class="w-full max-w-md aspect-square bg-[var(--color-panel-bg)] rounded-3xl shadow-2xl border border-[var(--color-border)] p-6 flex flex-col items-center justify-center">
+              <!-- Using a placeholder image with primary colors -->
+              <div class="w-full aspect-square bg-cover bg-center rounded-2xl" 
+                   style="background-image: url('https://placehold.co/500x500/9333ea/ffffff?text=AI+Generated+Preview'); border: 4px solid var(--color-primary);">
+              </div>
+              <!-- Changed to text-gray-700 (still secondary, but high contrast) -->
+              <p class="text-sm text-gray-700 mt-4 italic text-center">Prompt: "A majestic griffin soaring over a cyberpunk city, highly detailed digital art."</p>
+            </div>
+          </div>
         </div>
 
-        <!-- Navigation and Music -->
-        <div id="nav-controls">
-            <button id="prev-btn" class="nav-button">◀</button>
-            <button id="music-toggle" class="nav-button" title="Background Music On/Off">🎶</button>
-            <button id="next-btn" class="nav-button">▶</button>
+        <!-- Features Section -->
+        <div class="pt-12 pb-8 md:pb-16 border-t border-[var(--color-border)]">
+            <h3 class="text-3xl font-bold text-center mb-10 text-[var(--color-primary)]">Core Capabilities</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
+                    <div class="text-3xl text-[var(--color-primary)] mb-3">✨</div>
+                    <!-- Changed to text-gray-900 (near black) -->
+                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">High Fidelity Output</h4>
+                    <!-- Changed to text-gray-800 -->
+                    <p class="text-gray-800 dark:text-gray-400 text-sm">Our models are tuned for exceptional detail, handling complex lighting, textures, and artistic styles for stunning results.</p>
+                </div>
+                <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
+                    <div class="text-3xl text-[var(--color-primary)] mb-3">🚀</div>
+                    <!-- Changed to text-gray-900 (near black) -->
+                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Ultra-Fast Generation</h4>
+                    <!-- Changed to text-gray-800 -->
+                    <p class="text-gray-800 dark:text-gray-400 text-sm">Turn your descriptive prompt into a professional-grade visual in a matter of seconds, minimizing wait times.</p>
+                </div>
+                <div class="feature-card p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
+                    <div class="text-3xl text-[var(--color-primary)] mb-3">🎨</div>
+                    <!-- Changed to text-gray-900 (near black) -->
+                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Limitless Creativity</h4>
+                    <!-- Changed to text-gray-800 -->
+                    <p class="text-gray-800 dark:text-gray-400 text-sm">Explore infinite possibilities, generating everything from abstract concepts to specific product visualizations.</p>
+                </div>
+            </div>
         </div>
+        
+        <!-- How It Works Section (New Detailed Section) -->
+        <div class="pt-12 pb-16 md:pb-24 border-t border-[var(--color-border)] mt-12">
+            <h3 class="text-3xl font-bold text-center mb-12 text-[var(--color-primary)]">The Simple 3-Step Process</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                
+                <!-- Step 1 -->
+                <div class="p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
+                    <div class="w-12 h-12 flex items-center justify-center rounded-full bg-purple-100 text-[var(--color-primary)] font-extrabold text-2xl mx-auto mb-4 border border-[var(--color-primary)]">1</div>
+                    <!-- Changed to text-gray-900 (near black) -->
+                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Craft Your Prompt</h4>
+                    <!-- Changed to text-gray-800 -->
+                    <p class="text-gray-800 dark:text-gray-400 text-sm">Start with a detailed text prompt. Specify the subject, artistic style (e.g., oil painting, digital art), and scene elements.</p>
+                </div>
 
-        <!-- Color Palette -->
-        <div id="color-palette">
-            <!-- Color buttons generated by JavaScript -->
+                <!-- Step 2 -->
+                <div class="p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
+                    <div class="w-12 h-12 flex items-center justify-center rounded-full bg-purple-100 text-[var(--color-primary)] font-extrabold text-2xl mx-auto mb-4 border border-[var(--color-primary)]">2</div>
+                    <!-- Changed to text-gray-900 (near black) -->
+                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">AI Renders Instantly</h4>
+                    <!-- Changed to text-gray-800 -->
+                    <p class="text-gray-800 dark:text-gray-400 text-sm">We submit your request to the Gemini API, which processes the description and synthesizes a unique image based on your input.</p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="p-6 bg-[var(--color-panel-bg)] rounded-2xl shadow-xl border border-[var(--color-border)]">
+                    <div class="w-12 h-12 flex items-center justify-center rounded-full bg-purple-100 text-[var(--color-primary)] font-extrabold text-2xl mx-auto mb-4 border border-[var(--color-primary)]">3</div>
+                    <!-- Changed to text-gray-900 (near black) -->
+                    <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-200">Download High-Res</h4>
+                    <!-- Changed to text-gray-800 -->
+                    <p class="text-gray-800 dark:text-gray-400 text-sm">Receive your final image instantly, ready to be downloaded and used wherever your projects take you.</p>
+                </div>
+            </div>
         </div>
+        
+        <!-- Call to Action Footer (New Section) -->
+        <div class="text-center py-16 bg-purple-50 rounded-2xl mb-8 border border-[var(--color-primary-light)] shadow-lg">
+            <!-- Changed to text-gray-900 (near black) -->
+            <h3 class="text-3xl font-bold text-gray-900 mb-4">Ready to Transform Text into Art?</h3>
+            <!-- Changed to text-gray-800 -->
+            <p class="text-lg text-gray-800 mb-8 max-w-2xl mx-auto">
+                Join the beta today and explore the future of digital content creation. No limits, just creativity.
+            </p>
+            <button id="getStartedBtnFooter" class="px-12 py-4 text-xl rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all">
+                Access the Generator &rarr;
+            </button>
+        </div>
+        
+      </div>
     </div>
 
-    <script>
-        // Use an IIFE for clean scope
-        (function() {
-            // --- GLOBAL CONFIGURATION ---
-            const COLORS = [
-                { name: 'red', hex: '#E74C3C' },
-                { name: 'orange', hex: '#E67E22' },
-                { name: 'yellow', hex: '#F1C40F' },
-                { name: 'green', hex: '#2ECC71' },
-                { name: 'blue', hex: '#3498DB' },
-                { name: 'purple', hex: '#9B59B6' },
-                { name: 'pink', hex: '#FF77AA' },
-                { name: 'brown', hex: '#795548' },
-                { name: 'white', hex: '#FFFFFF' }, // White/Erase
-            ];
-
-            // Placeholder URLs for sounds - MUST BE VALID MP3 PATHS
-            const FILL_SOUND_URL = 'https://cdn.jsdelivr.net/gh/Tonejs/Tone.js/examples/assets/audio/pluck.mp3';
-            const MUSIC_URL = 'https://cdn.jsdelivr.net/gh/Tonejs/Tone.js/examples/assets/audio/samba.mp3';
-
-            // --- STATE MANAGEMENT ---
-            let currentColor = COLORS[0].hex;
-            let currentDrawingIndex = 0;
-            let drawings = [];
-            let drawingHistory = []; // Stores { elementId, oldColor } for undo
-            const MAX_HISTORY = 50;
-            let musicAudio;
-            let isMusicPlaying = false;
-
-            // --- DOM ELEMENTS ---
-            const svgContainer = document.getElementById('coloring-svg');
-            const paletteEl = document.getElementById('color-palette');
-            const musicToggleBtn = document.getElementById('music-toggle');
-            const undoBtn = document.getElementById('undo-btn');
-            const clearBtn = document.getElementById('clear-btn');
-            const saveBtn = document.getElementById('save-btn');
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-            const sparkleContainer = document.getElementById('drawing-container');
+    <!-- 3. Public Auth Page (Clerk Form) -->
+    <div id="public-auth" class="flex-1 hidden flex justify-center items-center p-8">
+      <div id="clerk-sign-in-form" class="w-full max-w-sm"></div>
+    </div>
+  </div>
 
 
-            // --- SVG DRAWING DEFINITIONS ---
-            // Each drawing object contains its unique ID and the SVG code.
-            const DRAWING_DATA = [
-                {
-                    id: 'flower',
-                    name: 'Flower',
-                    svg: `<g transform="translate(50, 50) scale(0.8)">
-                        <rect x="230" y="300" width="40" height="200" fill="#88B04B" id="flower-stem" class="colorable-part" />
-                        <circle cx="250" cy="250" r="70" fill="#F1C40F" id="flower-center" class="colorable-part" />
-                        <ellipse cx="250" cy="100" rx="60" ry="100" fill="#E74C3C" id="flower-petal-1" class="colorable-part" transform="rotate(0 250 250)"/>
-                        <ellipse cx="250" cy="100" rx="60" ry="100" fill="#E74C3C" id="flower-petal-2" class="colorable-part" transform="rotate(45 250 250)"/>
-                        <ellipse cx="250" cy="100" rx="60" ry="100" fill="#E74C3C" id="flower-petal-3" class="colorable-part" transform="rotate(90 250 250)"/>
-                        <ellipse cx="250" cy="100" rx="60" ry="100" fill="#E74C3C" id="flower-petal-4" class="colorable-part" transform="rotate(135 250 250)"/>
-                        <ellipse cx="250" cy="100" rx="60" ry="100" fill="#E74C3C" id="flower-petal-5" class="colorable-part" transform="rotate(180 250 250)"/>
-                        <ellipse cx="250" cy="100" rx="60" ry="100" fill="#E74C3C" id="flower-petal-6" class="colorable-part" transform="rotate(225 250 250)"/>
-                        <ellipse cx="250" cy="100" rx="60" ry="100" fill="#E74C3C" id="flower-petal-7" class="colorable-part" transform="rotate(270 250 250)"/>
-                        <ellipse cx="250" cy="100" rx="60" ry="100" fill="#E74C3C" id="flower-petal-8" class="colorable-part" transform="rotate(315 250 250)"/>
-                    </g>`
-                },
-                {
-                    id: 'elephant',
-                    name: 'Elephant',
-                    svg: `<g transform="translate(100, 100) scale(0.6)">
-                        <!-- Body - using a path for complexity -->
-                        <path d="M100,200 C50,250 50,350 150,400 L300,400 C350,350 350,250 300,200 Z" fill="#BBDEFB" id="elephant-body" class="colorable-part" />
-                        <!-- Ear -->
-                        <path d="M100,200 C0,100 100,50 150,150 Z" fill="#90CAF9" id="elephant-ear" class="colorable-part" />
-                        <!-- Head -->
-                        <circle cx="200" cy="200" r="70" fill="#BBDEFB" id="elephant-head" class="colorable-part" />
-                        <!-- Trunk -->
-                        <path d="M220,220 L240,280 L200,350 L180,300 Z" fill="#BBDEFB" id="elephant-trunk" class="colorable-part" />
-                        <!-- Legs -->
-                        <rect x="120" y="400" width="30" height="50" fill="#64B5F6" id="elephant-leg-1" class="colorable-part" />
-                        <rect x="250" y="400" width="30" height="50" fill="#64B5F6" id="elephant-leg-2" class="colorable-part" />
-                    </g>`
-                },
-                {
-                    id: 'rainbow',
-                    name: 'Rainbow',
-                    svg: `<g transform="translate(0, 0)">
-                        <!-- Arcs -->
-                        <path d="M 50 450 A 200 200 0 0 1 450 450 L 450 470 A 220 220 0 0 0 50 470 Z" fill="#E74C3C" id="rainbow-arc-red" class="colorable-part" />
-                        <path d="M 70 450 A 180 180 0 0 1 430 450 L 430 470 A 200 200 0 0 0 70 470 Z" fill="#E67E22" id="rainbow-arc-orange" class="colorable-part" />
-                        <path d="M 90 450 A 160 160 0 0 1 410 450 L 410 470 A 180 180 0 0 0 90 470 Z" fill="#F1C40F" id="rainbow-arc-yellow" class="colorable-part" />
-                        <path d="M 110 450 A 140 140 0 0 1 390 450 L 390 470 A 160 160 0 0 0 110 470 Z" fill="#2ECC71" id="rainbow-arc-green" class="colorable-part" />
-                        <path d="M 130 450 A 120 120 0 0 1 370 450 L 370 470 A 140 140 0 0 0 130 470 Z" fill="#3498DB" id="rainbow-arc-blue" class="colorable-part" />
-                        <path d="M 150 450 A 100 100 0 0 1 350 450 L 350 470 A 120 120 0 0 0 150 470 Z" fill="#9B59B6" id="rainbow-arc-purple" class="colorable-part" />
-                        <!-- Clouds -->
-                        <circle cx="80" cy="450" r="40" fill="#FFFFFF" id="rainbow-cloud-left-1" class="colorable-part" />
-                        <circle cx="120" cy="450" r="30" fill="#FFFFFF" id="rainbow-cloud-left-2" class="colorable-part" />
-                        <circle cx="420" cy="450" r="40" fill="#FFFFFF" id="rainbow-cloud-right-1" class="colorable-part" />
-                        <circle cx="380" cy="450" r="30" fill="#FFFFFF" id="rainbow-cloud-right-2" class="colorable-part" />
-                    </g>`
-                }
-            ];
+  <script>
+    // Constants and DOM Elements
+    const apiKey = "AIzaSyD8xBXpp0FYeV0nCxZ9V_VtVjKwoo6_BUw";
+    const protectedContent = document.getElementById('protected-content');
+    const publicAuth = document.getElementById('public-auth');
+    const landingPage = document.getElementById('landing-page');
+    // Updated to include the new footer button
+    const getStartedBtn = document.getElementById('getStartedBtn'); 
+    const getStartedBtnFooter = document.getElementById('getStartedBtnFooter');
+    const landingSignInLink = document.getElementById('landingSignInLink');
+    const mobileTabs = document.getElementById('mobileTabs');
 
-            // --- AUDIO FUNCTIONS ---
+    const sidebar = document.getElementById('sidebar');
+    const imageArea = document.getElementById('imageArea');
+    const promptInput = document.getElementById('promptInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const generatedImageDisplay = document.getElementById('generatedImage');
+    const loadingState = document.getElementById('loadingState');
+    const placeholderText = document.getElementById('placeholderText');
+    const errorMessage = document.getElementById('errorMessage');
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+    const tabPrompt = document.getElementById('tabPrompt');
+    const tabPreview = document.getElementById('tabPreview');
 
-            // Function to play a simple sound effect (fill sound or color name sound)
-            function playSound(url) {
-                try {
-                    const audio = new Audio(url);
-                    audio.play().catch(e => console.log('Audio play failed (maybe autoplay blocked or no valid URL):', e));
-                } catch (e) {
-                    console.warn('Error creating audio element:', e);
-                }
+    // ✅ Download button setup
+    const downloadBtn = document.createElement('button');
+    downloadBtn.id = "downloadImageBtn";
+    downloadBtn.textContent = "DOWNLOAD IMAGE";
+    downloadBtn.className =
+      "w-full py-3 rounded-xl font-bold bg-gradient-to-r from-green-500 to-green-700 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all hidden mt-4";
+    sidebar.appendChild(downloadBtn);
+
+    // --- Utility Functions ---
+
+    /**
+     * Controls which major view (APP, AUTH, LANDING) is displayed.
+     * @param {'APP'|'AUTH'|'LANDING'} state 
+     */
+    function showAppView(state) {
+        // Hide all containers and mobile tabs
+        protectedContent.classList.add('hidden');
+        publicAuth.classList.add('hidden');
+        landingPage.classList.add('hidden');
+        mobileTabs.classList.add('hidden');
+        
+        // Show the correct container based on state
+        if (state === 'APP') {
+            protectedContent.classList.remove('hidden');
+            if (window.innerWidth < 768) mobileTabs.classList.remove('hidden');
+        } else if (state === 'AUTH') {
+            publicAuth.classList.remove('hidden');
+            // Mount the Clerk sign-in form when switching to the AUTH state
+            Clerk.mountSignIn(document.getElementById("clerk-sign-in-form"));
+        } else { // LANDING
+            landingPage.classList.remove('hidden');
+        }
+    }
+
+
+    function showLoading(show) {
+      if (show) {
+        loadingState.classList.remove('hidden');
+        generatedImageDisplay.classList.add('hidden');
+        placeholderText.classList.add('hidden');
+        errorMessage.classList.add('hidden');
+        downloadBtn.classList.add('hidden');
+      } else {
+        loadingState.classList.add('hidden');
+      }
+    }
+
+    function toggleGenerateButton(disabled) {
+      generateBtn.disabled = disabled || promptInput.value.trim() === '';
+      generateBtn.textContent = disabled ? "GENERATING..." : "GENERATE IMAGE";
+      generateBtn.style.opacity = disabled ? "0.7" : "1";
+    }
+
+    // --- Theme and Mobile Tab Logic ---
+
+    function updateTabColors() {
+      // Logic for dark mode styles is now encapsulated in the CSS classes
+      // No need for inline style overrides here, as CSS handles the dark-mode class
+    }
+
+    function activateTab(tab) {
+      tabPrompt.classList.remove('active');
+      tabPreview.classList.remove('active');
+      sidebar.classList.remove('active');
+      imageArea.classList.remove('active');
+
+      if (tab === 'prompt') {
+        tabPrompt.classList.add('active');
+        sidebar.classList.add('active');
+      } else {
+        tabPreview.classList.add('active');
+        imageArea.classList.add('active');
+      }
+
+      updateTabColors();
+    }
+
+    // --- Main Logic: Image Generation ---
+
+    async function generateImage() {
+      const prompt = promptInput.value.trim();
+      if (!prompt) return;
+
+      toggleGenerateButton(true);
+      showLoading(true);
+
+      // Simple retry mechanism for API calls
+      const maxRetries = 3;
+      let lastError = null;
+
+      for (let i = 0; i < maxRetries; i++) {
+        try {
+          // Using the preferred imagen-3.0-generate-002 model
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+          const payload = { 
+              instances: [{ prompt: prompt }], 
+              parameters: { "sampleCount": 1 }
+          };
+          
+          const response = await fetch(apiUrl, { 
+              method: 'POST', 
+              headers: { 'Content-Type': 'application/json' }, 
+              body: JSON.stringify(payload) 
+          });
+          
+          if (!response.ok) {
+              const errorBody = await response.json();
+              throw new Error(`API returned status ${response.status}: ${errorBody.error?.message || response.statusText}`);
+          }
+
+          const result = await response.json();
+
+          // Extract base64 data specific to imagen-3.0-generate-002:predict response structure
+          const base64Data = result?.predictions?.[0]?.bytesBase64Encoded;
+
+          if (base64Data) {
+            generatedImageDisplay.src = `data:image/png;base64,${base64Data}`;
+            generatedImageDisplay.classList.remove('hidden');
+            placeholderText.classList.add('hidden');
+            downloadBtn.classList.remove('hidden');
+            // On mobile, automatically switch to preview tab after generation
+            if (window.innerWidth < 768) activateTab('preview');
+            // Success, break the retry loop
+            lastError = null; 
+            break;
+          } else {
+            // No base64 data, this is an issue we might retry or handle as a final failure
+            throw new Error("API response missing image data.");
+          }
+        } catch (err) {
+          lastError = err;
+          console.error(`Attempt ${i + 1} failed:`, err);
+          if (i < maxRetries - 1) {
+            // Exponential backoff: 1s, 2s, 4s delay
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+          }
+        }
+      }
+
+      if (lastError) {
+          errorMessage.textContent = `Image generation failed after ${maxRetries} attempts. Error: ${lastError.message}`;
+          errorMessage.classList.remove('hidden');
+      }
+
+      toggleGenerateButton(false);
+      showLoading(false);
+    }
+
+    // --- Event Listeners and Initial Load ---
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Force Light Mode as Default (Ignoring localStorage initial check)
+      // The body starts with 'light-mode' by default in the HTML class attribute now
+      body.classList.remove('dark-mode'); 
+      body.classList.add('light-mode');
+      themeToggle.textContent = '🌙'; 
+      localStorage.setItem('theme', 'light');
+
+      promptInput.addEventListener('input', () => {
+        generateBtn.disabled = promptInput.value.trim() === '';
+      });
+
+      // Initial tab setup for mobile
+      updateTabColors();
+      if (window.innerWidth < 768) activateTab('prompt');
+    });
+
+    // Clerk Initialization and View Switching
+    window.addEventListener("load", async () => {
+        await Clerk.load();
+        
+        // Mount User Button (always visible in the header for signed-in users)
+        Clerk.mountUserButton(document.getElementById("clerk-user-button"));
+        
+        // Determine initial view state
+        if (Clerk.user) {
+            showAppView('APP');
+        } else {
+            showAppView('LANDING');
+        }
+
+        // Listener for authentication changes (login/logout)
+        Clerk.addListener(({ user }) => {
+            if (user) {
+                showAppView('APP');
+            } else {
+                // On logout, return to the landing page
+                showAppView('LANDING');
             }
+        });
+        
+        // Function to trigger auth view
+        const triggerAuthView = (e) => {
+            e.preventDefault();
+            showAppView('AUTH');
+        };
 
-            // Function to speak the color name using the Web Speech API
-            function speakColor(colorName) {
-                // Ensure the Web Speech API is available
-                if ('speechSynthesis' in window) {
-                    const utterance = new SpeechSynthesisUtterance(colorName);
-                    // Use a fun voice/pitch if possible (browser dependent)
-                    utterance.pitch = 1.2;
-                    utterance.rate = 1.1;
-                    speechSynthesis.speak(utterance);
-                } else {
-                    console.log(`Speech not supported, saying: ${colorName}`);
-                }
-            }
+        // Landing Page Button Handlers (Transition to Auth)
+        getStartedBtn.addEventListener('click', triggerAuthView);
+        landingSignInLink.addEventListener('click', triggerAuthView);
+        // New Footer CTA Listener
+        getStartedBtnFooter.addEventListener('click', triggerAuthView);
+    });
 
-            // Function to toggle background music
-            function toggleMusic() {
-                if (!musicAudio) {
-                    musicAudio = new Audio(MUSIC_URL);
-                    musicAudio.loop = true;
-                    musicAudio.volume = 0.3; // Soft volume
-                    musicAudio.addEventListener('canplaythrough', () => {
-                        // Only try to play if we just created it and it's supposed to be ON
-                        if (isMusicPlaying) {
-                            musicAudio.play().catch(e => console.log('Music autoplay blocked, user needs to interact first:', e));
-                        }
-                    });
-                }
+    // Theme Toggle
+    themeToggle.addEventListener('click', () => {
+      // Toggle between light-mode (default) and dark-mode
+      const isLight = body.classList.contains('light-mode');
+      
+      if (isLight) {
+          body.classList.remove('light-mode');
+          body.classList.add('dark-mode');
+          themeToggle.textContent = '☀️';
+          localStorage.setItem('theme', 'dark');
+      } else {
+          body.classList.remove('dark-mode');
+          body.classList.add('light-mode');
+          themeToggle.textContent = '🌙';
+          localStorage.setItem('theme', 'light');
+      }
+      updateTabColors();
+    });
 
-                if (isMusicPlaying) {
-                    musicAudio.pause();
-                    isMusicPlaying = false;
-                    musicToggleBtn.classList.add('off');
-                    musicToggleBtn.textContent = '🔇';
-                } else {
-                    musicAudio.play().catch(e => console.log('Music play blocked after user interaction:', e));
-                    isMusicPlaying = true;
-                    musicToggleBtn.classList.remove('off');
-                    musicToggleBtn.textContent = '🎶';
-                }
-                localStorage.setItem('colorMagicMusicState', isMusicPlaying);
-            }
+    // Generate Button
+    generateBtn.addEventListener('click', generateImage);
 
-            // --- LOCAL STORAGE AND STATE FUNCTIONS ---
+    // Download Button
+    downloadBtn.addEventListener('click', () => {
+      const imgSrc = generatedImageDisplay.src;
+      if (!imgSrc) return;
+      const link = document.createElement('a');
+      link.href = imgSrc;
+      link.download = 'askaio-generated.png';
+      link.click();
+    });
 
-            // Mandatory: App ID for Firestore is not used here as the user explicitly asked for localStorage.
-            const STORAGE_PREFIX = 'colorMagicState_';
-
-            // Function to load all drawing states from localStorage
-            function loadAllStates() {
-                DRAWING_DATA.forEach(drawing => {
-                    const storedState = localStorage.getItem(STORAGE_PREFIX + drawing.id);
-                    // Initialize each drawing state with the initial SVG code
-                    drawings.push({
-                        ...drawing,
-                        state: storedState ? JSON.parse(storedState) : {},
-                        history: [], // History is transient and not saved across sessions
-                    });
-                });
-
-                // Load music state
-                const savedMusicState = localStorage.getItem('colorMagicMusicState');
-                if (savedMusicState === 'true') {
-                    isMusicPlaying = true;
-                } else {
-                    isMusicPlaying = false;
-                    musicToggleBtn.classList.add('off');
-                    musicToggleBtn.textContent = '🔇';
-                }
-            }
-
-            // Function to save the current drawing's state to localStorage
-            function saveCurrentState() {
-                const currentDrawing = drawings[currentDrawingIndex];
-                localStorage.setItem(STORAGE_PREFIX + currentDrawing.id, JSON.stringify(currentDrawing.state));
-                console.log(`State saved for: ${currentDrawing.name}`);
-            }
-
-            // --- UI RENDER FUNCTIONS ---
-
-            // Renders the current drawing into the SVG container
-            function renderDrawing() {
-                const currentDrawing = drawings[currentDrawingIndex];
-                // Insert the base SVG content
-                svgContainer.innerHTML = currentDrawing.svg;
-                svgContainer.dataset.drawingId = currentDrawing.id;
-
-                // Apply saved colors
-                const state = currentDrawing.state;
-                for (const id in state) {
-                    const element = document.getElementById(id);
-                    if (element) {
-                        element.style.fill = state[id];
-                    }
-                }
-            }
-
-            // Creates and attaches the color palette buttons
-            function setupColorPalette() {
-                COLORS.forEach(color => {
-                    const button = document.createElement('button');
-                    button.className = 'color-button';
-                    button.style.backgroundColor = color.hex;
-                    button.dataset.hex = color.hex;
-                    button.dataset.name = color.name;
-                    button.addEventListener('click', () => selectColor(button, color.hex, color.name));
-                    paletteEl.appendChild(button);
-                });
-            }
-
-            // --- CORE INTERACTION LOGIC ---
-
-            // Handles selecting a new color from the palette
-            function selectColor(button, hex, name) {
-                currentColor = hex;
-                // Update active state on buttons
-                document.querySelectorAll('.color-button').forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-
-                // Provide voice feedback
-                speakColor(name);
-                console.log(`Color selected: ${name} (${hex})`);
-            }
-
-            // Handles the coloring action when an SVG part is tapped
-            function handleColoringTap(event) {
-                let target = event.target;
-
-                // Ensure the click is on a colorable part (not the main SVG)
-                if (!target || !target.classList.contains('colorable-part')) return;
-
-                const elementId = target.id;
-                const currentDrawing = drawings[currentDrawingIndex];
-
-                // Check if the color is actually changing to prevent history spamming
-                const oldColor = target.style.fill || target.getAttribute('fill');
-                if (oldColor === currentColor) return; // Color is the same, do nothing
-
-                // 1. Record for Undo
-                currentDrawing.history.push({ elementId, oldColor: oldColor || '#FFFFFF' });
-                // Keep history size manageable
-                if (currentDrawing.history.length > MAX_HISTORY) {
-                    currentDrawing.history.shift();
-                }
-
-                // 2. Apply New Color
-                target.style.fill = currentColor;
-
-                // 3. Update State (For Automatic Save)
-                currentDrawing.state[elementId] = currentColor;
-
-                // 4. Save to LocalStorage immediately
-                saveCurrentState();
-
-                // 5. Provide Feedback
-                playSound(FILL_SOUND_URL);
-                showSparkle(event.clientX, event.clientY);
-            }
-
-            // --- ACTION BUTTON LOGIC ---
-
-            function undoLastChange() {
-                const currentDrawing = drawings[currentDrawingIndex];
-                const lastAction = currentDrawing.history.pop();
-
-                if (lastAction) {
-                    const element = document.getElementById(lastAction.elementId);
-                    if (element) {
-                        // Revert the color
-                        element.style.fill = lastAction.oldColor;
-
-                        // Update state for persistent saving
-                        currentDrawing.state[lastAction.elementId] = lastAction.oldColor;
-                        saveCurrentState();
-                        speakColor("Undo!"); // Simple voice feedback
-                    }
-                } else {
-                    speakColor("Nothing to undo!");
-                }
-            }
-
-            function clearCurrentDrawing() {
-                // Confirm action (using a simple prompt instead of alert/confirm)
-                if (confirm("Are you sure you want to clear this drawing?")) {
-                    const currentDrawing = drawings[currentDrawingIndex];
-                    currentDrawing.state = {};
-                    currentDrawing.history = []; // Also clear history
-
-                    // Reset all colors in the SVG
-                    document.querySelectorAll('#coloring-svg .colorable-part').forEach(el => {
-                        el.style.fill = ''; // Reset inline style
-                    });
-
-                    saveCurrentState(); // Save the cleared state
-                    speakColor("Cleared!");
-                }
-            }
-
-            // --- NAVIGATION LOGIC ---
-
-            function changeDrawing(direction) {
-                // Save current state before switching
-                saveCurrentState();
-
-                currentDrawingIndex += direction;
-                if (currentDrawingIndex < 0) {
-                    currentDrawingIndex = drawings.length - 1; // Wrap around to the end
-                } else if (currentDrawingIndex >= drawings.length) {
-                    currentDrawingIndex = 0; // Wrap around to the beginning
-                }
-
-                // Render the new drawing
-                renderDrawing();
-                speakColor(drawings[currentDrawingIndex].name);
-            }
-
-            // --- VISUAL FEEDBACK (SPARKLE) ---
-
-            function showSparkle(x, y) {
-                // Create the sparkle element
-                const sparkle = document.createElement('div');
-                sparkle.className = 'sparkle-effect';
-                sparkle.textContent = '✨'; // Star emoji for sparkle
-                sparkle.style.left = `${x}px`;
-                sparkle.style.top = `${y}px`;
-
-                sparkleContainer.appendChild(sparkle);
-
-                // Remove the sparkle after animation completes
-                sparkle.addEventListener('animationend', () => {
-                    sparkle.remove();
-                });
-            }
-
-            // --- INITIALIZATION ---
-
-            function init() {
-                // 1. Load data from localStorage
-                loadAllStates();
-
-                // 2. Setup UI elements
-                setupColorPalette();
-
-                // 3. Render the initial drawing
-                renderDrawing();
-
-                // 4. Set initial active color (highlight first button)
-                const firstColorButton = paletteEl.querySelector('.color-button');
-                if (firstColorButton) {
-                    selectColor(firstColorButton, COLORS[0].hex, COLORS[0].name);
-                }
-
-                // 5. Attach event listeners
-                svgContainer.addEventListener('click', handleColoringTap);
-                undoBtn.addEventListener('click', undoLastChange);
-                clearBtn.addEventListener('click', clearCurrentDrawing);
-                saveBtn.addEventListener('click', saveCurrentState);
-                prevBtn.addEventListener('click', () => changeDrawing(-1));
-                nextBtn.addEventListener('click', () => changeDrawing(1));
-                musicToggleBtn.addEventListener('click', toggleMusic);
-
-                // 6. Initialize music if it was saved as ON
-                if (isMusicPlaying) {
-                    // This will handle creating and attempting to play the audio
-                    toggleMusic();
-                }
-
-                console.log("Color Magic Initialized!");
-            }
-
-            // Start the application when the DOM is fully loaded
-            document.addEventListener('DOMContentLoaded', init);
-
-        })();
-    </script>
+    // Mobile tabs
+    tabPrompt.addEventListener('click', () => activateTab('prompt'));
+    tabPreview.addEventListener('click', () => activateTab('preview'));
+  </script>
 </body>
 </html>
-
