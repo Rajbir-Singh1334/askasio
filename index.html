@@ -324,241 +324,207 @@
 
 
 <script>
-  // Constants and DOM Elements
-  const apiKey = "AIzaSyD8xBXpp0FYeV0nCxZ9V_VtVjKwoo6_BUw";
-  const protectedContent = document.getElementById('protected-content');
-  const publicAuth = document.getElementById('public-auth');
-  const landingPage = document.getElementById('landing-page');
-  const getStartedBtn = document.getElementById('getStartedBtn');
-  const getStartedBtnFooter = document.getElementById('getStartedBtnFooter');
-  const landingSignInLink = document.getElementById('landingSignInLink');
-  const mobileTabs = document.getElementById('mobileTabs');
+window.addEventListener("load", async () => {
+  await Clerk.load();
 
-  const sidebar = document.getElementById('sidebar');
-  const imageArea = document.getElementById('imageArea');
-  const promptInput = document.getElementById('promptInput');
-  const generateBtn = document.getElementById('generateBtn');
-  const generatedImageDisplay = document.getElementById('generatedImage');
-  const loadingState = document.getElementById('loadingState');
-  const placeholderText = document.getElementById('placeholderText');
-  const errorMessage = document.getElementById('errorMessage');
-  const themeToggle = document.getElementById('themeToggle');
-  const body = document.body;
-  const tabPrompt = document.getElementById('tabPrompt');
-  const tabPreview = document.getElementById('tabPreview');
+  if (!Clerk.user) {
+    document.getElementById("protected-content").classList.add("hidden");
+    document.getElementById("public-auth").classList.remove("hidden");
 
-  // ✅ Download button setup
-  const downloadBtn = document.createElement('button');
-  downloadBtn.id = "downloadImageBtn";
-  downloadBtn.textContent = "DOWNLOAD IMAGE";
-  downloadBtn.className =
-    "w-full py-3 rounded-xl font-bold bg-gradient-to-r from-green-500 to-green-700 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all hidden mt-4";
-  sidebar.appendChild(downloadBtn);
+    // Mount the Clerk SignIn form into the container (space theme 🌌)
+    Clerk.mountSignIn(document.getElementById("clerk-sign-in-form"), {
+      appearance: {
+        elements: {
+          card: "bg-gradient-to-br from-[#1a102b] to-[#0b0f24] border border-purple-700/40 shadow-xl rounded-2xl p-6",
+          headerTitle: "text-3xl font-extrabold text-purple-400 tracking-wide drop-shadow-lg",
+          headerSubtitle: "text-gray-400 italic",
+          formButtonPrimary:
+            "bg-gradient-to-r from-purple-500 via-fuchsia-600 to-pink-600 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:scale-[1.05] hover:shadow-purple-500/50 transition-all",
+          formFieldInput:
+            "bg-[#0f172a] border border-purple-600/40 text-white placeholder-gray-400 rounded-lg px-3 py-2 focus:ring-2 focus:ring-fuchsia-500",
+          footerActionLink:
+            "text-purple-400 hover:text-fuchsia-300 font-semibold transition-colors",
+          socialButtonsBlockButton:
+            "bg-[#111827] border border-purple-500/40 text-purple-300 rounded-lg px-4 py-2 hover:bg-purple-900/30 hover:text-white transition-all",
+        },
+        layout: {
+          socialButtonsPlacement: "bottom",
+          logoPlacement: "none",
+        },
+        variables: {
+          colorPrimary: "#a855f7",
+          colorBackground: "transparent",
+          colorText: "#e5e7eb",
+        },
+      },
+      signUpUrl: "/sign-up",
+    });
+  } else {
+    document.getElementById("protected-content").classList.remove("hidden");
+    document.getElementById("public-auth").classList.add("hidden");
+  }
 
-  // --- Utility Functions ---
-  function showAppView(state) {
-    protectedContent.classList.add('hidden');
-    publicAuth.classList.add('hidden');
-    landingPage.classList.add('hidden');
-    mobileTabs.classList.add('hidden');
+  // Mount the user button in the header (space theme 👨‍🚀)
+  Clerk.mountUserButton(document.getElementById("clerk-user-button"), {
+    appearance: {
+      elements: {
+        avatarBox:
+          "ring-2 ring-purple-500 hover:ring-fuchsia-400 transition-all shadow-md",
+        userButtonPopoverCard:
+          "bg-gradient-to-br from-[#1a102b] to-[#0b0f24] border border-purple-700/40 rounded-xl shadow-2xl",
+        userButtonPopoverActionButton:
+          "hover:bg-purple-800/40 text-purple-200 px-3 py-2 rounded-lg transition-all",
+      },
+    },
+  });
 
-    if (state === 'APP') {
-      protectedContent.classList.remove('hidden');
-      if (window.innerWidth < 768) mobileTabs.classList.remove('hidden');
-    } else if (state === 'AUTH') {
-      publicAuth.classList.remove('hidden');
+  // Listen for sign in/out events
+  Clerk.addListener(({ user }) => {
+    if (user) {
+      document.getElementById("protected-content").classList.remove("hidden");
+      document.getElementById("public-auth").classList.add("hidden");
+    } else {
+      document.getElementById("protected-content").classList.add("hidden");
+      document.getElementById("public-auth").classList.remove("hidden");
       Clerk.mountSignIn(document.getElementById("clerk-sign-in-form"));
-    } else {
-      landingPage.classList.remove('hidden');
     }
+  });
+});
+</script>
+
+<script>
+const apiKey = "AIzaSyD8xBXpp0FYeV0nCxZ9V_VtVjKwoo6_BUw";
+const sidebar = document.getElementById('sidebar');
+const imageArea = document.getElementById('imageArea');
+const promptInput = document.getElementById('promptInput');
+const generateBtn = document.getElementById('generateBtn');
+const copyPromptBtn = document.getElementById('copyPromptBtn');
+const generatedImageDisplay = document.getElementById('generatedImage');
+const loadingState = document.getElementById('loadingState');
+const placeholderText = document.getElementById('placeholderText');
+const errorMessage = document.getElementById('errorMessage');
+const themeToggle = document.getElementById('themeToggle');
+const body = document.body;
+
+const tabPrompt = document.getElementById('tabPrompt');
+const tabPreview = document.getElementById('tabPreview');
+
+function showLoading(show) {
+  if (show) {
+    loadingState.classList.remove('hidden');
+    generatedImageDisplay.classList.add('hidden');
+    placeholderText.classList.add('hidden');
+    errorMessage.classList.add('hidden');
+  } else {
+    loadingState.classList.add('hidden');
   }
+}
 
-  function showLoading(show) {
-    if (show) {
-      loadingState.classList.remove('hidden');
-      generatedImageDisplay.classList.add('hidden');
-      placeholderText.classList.add('hidden');
-      errorMessage.classList.add('hidden');
-      downloadBtn.classList.add('hidden');
-    } else {
-      loadingState.classList.add('hidden');
-    }
-  }
+// 🔹 Disable/enable buttons during generation
+function toggleButtons(disabled) {
+  generateBtn.disabled = disabled || promptInput.value.trim() === '';
+  copyPromptBtn.disabled = disabled;
+}
 
-  function toggleGenerateButton(disabled) {
-    generateBtn.disabled = disabled || promptInput.value.trim() === '';
-    generateBtn.textContent = disabled ? "GENERATING..." : "GENERATE IMAGE";
-    generateBtn.style.opacity = disabled ? "0.7" : "1";
-  }
+document.addEventListener('DOMContentLoaded', () => {
+  const savedTheme = localStorage.getItem('theme');
 
-  function activateTab(tab) {
-    tabPrompt.classList.remove('active');
-    tabPreview.classList.remove('active');
-    sidebar.classList.remove('active');
-    imageArea.classList.remove('active');
-
-    if (tab === 'prompt') {
-      tabPrompt.classList.add('active');
-      sidebar.classList.add('active');
-    } else {
-      tabPreview.classList.add('active');
-      imageArea.classList.add('active');
-    }
-  }
-
-  // --- Main Logic: Image Generation (Gemini 2.0 Flash Preview Image Generation) ---
-  async function generateImage() {
-    const prompt = promptInput.value.trim();
-    if (!prompt) return;
-
-    toggleGenerateButton(true);
-    showLoading(true);
-
-    const maxRetries = 3;
-    let lastError = null;
-
-    for (let i = 0; i < maxRetries; i++) {
-      try {
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
-
-        const payload = {
-          contents: [
-             { role: "user", parts: [{ text: prompt }] }
-             ],
-               generationConfig: {
-                  responseModalities: ["IMAGE"]
-                       }
-                     };
-
-
-        const response = await fetch(apiUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-          const errorBody = await response.json();
-          throw new Error(`API returned status ${response.status}: ${errorBody.error?.message || response.statusText}`);
-        }
-
-        const result = await response.json();
-        const part = result?.candidates?.[0]?.content?.parts?.[0];
-
-        // If model returned text only
-        if (part?.text && !part?.inline_data && !part?.data) {
-          errorMessage.textContent = "Model returned text: " + part.text;
-          errorMessage.classList.remove("hidden");
-          showLoading(false);
-          toggleGenerateButton(false);
-          return;
-        }
-
-        // Extract image data
-        const base64Data = part?.inline_data?.data || part?.data;
-        const mimeType = part?.inline_data?.mime_type || "image/png";
-
-        if (base64Data) {
-          generatedImageDisplay.src = `data:${mimeType};base64,${base64Data}`;
-          generatedImageDisplay.classList.remove("hidden");
-          placeholderText.classList.add("hidden");
-          downloadBtn.classList.remove("hidden");
-
-          if (window.innerWidth < 768) activateTab("preview");
-          lastError = null;
-          break;
-        } else {
-          throw new Error("API response missing image data.");
-        }
-      } catch (err) {
-        lastError = err;
-        console.error(`Attempt ${i + 1} failed:`, err);
-        if (i < maxRetries - 1) {
-          await new Promise(res => setTimeout(res, Math.pow(2, i) * 1000));
-        }
-      }
-    }
-
-    if (lastError) {
-      errorMessage.textContent = `Image generation failed after ${maxRetries} attempts. Error: ${lastError.message}`;
-      errorMessage.classList.remove("hidden");
-    }
-
-    toggleGenerateButton(false);
-    showLoading(false);
-  }
-
-  // --- Event Listeners ---
-  document.addEventListener('DOMContentLoaded', () => {
-    body.classList.remove('dark-mode');
+  // Default theme logic
+  if (!savedTheme || savedTheme === 'light') {
     body.classList.add('light-mode');
     themeToggle.textContent = '🌙';
     localStorage.setItem('theme', 'light');
+  } else {
+    themeToggle.textContent = '☀️';
+  }
 
-    promptInput.addEventListener('input', () => {
-      generateBtn.disabled = promptInput.value.trim() === '';
-    });
-
-    if (window.innerWidth < 768) activateTab('prompt');
+  // Set bottom tab text colors on load
+  document.querySelectorAll('.bottom-tabs button').forEach(btn => {
+    btn.style.color = (!savedTheme || savedTheme === 'light') ? 'black' : 'white';
   });
 
-  // --- Clerk Auth Setup ---
-  window.addEventListener("load", async () => {
-    await Clerk.load();
-    Clerk.mountUserButton(document.getElementById("clerk-user-button"));
-
-    if (Clerk.user) showAppView('APP');
-    else showAppView('LANDING');
-
-    Clerk.addListener(({ user }) => {
-      if (user) showAppView('APP');
-      else showAppView('LANDING');
-    });
-
-    const triggerAuthView = (e) => {
-      e.preventDefault();
-      showAppView('AUTH');
-    };
-
-    getStartedBtn.addEventListener('click', triggerAuthView);
-    landingSignInLink.addEventListener('click', triggerAuthView);
-    getStartedBtnFooter.addEventListener('click', triggerAuthView);
+  promptInput.addEventListener('input', () => {
+    generateBtn.disabled = promptInput.value.trim() === '';
   });
 
-  // --- Theme Toggle ---
-  themeToggle.addEventListener('click', () => {
-    const isLight = body.classList.contains('light-mode');
-    if (isLight) {
-      body.classList.remove('light-mode');
-      body.classList.add('dark-mode');
-      themeToggle.textContent = '☀️';
-      localStorage.setItem('theme', 'dark');
+  // Mobile default: show prompt tab
+  if (window.innerWidth < 768) {
+    activateTab('prompt');
+  }
+});
+
+themeToggle.addEventListener('click', () => {
+  body.classList.toggle('light-mode');
+  const isLight = body.classList.contains('light-mode');
+  themeToggle.textContent = isLight ? '🌙' : '☀️';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+
+  // Update bottom tab text colors instantly
+  document.querySelectorAll('.bottom-tabs button').forEach(btn => {
+    btn.style.color = isLight ? 'black' : 'white';
+  });
+});
+
+copyPromptBtn.addEventListener('click', () => {
+  navigator.clipboard.writeText(promptInput.value);
+});
+
+async function generateImage() {
+  const prompt = promptInput.value.trim();
+  if (!prompt) return;
+
+  toggleButtons(true); // disable both
+  showLoading(true);
+
+  try {
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
+    const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseModalities: ['TEXT','IMAGE'] } };
+    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const result = await response.json();
+
+    const base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+    if (base64Data) {
+      generatedImageDisplay.src = `data:image/png;base64,${base64Data}`;
+      generatedImageDisplay.classList.remove('hidden');
+      placeholderText.classList.add('hidden');
     } else {
-      body.classList.remove('dark-mode');
-      body.classList.add('light-mode');
-      themeToggle.textContent = '🌙';
-      localStorage.setItem('theme', 'light');
+      errorMessage.textContent = "No image generated. Try a different prompt.";
+      errorMessage.classList.remove('hidden');
     }
-  });
+  } catch (err) {
+    errorMessage.textContent = "Error: " + err.message;
+    errorMessage.classList.remove('hidden');
+  } finally {
+    toggleButtons(false); // re-enable
+    showLoading(false);
+  }
+}
 
-  // --- Generate + Download + Mobile Tabs ---
-  generateBtn.addEventListener('click', generateImage);
-  downloadBtn.addEventListener('click', () => {
-    const imgSrc = generatedImageDisplay.src;
-    if (!imgSrc) return;
-    const link = document.createElement('a');
-    link.href = imgSrc;
-    link.download = 'askaio-generated.png';
-    link.click();
-  });
+generateBtn.addEventListener('click', generateImage);
 
-  tabPrompt.addEventListener('click', () => activateTab('prompt'));
-  tabPreview.addEventListener('click', () => activateTab('preview'));
+// Mobile tab switching
+function activateTab(tab) {
+  tabPrompt.classList.remove('active');
+  tabPreview.classList.remove('active');
+  sidebar.classList.remove('active');
+  imageArea.classList.remove('active');
+
+  if (tab === 'prompt') {
+    tabPrompt.classList.add('active');
+    sidebar.classList.add('active');
+  } else {
+    tabPreview.classList.add('active');
+    imageArea.classList.add('active');
+  }
+}
+
+tabPrompt.addEventListener('click', () => activateTab('prompt'));
+tabPreview.addEventListener('click', () => activateTab('preview'));
 </script>
-
 
 </body>
 </html>
+
 
 
 
