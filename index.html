@@ -358,9 +358,25 @@ function showLoading(show) {
   }
 }
 
-// 🔹 Disable/enable buttons during generation
+/**
+ * Disables/enables the generate button and updates its appearance.
+ * @param {boolean} disabled - True to disable and show loading state, false to re-enable.
+ */
 function toggleButtons(disabled) {
-  generateBtn.disabled = disabled || promptInput.value.trim() === '';
+  const isPromptEmpty = promptInput.value.trim() === '';
+  generateBtn.disabled = disabled || isPromptEmpty;
+
+  if (disabled) {
+    generateBtn.textContent = 'GENERATING...';
+    generateBtn.classList.add('opacity-70', 'cursor-not-allowed');
+    generateBtn.classList.remove('hover:scale-[1.02]', 'shadow-md', 'hover:shadow-lg');
+  } else {
+    generateBtn.textContent = 'GENERATE IMAGE';
+    generateBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+    if (!isPromptEmpty) {
+        generateBtn.classList.add('hover:scale-[1.02]', 'shadow-md', 'hover:shadow-lg');
+    }
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -381,7 +397,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   promptInput.addEventListener('input', () => {
-    generateBtn.disabled = promptInput.value.trim() === '';
+    // Only toggle based on empty state if we are NOT currently generating
+    if (generateBtn.textContent !== 'GENERATING...') {
+        toggleButtons(false); 
+    }
   });
 
   // Mobile default: show prompt tab
@@ -406,7 +425,8 @@ async function generateImage() {
   const prompt = promptInput.value.trim();
   if (!prompt) return;
 
-  toggleButtons(true); // disable both
+  // 1. Immediately disable button, show loading
+  toggleButtons(true); 
   showLoading(true);
 
   // Simple retry mechanism with exponential backoff
@@ -448,6 +468,7 @@ async function generateImage() {
       }
   }
 
+  // 2. Display result or error
   if (base64Data) {
     generatedImageDisplay.src = `data:image/png;base64,${base64Data}`;
     generatedImageDisplay.classList.remove('hidden');
@@ -458,7 +479,8 @@ async function generateImage() {
     errorMessage.classList.remove('hidden');
   }
 
-  toggleButtons(false); // re-enable
+  // 3. Re-enable button
+  toggleButtons(false); 
   showLoading(false);
 }
 
