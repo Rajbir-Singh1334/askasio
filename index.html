@@ -423,12 +423,13 @@
 
         const payload = {
           contents: [
-            { role: "user", parts: [{ text: prompt }] }
-          ],
-          generationConfig: {
-            responseModalities: ["TEXT", "IMAGE"]
-          }
-        };
+             { role: "user", parts: [{ text: prompt }] }
+             ],
+               generationConfig: {
+                  responseModalities: ["IMAGE"]
+                       }
+                     };
+
 
         const response = await fetch(apiUrl, {
           method: "POST",
@@ -558,6 +559,7 @@
 
 </body>
 </html>
+
 
 
 
