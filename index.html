@@ -1,308 +1,305 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Askaio - AI Image Generator</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Askaio - AI Image Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Clerk Frontend SDK -->
-  <script 
-    async 
-    crossorigin="anonymous" 
-    data-clerk-publishable-key="pk_test_ZXBpYy1haXJlZGFsZS02MS5jbGVyay5hY2NvdW50cy5kZXYk" 
-    src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js">
-  </script>
+  <!-- Clerk Frontend SDK -->
+  <script 
+    async 
+    crossorigin="anonymous" 
+    data-clerk-publishable-key="pk_test_ZXBpYy1haXJlZGFsZS02MS5jbGVyay5hY2NvdW50cy5kZXYk" 
+    src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js">
+  </script>
 
-  <style>
-    :root {
-      --color-dark-bg: #211e2f;
-      --color-panel-bg: #2b283d;
-      --color-primary: #ecddfa;
-      --color-primary-dark: #9333ea;
-      --color-text-light: #d1d5db;
-      --color-border: #4b4864;
-      --transition-fast: 0.3s ease;
-      --transition-slow: 0.6s ease;
-    }
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--color-dark-bg);
-      margin: 0;
-      padding: 0;
-      color: var(--color-text-light);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+  <style>
+    :root {
+      --color-dark-bg: #211e2f;
+      --color-panel-bg: #2b283d;
+      --color-primary: #ecddfa;
+      --color-primary-dark: #9333ea;
+      --color-text-light: #d1d5db;
+      --color-border: #4b4864;
+      --transition-fast: 0.3s ease;
+      --transition-slow: 0.6s ease;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--color-dark-bg);
+      margin: 0;
+      padding: 0;
+      color: var(--color-text-light);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-    /* Custom Animation for Landing Page Headline */
-    @keyframes pulse-slow {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.8; }
-    }
-    .animate-pulse-slow {
-      animation: pulse-slow 8s infinite ease-in-out;
-    }
-  </style>
+    /* Custom Animation for Landing Page Headline */
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+    .animate-pulse-slow {
+      animation: pulse-slow 8s infinite ease-in-out;
+    }
+  </style>
 </head>
 <body>
-  <!-- Header -->
-  <header class="flex justify-between items-center p-4 bg-[var(--color-panel-bg)]">
-    <h1 class="text-xl font-bold">Askaio</h1>
-    <div class="flex items-center gap-4">
-      <div id="clerk-sign-in"></div>
-      <div id="clerk-user-button"></div>
-    </div>
-  </header>
+  <!-- Header -->
+  <header class="flex justify-between items-center p-4 bg-[var(--color-panel-bg)]">
+    <h1 class="text-xl font-bold">Askaio</h1>
+    <div class="flex items-center gap-4">
+      <div id="clerk-sign-in"></div>
+      <div id="clerk-user-button"></div>
+    </div>
+  </header>
 
-  <!-- Protected Content (only visible when logged in) -->
-  <main id="protected-content" class="flex-1 hidden">
-    <div class="main-layout flex flex-col md:flex-row gap-4 p-4 md:p-8">
-      <!-- Sidebar (Prompt Panel) -->
-      <aside class="sidebar flex flex-col gap-4 bg-[var(--color-panel-bg)] rounded-2xl shadow-lg p-6 w-full md:w-[400px]" id="sidebar">
-        <div class="sidebar-header flex justify-between items-center mb-4">
-          <h1 class="text-4xl font-extrabold tracking-wide drop-shadow-lg">Askaio</h1>
-          <button id="themeToggle" aria-label="Toggle Theme" class="w-12 h-12 flex items-center justify-center rounded-full bg-gray-700 hover:bg-gray-600 text-2xl transition-all">☀️</button>
-        </div>
-        <p class="text-gray-400 leading-relaxed">Enter a descriptive prompt to generate a stunning AI-powered image. The more details you provide, the better your result!</p>
-        <textarea id="promptInput" placeholder="e.g., A futuristic neon city skyline at night with flying cars" class="prompt-box w-full h-40 p-4 rounded-xl border-2 border-[var(--color-primary-dark)] bg-gray-800 text-white resize-none focus:outline-none focus:ring-4 focus:ring-purple-400 transition-all"></textarea>
-        <button id="generateBtn" disabled class="w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all">GENERATE IMAGE</button>
-      </aside>
+  <!-- Protected Content (only visible when logged in) -->
+  <main id="protected-content" class="flex-1 hidden">
+    <div class="main-layout flex flex-col md:flex-row gap-4 p-4 md:p-8">
+      <!-- Sidebar (Prompt Panel) -->
+      <aside class="sidebar flex flex-col gap-4 bg-[var(--color-panel-bg)] rounded-2xl shadow-lg p-6 w-full md:w-[400px]" id="sidebar">
+        <div class="sidebar-header flex justify-between items-center mb-4">
+          <h1 class="text-4xl font-extrabold tracking-wide drop-shadow-lg">Askaio</h1>
+          <button id="themeToggle" aria-label="Toggle Theme" class="w-12 h-12 flex items-center justify-center rounded-full bg-gray-700 hover:bg-gray-600 text-2xl transition-all">☀️</button>
+        </div>
+        <p class="text-gray-400 leading-relaxed">Enter a descriptive prompt to generate a stunning AI-powered image. The more details you provide, the better your result!</p>
+        <textarea id="promptInput" placeholder="e.g., A futuristic neon city skyline at night with flying cars" class="prompt-box w-full h-40 p-4 rounded-xl border-2 border-[var(--color-primary-dark)] bg-gray-800 text-white resize-none focus:outline-none focus:ring-4 focus:ring-purple-400 transition-all"></textarea>
+        <button id="generateBtn" disabled class="w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all">GENERATE IMAGE</button>
+      </aside>
 
-      <!-- Main Image Display -->
-      <main class="image-area flex-1 flex justify-center items-center bg-[var(--color-panel-bg)] rounded-2xl shadow-lg overflow-hidden relative p-4" id="imageArea">
-        <div class="image-display w-full h-full flex justify-center items-center border-2 border-dashed border-[var(--color-border)] rounded-xl relative">
-          <div id="loadingState" class="hidden flex flex-col items-center gap-4">
-            <div class="loading-spinner border-6 border-gray-600 border-t-[var(--color-primary)] rounded-full w-14 h-14 animate-spin"></div>
-            <p class="loading-message text-gray-400 italic">Generating your masterpiece...</p>
-          </div>
-          <img id="generatedImage" src="" alt="Generated Image" class="hidden max-w-full max-h-full rounded-lg shadow-lg transition-opacity duration-700">
-          
-          <!-- Download Button - Only visible when an image is successfully loaded -->
-          <button id="downloadBtn" class="absolute top-4 right-4 p-3 bg-purple-700/80 text-white rounded-full shadow-lg hover:bg-purple-600 transition-opacity duration-300 hidden z-10" aria-label="Download Image">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-          </button>
+      <!-- Main Image Display -->
+      <main class="image-area flex-1 flex justify-center items-center bg-[var(--color-panel-bg)] rounded-2xl shadow-lg overflow-hidden relative p-4" id="imageArea">
+        <div class="image-display w-full h-full flex justify-center items-center border-2 border-dashed border-[var(--color-border)] rounded-xl relative">
+          <div id="loadingState" class="hidden flex flex-col items-center gap-4">
+            <div class="loading-spinner border-6 border-gray-600 border-t-[var(--color-primary)] rounded-full w-14 h-14 animate-spin"></div>
+            <p class="loading-message text-gray-400 italic">Generating your masterpiece...</p>
+          </div>
+          <img id="generatedImage" src="" alt="Generated Image" class="hidden max-w-full max-h-full rounded-lg shadow-lg transition-opacity duration-700">
+          
+          <!-- Download Button - Only visible when an image is successfully loaded -->
+          <button id="downloadBtn" class="absolute top-4 right-4 p-3 bg-purple-700/80 text-white rounded-full shadow-lg hover:bg-purple-600 transition-opacity duration-300 hidden z-10" aria-label="Download Image">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+          </button>
 
-          <p id="placeholderText" class="text-gray-500 italic">Your generated image will appear here.</p>
-          <p id="errorMessage" class="error-message text-red-400 font-semibold hidden"></p>
-        </div>
-      </main>
-    </div>
-    <div class="bottom-tabs fixed bottom-0 left-0 w-full flex justify-around bg-[var(--color-panel-bg)] p-2 md:hidden">
-      <button id="tabPrompt" class="flex-1 py-2 text-center active">Prompt</button>
-      <button id="tabPreview" class="flex-1 py-2 text-center">Preview</button>
-    </div>
-  </main>
+          <p id="placeholderText" class="text-gray-500 italic">Your generated image will appear here.</p>
+          <p id="errorMessage" class="error-message text-red-400 font-semibold hidden"></p>
+        </div>
+      </main>
+    </div>
+    <div class="bottom-tabs fixed bottom-0 left-0 w-full flex justify-around bg-[var(--color-panel-bg)] p-2 md:hidden">
+      <button id="tabPrompt" class="flex-1 py-2 text-center active">Prompt</button>
+      <button id="tabPreview" class="flex-1 py-2 text-center">Preview</button>
+    </div>
+  </main>
 
-  <!-- Public Auth Page (when logged out) -->
-  <div id="public-auth" class="flex-1 hidden flex items-center justify-center p-4 relative">
-    
-    <!-- Landing Page: Initial View (Hero block) -->
-    <div id="public-landing" class="max-w-7xl w-full flex flex-col items-center justify-center space-y-16">
-        
-        <!-- Hero Content -->
-        <div class="text-center space-y-8 p-4 pt-10 md:pt-0">
-            <h2 class="text-6xl md:text-8xl font-extrabold leading-tight tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 drop-shadow-2xl animate-pulse-slow">
-                Dream. Generate. Amaze.
-            </h2>
-            <p class="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto">
-                Transform your text ideas into stunning, high-resolution visual art in seconds. **Askaio** uses the latest diffusion models to bring your deepest creative concepts to life.
-            </p>
-        </div>
+  <!-- Public Auth Page (when logged out) -->
+  <div id="public-auth" class="flex-1 hidden flex items-center justify-center p-4 relative">
+    
+    <!-- Landing Page: Initial View (Hero block) -->
+    <div id="public-landing" class="max-w-7xl w-full flex flex-col items-center justify-center space-y-16">
+        
+        <!-- Hero Content -->
+        <div class="text-center space-y-8 p-4 pt-10 md:pt-0">
+            <h2 class="text-6xl md:text-8xl font-extrabold leading-tight tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 drop-shadow-2xl animate-pulse-slow">
+                Dream. Generate. Amaze.
+            </h2>
+            <p class="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto">
+                Transform your text ideas into stunning, high-resolution visual art in seconds. **Askaio** uses the latest diffusion models to bring your deepest creative concepts to life.
+            </p>
+        </div>
 
-        <!-- CTAs / Entry Point -->
-        <div class="flex flex-col sm:flex-row gap-6 justify-center">
-            <button id="showSignUp" class="flex items-center justify-center sm:w-60 py-4 rounded-full text-lg font-bold bg-gradient-to-r from-fuchsia-600 to-purple-700 text-white shadow-xl hover:shadow-fuchsia-500/50 hover:scale-[1.05] transition-all duration-300">
-                Start Generating Now
-            </button>
-            <button id="showSignIn" class="flex items-center justify-center sm:w-60 py-4 rounded-full text-lg font-bold border-2 border-purple-500 text-purple-300 hover:bg-purple-900/40 hover:text-white transition-all duration-300">
-                Log In
-            </button>
-        </div>
-        
-        <!-- Mockup Visual -->
-        <div class="w-full max-w-5xl p-6 bg-[var(--color-panel-bg)] rounded-3xl border-2 border-purple-700/50 shadow-2xl shadow-purple-900/50 hidden md:block">
-            <div class="h-64 md:h-96 w-full rounded-2xl bg-gray-900 flex items-center justify-center overflow-hidden relative">
-                <img src="https://placehold.co/1200x600/1e293b/d1d5db?text=Breathtaking+AI+Art+Example" alt="AI Art Example" class="w-full h-full object-cover opacity-70">
-                <div class="absolute inset-0 bg-black/30 flex items-center justify-center">
-                    <p class="text-white text-3xl font-semibold drop-shadow-lg">A New Canvas for Creativity</p>
-                </div>
-            </div>
-        </div>
+        <!-- CTAs / Entry Point -->
+        <div class="flex flex-col sm:flex-row gap-6 justify-center">
+            <button id="showSignUp" class="flex items-center justify-center sm:w-60 py-4 rounded-full text-lg font-bold bg-gradient-to-r from-fuchsia-600 to-purple-700 text-white shadow-xl hover:shadow-fuchsia-500/50 hover:scale-[1.05] transition-all duration-300">
+                Start Generating Now
+            </button>
+            <button id="showSignIn" class="flex items-center justify-center sm:w-60 py-4 rounded-full text-lg font-bold border-2 border-purple-500 text-purple-300 hover:bg-purple-900/40 hover:text-white transition-all duration-300">
+                Log In
+            </button>
+        </div>
+        
+        <!-- Mockup Visual -->
+        <div class="w-full max-w-5xl p-6 bg-[var(--color-panel-bg)] rounded-3xl border-2 border-purple-700/50 shadow-2xl shadow-purple-900/50 hidden md:block">
+            <div class="h-64 md:h-96 w-full rounded-2xl bg-gray-900 flex items-center justify-center overflow-hidden relative">
+                <img src="https://placehold.co/1200x600/1e293b/d1d5db?text=Breathtaking+AI+Art+Example" alt="AI Art Example" class="w-full h-full object-cover opacity-70">
+                <div class="absolute inset-0 bg-black/30 flex items-center justify-center">
+                    <p class="text-white text-3xl font-semibold drop-shadow-lg">A New Canvas for Creativity</p>
+                </div>
+        </div>
+        </div>
 
-    </div>
-    
-    <!-- Clerk Form Container (Hidden by default, shown as an overlay when a button is clicked) -->
-    <div id="clerk-form-container" class="absolute inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 hidden">
-        <div id="clerk-mount-target" class="p-4 w-full max-w-md">
-            <!-- Clerk mounts form here -->
-        </div>
-    </div>
-  </div>
+    </div>
+    
+    <!-- Clerk Form Container (Hidden by default, shown as an overlay when a button is clicked) -->
+    <div id="clerk-form-container" class="absolute inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 hidden">
+        <div id="clerk-mount-target" class="p-4 w-full max-w-md">
+            <!-- Clerk mounts form here -->
+        </div>
+    </div>
+  </div>
 
 
 <style>
 @media (min-width: 768px) {
-  .bottom-tabs { display: none !important; }
-  #sidebar { display: flex !important; }
-  #imageArea { display: flex !important; }
+  .bottom-tabs { display: none !important; }
+  #sidebar { display: flex !important; }
+  #imageArea { display: flex !important; }
 }
 @media (max-width: 767px) {
-  #sidebar { display: flex; }
-  #imageArea { display: none; }
+  #sidebar { display: flex; }
+  #imageArea { display: none; }
 }
 .bottom-tabs button.active {
-  color: white;
-  background-color: var(--color-primary);
+  color: white;
+  background-color: var(--color-primary);
 }
 .bottom-tabs button {
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 .bottom-tabs button:hover {
-  background-color: rgba(255,255,255,0.05);
+  background-color: rgba(255,255,255,0.05);
 }
 @media (max-width: 767px) {
-  #sidebar { display: flex; }
-  #imageArea { display: none; }
-  .bottom-tabs { display: flex; }
+  #sidebar, #imageArea {
+    display: none;
+  }
+  #sidebar.active, #imageArea.active {
+    display: flex !important;
+  }
+  .bottom-tabs { display: flex; }
 }
 
 .bottom-tabs button.active {
-  color: white;
-  background-color: var(--color-primary);
+  color: white;
+  background-color: var(--color-primary);
 }
 .bottom-tabs button {
-  transition: background var(--transition-fast), color var(--transition-fast);
-  border-radius: 6px;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  border-radius: 6px;
 }
 
 /* Dark mode text color */
 body:not(.light-mode) .bottom-tabs button {
-  color: white;
+  color: white;
 }
 
 /* Light mode text color */
 body.light-mode .bottom-tabs button {
-  color: black;
+  color: black;
 }
 
 /* Active tab style */
 .bottom-tabs button.active {
-  color: white !important; /* always white on active */
-  background-color: var(--color-primary);
+  color: white !important; /* always white on active */
+  background-color: var(--color-primary);
 }
 .loading-spinner {
-  border-width: 6px;
-  border-style: solid;
-  border-color: rgba(255,255,255,0.2);
-  border-top-color: var(--color-primary);
+  border-width: 6px;
+  border-style: solid;
+  border-color: rgba(255,255,255,0.2);
+  border-top-color: var(--color-primary);
 }
 #generatedImage {
-  box-shadow: 0 0 20px rgba(168, 85, 247, 0.7);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.7);
 }
 body.light-mode {
-  background: #f3f4f6;
-  color: #1f2937;
+  background: #f3f4f6;
+  color: #1f2937;
 }
 
 body.light-mode .sidebar {
-  background: #ffffff;
+  background: #ffffff;
 }
 
 body.light-mode #promptInput {
-  background: #ffffff;
-  color: #111827;
-  border-color: #d1d5db;
+  background: #ffffff;
+  color: #111827;
+  border-color: #d1d5db;
 }
 
 body.light-mode #imageArea {
-  background: #ffffff;
-  border-color: #d1d5db;
+  background: #ffffff;
+  border-color: #d1d5db;
 }
 
 body.light-mode #placeholderText {
-  color: #6b7280;
+  color: #6b7280;
 }
 
 body.light-mode #generateBtn {
-  background: linear-gradient(to right, #6366f1, #4f46e5);
+  background: linear-gradient(to right, #6366f1, #4f46e5);
 }
 
 body.light-mode .image-display {
-  border-color: #d1d5db;
+  border-color: #d1d5db;
 }
 
 body.light-mode #errorMessage {
-  color: #dc2626;
+  color: #dc2626;
 }
 body.light-mode header {
-  background: #ffffff;
+  background: #ffffff;
 }
 body.light-mode #themeToggle {
-  background: #e5e7eb; /* light gray */
-  color: #1f2937; /* dark text */
+  background: #e5e7eb; /* light gray */
+  color: #1f2937; /* dark text */
 }
 body.light-mode #themeToggle:hover {
-  background: #d1d5db; /* slightly darker gray */
+  background: #d1d5db; /* slightly darker gray */
 }
 
 body.light-mode .sidebar {
-  background: #e5e7eb;
+  background: #e5e7eb;
 }
-@media (max-width: 767px) {
-  #sidebar, #imageArea {
-    display: none;
-  }
-  #sidebar.active, #imageArea.active {
-    display: flex !important;
-  }
-}
+
 </style>
 <script>
 // Define the custom Clerk appearance once
 const clerkAppearance = {
-    elements: {
-        // Light background, subtle shadow, and light border
-        card: "bg-white shadow-2xl rounded-2xl p-6 border border-gray-200",
-        
-        // Darker text for titles on a light background, keeping the purple accent
-        headerTitle: "text-3xl font-extrabold text-purple-700 tracking-wide",
-        
-        // Lighter gray subtitle
-        headerSubtitle: "text-gray-500 italic",
-        
-        // Primary button with a vibrant gradient, now starting from lighter shades
-        formButtonPrimary: 
-            "bg-gradient-to-r from-purple-500 via-fuchsia-600 to-pink-600 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:scale-[1.05] hover:shadow-purple-400/50 transition-all",
-        
-        // Light input field with a subtle border and dark text
-        formFieldInput: 
-            "bg-gray-50 border border-purple-300 text-gray-800 placeholder-gray-400 rounded-lg px-3 py-2 focus:ring-2 focus:ring-fuchsia-500",
-        
-        // Accent link color for the footer, standing out against the light background
-        footerActionLink: 
-            "text-purple-600 hover:text-fuchsia-500 font-semibold transition-colors",
-        
-        // Social buttons with light background and colored border/text
-        socialButtonsBlockButton: 
-            "bg-white border border-purple-300 text-purple-600 rounded-lg px-4 py-2 hover:bg-purple-50 hover:text-purple-700 transition-all",
-    },
-    
-    // Layout remains the same
-    layout: {
-        socialButtonsPlacement: "bottom",
-        logoPlacement: "none",
-    },
-    
-    // Variable changes for a light theme
-    variables: {
-        colorPrimary: "#a855f7", // Same purple accent
-        colorBackground: "transparent", // Use the surrounding light background
-        colorText: "#1f2937", // Dark text color for readability on a light background (text-gray-800 equivalent)
-    },
+    elements: {
+        // Light background, subtle shadow, and light border
+        card: "bg-white shadow-2xl rounded-2xl p-6 border border-gray-200",
+        
+        // Darker text for titles on a light background, keeping the purple accent
+        headerTitle: "text-3xl font-extrabold text-purple-700 tracking-wide",
+        
+        // Lighter gray subtitle
+        headerSubtitle: "text-gray-500 italic",
+        
+        // Primary button with a vibrant gradient, now starting from lighter shades
+        formButtonPrimary: 
+            "bg-gradient-to-r from-purple-500 via-fuchsia-600 to-pink-600 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:scale-[1.05] hover:shadow-purple-400/50 transition-all",
+        
+        // Light input field with a subtle border and dark text
+        formFieldInput: 
+            "bg-gray-50 border border-purple-300 text-gray-800 placeholder-gray-400 rounded-lg px-3 py-2 focus:ring-2 focus:ring-fuchsia-500",
+        
+        // Accent link color for the footer, standing out against the light background
+        footerActionLink: 
+            "text-purple-600 hover:text-fuchsia-500 font-semibold transition-colors",
+        
+        // Social buttons with light background and colored border/text
+        socialButtonsBlockButton: 
+            "bg-white border border-purple-300 text-purple-600 rounded-lg px-4 py-2 hover:bg-purple-50 hover:text-purple-700 transition-all",
+    },
+    
+    // Layout remains the same
+    layout: {
+        socialButtonsPlacement: "bottom",
+        logoPlacement: "none",
+    },
+    
+    // Variable changes for a light theme
+    variables: {
+        colorPrimary: "#a855f7", // Same purple accent
+        colorBackground: "transparent", // Use the surrounding light background
+        colorText: "#1f2937", // Dark text color for readability on a light background (text-gray-800 equivalent)
+    },
 };
 
 // New elements for the auth gateway
@@ -314,86 +311,86 @@ const showSignInBtn = document.getElementById("showSignIn");
 const showSignUpBtn = document.getElementById("showSignUp");
 
 /**
- * Hides the landing page and mounts the appropriate Clerk form (Sign In or Sign Up).
- * @param {'signIn' | 'signUp'} type - The type of form to mount.
- */
+ * Hides the landing page and mounts the appropriate Clerk form (Sign In or Sign Up).
+ * @param {'signIn' | 'signUp'} type - The type of form to mount.
+ */
 function showForm(type) {
-    // Hide the landing page and show the form container
-    publicLanding.classList.add("hidden");
-    clerkFormContainer.classList.remove("hidden");
-    
-    // Crucial Fix: Clear the mount target's content, but do not delete the element itself.
-    clerkMountTarget.innerHTML = ''; 
+    // Hide the landing page and show the form container
+    publicLanding.classList.add("hidden");
+    clerkFormContainer.classList.remove("hidden");
+    
+    // Crucial Fix: Clear the mount target's content, but do not delete the element itself.
+    clerkMountTarget.innerHTML = ''; 
 
-    if (type === 'signIn') {
-        Clerk.mountSignIn(clerkMountTarget, { // Use the dedicated mount target
-            appearance: clerkAppearance,
-            // Ensure internal links within the Clerk form switch views correctly
-            initialState: {
-                onSwitchToSignUp: () => showForm('signUp') 
-            }
-        });
-    } else { // type === 'signUp'
-        Clerk.mountSignUp(clerkMountTarget, { // Use the dedicated mount target
-            appearance: clerkAppearance,
-            // Ensure internal links within the Clerk form switch views correctly
-            initialState: {
-                onSwitchToSignIn: () => showForm('signIn')
-            }
-        });
-    }
+    if (type === 'signIn') {
+        Clerk.mountSignIn(clerkMountTarget, { // Use the dedicated mount target
+            appearance: clerkAppearance,
+            // Ensure internal links within the Clerk form switch views correctly
+            initialState: {
+                onSwitchToSignUp: () => showForm('signUp') 
+            }
+        });
+    } else { // type === 'signUp'
+        Clerk.mountSignUp(clerkMountTarget, { // Use the dedicated mount target
+            appearance: clerkAppearance,
+            // Ensure internal links within the Clerk form switch views correctly
+            initialState: {
+                onSwitchToSignIn: () => showForm('signIn')
+            }
+        });
+    }
 }
 
 // === FIX: Changed 'window.addEventListener("load", ...)' to 'document.addEventListener("DOMContentLoaded", ...)'
 // This ensures Clerk starts loading as soon as the DOM structure is ready, improving responsiveness.
 document.addEventListener("DOMContentLoaded", async () => {
-  await Clerk.load();
+  await Clerk.load();
 
-  if (!Clerk.user) {
-    document.getElementById("protected-content").classList.add("hidden");
-    document.getElementById("public-auth").classList.remove("hidden");
+  if (!Clerk.user) {
+    document.getElementById("protected-content").classList.add("hidden");
+    document.getElementById("public-auth").classList.remove("hidden");
 
-    // Start by showing the friendly landing page (Hero)
-    publicLanding.classList.remove("hidden");
-    clerkFormContainer.classList.add("hidden");
-    
-    // Attach event listeners to the new buttons
-    if (showSignInBtn) showSignInBtn.addEventListener('click', () => showForm('signIn'));
-    if (showSignUpBtn) showSignUpBtn.addEventListener('click', () => showForm('signUp'));
-  } else {
-    document.getElementById("protected-content").classList.remove("hidden");
-    document.getElementById("public-auth").classList.add("hidden");
-  }
+    // Start by showing the friendly landing page (Hero)
+    publicLanding.classList.remove("hidden");
+    clerkFormContainer.classList.add("hidden");
+    
+    // Attach event listeners to the new buttons
+    if (showSignInBtn) showSignInBtn.addEventListener('click', () => showForm('signIn'));
+    if (showSignUpBtn) showSignUpBtn.addEventListener('click', () => showForm('signUp'));
+  } else {
+    document.getElementById("protected-content").classList.remove("hidden");
+    document.getElementById("public-auth").classList.add("hidden");
+  }
 
-  // Mount the user button in the header (space theme 👨‍🚀)
-  Clerk.mountUserButton(document.getElementById("clerk-user-button"), {
-    appearance: {
-      elements: {
-        avatarBox:
-          "ring-2 ring-purple-500 hover:ring-fuchsia-400 transition-all shadow-md",
-        userButtonPopoverCard:
-          "bg-gradient-to-br from-[#1a102b] to-[#0b0f24] border border-purple-700/40 rounded-xl shadow-2xl",
-        userButtonPopoverActionButton:
-          "hover:bg-purple-800/40 text-purple-200 px-3 py-2 rounded-lg transition-all",
-      },
-    },
-  });
+  // Mount the user button in the header (space theme 👨‍🚀)
+  Clerk.mountUserButton(document.getElementById("clerk-user-button"), {
+    appearance: {
+      elements: {
+        avatarBox:
+          "ring-2 ring-purple-500 hover:ring-fuchsia-400 transition-all shadow-md",
+        userButtonPopoverCard:
+          "bg-gradient-to-br from-[#1a102b] to-[#0b0f24] border border-purple-700/40 rounded-xl shadow-2xl",
+        userButtonPopoverActionButton:
+          "hover:bg-purple-800/40 text-purple-200 px-3 py-2 rounded-lg transition-all",
+      },
+    },
+  });
 
-  // Listen for sign in/out events
-  Clerk.addListener(({ user }) => {
-    if (user) {
-      document.getElementById("protected-content").classList.remove("hidden");
-      document.getElementById("public-auth").classList.add("hidden");
-      publicLanding.classList.remove("hidden"); // Reset state
-      clerkFormContainer.classList.add("hidden");
-    } else {
-      document.getElementById("protected-content").classList.add("hidden");
-      document.getElementById("public-auth").classList.remove("hidden");
-      // Show landing page again on sign out
-      publicLanding.classList.remove("hidden"); 
-      clerkFormContainer.classList.add("hidden");
-    }
-  });
+  // Listen for sign in/out events
+  Clerk.addListener(({ user }) => {
+    if (user) {
+      document.getElementById("protected-content").classList.remove("hidden");
+      document.getElementById("public-auth").classList.add("hidden");
+      publicLanding.classList.remove("hidden"); // Reset state
+      clerkFormContainer.classList.add("hidden");
+    } else {
+      document.getElementById("protected-content").classList.add("hidden");
+      document.getElementById("public-auth").classList.remove("hidden");
+      // Show landing page again on sign out
+      publicLanding.classList.remove("hidden"); 
+      clerkFormContainer.classList.add("hidden");
+    }
+  });
 });
 // === END OF FIX
 
@@ -415,48 +412,59 @@ const tabPrompt = document.getElementById('tabPrompt');
 const tabPreview = document.getElementById('tabPreview');
 
 function showLoading(show) {
-  if (show) {
-    loadingState.classList.remove('hidden');
-    generatedImageDisplay.classList.add('hidden');
-    placeholderText.classList.add('hidden');
-    errorMessage.classList.add('hidden');
-    // Hide download button when generating or before success
-    downloadBtn.classList.add('hidden');
-  } else {
-    loadingState.classList.add('hidden');
-  }
+  if (show) {
+    loadingState.classList.remove('hidden');
+    generatedImageDisplay.classList.add('hidden');
+    placeholderText.classList.add('hidden');
+    errorMessage.classList.add('hidden');
+    // Hide download button when generating or before success
+    downloadBtn.classList.add('hidden');
+  } else {
+    loadingState.classList.add('hidden');
+  }
 }
 
 /**
- * Disables/enables the generate button and updates its appearance.
- * @param {boolean} disabled - True to disable and show loading state, false to re-enable.
- */
+ * Disables/enables the generate button and updates its appearance.
+ * @param {boolean} disabled - True to disable and show loading state, false to re-enable.
+ */
 function toggleButtons(disabled) {
-  const isPromptEmpty = promptInput.value.trim() === '';
-  generateBtn.disabled = disabled || isPromptEmpty;
+  const isPromptEmpty = promptInput.value.trim() === '';
+  generateBtn.disabled = disabled || isPromptEmpty;
 
-  if (disabled) {
-    generateBtn.textContent = 'GENERATING...';
-    generateBtn.classList.add('opacity-70', 'cursor-not-allowed');
-    generateBtn.classList.remove('hover:scale-[1.02]', 'shadow-md', 'hover:shadow-lg');
-  } else {
-    generateBtn.textContent = 'GENERATE IMAGE';
-    generateBtn.classList.remove('opacity-70', 'cursor-not-allowed');
-    if (!isPromptEmpty) {
-        generateBtn.classList.add('hover:scale-[1.02]', 'shadow-md', 'hover:shadow-lg');
-    }
-  }
+  if (disabled) {
+    generateBtn.textContent = 'GENERATING...';
+    generateBtn.classList.add('opacity-70', 'cursor-not-allowed');
+    generateBtn.classList.remove('hover:scale-[1.02]', 'shadow-md', 'hover:shadow-lg');
+  } else {
+    generateBtn.textContent = 'GENERATE IMAGE';
+    generateBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+    if (!isPromptEmpty) {
+        generateBtn.classList.add('hover:scale-[1.02]', 'shadow-md', 'hover:shadow-lg');
+    }
+  }
 }
 
 /**
- * Handles the download of the generated image.
+ * Generates a 10-digit random number string for unique filenames.
+ * @returns {string} A 10-digit random number string.
+ */
+function generateRandomId() {
+    // Ensure the number is 10 digits by multiplying by 10^10 and padding with leading zeros.
+    return Math.floor(Math.random() * 10000000000).toString().padStart(10, '0');
+}
+
+/**
+ * Handles the download of the generated image, using a unique filename.
  */
 function downloadImage() {
     const imageData = generatedImageDisplay.src;
     if (imageData && imageData !== 'data:image/png;base64,') {
         const link = document.createElement('a');
         link.href = imageData;
-        link.download = 'askaio_generated_image.png'; // Set a default filename
+        // Generate a unique filename using a 10-digit random ID
+        const randomId = generateRandomId();
+        link.download = `askaio_generated_image${randomId}.png`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -464,134 +472,134 @@ function downloadImage() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const savedTheme = localStorage.getItem('theme');
+  const savedTheme = localStorage.getItem('theme');
 
-  // Default theme logic
-  if (!savedTheme || savedTheme === 'light') {
-    body.classList.add('light-mode');
-    themeToggle.textContent = '🌙';
-    localStorage.setItem('theme', 'light');
-  } else {
-    themeToggle.textContent = '☀️';
-  }
+  // Default theme logic
+  if (!savedTheme || savedTheme === 'light') {
+    body.classList.add('light-mode');
+    themeToggle.textContent = '🌙';
+    localStorage.setItem('theme', 'light');
+  } else {
+    themeToggle.textContent = '☀️';
+  }
 
-  // Set bottom tab text colors on load
-  document.querySelectorAll('.bottom-tabs button').forEach(btn => {
-    btn.style.color = (!savedTheme || savedTheme === 'light') ? 'black' : 'white';
-  });
+  // Set bottom tab text colors on load
+  document.querySelectorAll('.bottom-tabs button').forEach(btn => {
+    btn.style.color = (!savedTheme || savedTheme === 'light') ? 'black' : 'white';
+  });
 
-  promptInput.addEventListener('input', () => {
-    // Only toggle based on empty state if we are NOT currently generating
-    if (generateBtn.textContent !== 'GENERATING...') {
-        toggleButtons(false); 
-    }
-  });
+  promptInput.addEventListener('input', () => {
+    // Only toggle based on empty state if we are NOT currently generating
+    if (generateBtn.textContent !== 'GENERATING...') {
+        toggleButtons(false); 
+    }
+  });
 
-  // Mobile default: show prompt tab
-  if (window.innerWidth < 768) {
-    activateTab('prompt');
-  }
-  
-  // Attach download handler
-  downloadBtn.addEventListener('click', downloadImage);
+  // Mobile default: show prompt tab
+  if (window.innerWidth < 768) {
+    activateTab('prompt');
+  }
+  
+  // Attach download handler
+  downloadBtn.addEventListener('click', downloadImage);
 });
 
 themeToggle.addEventListener('click', () => {
-  body.classList.toggle('light-mode');
-  const isLight = body.classList.contains('light-mode');
-  themeToggle.textContent = isLight ? '🌙' : '☀️';
-  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  body.classList.toggle('light-mode');
+  const isLight = body.classList.contains('light-mode');
+  themeToggle.textContent = isLight ? '🌙' : '☀️';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
 
-  // Update bottom tab text colors instantly
-  document.querySelectorAll('.bottom-tabs button').forEach(btn => {
-    btn.style.color = isLight ? 'black' : 'white';
-  });
+  // Update bottom tab text colors instantly
+  document.querySelectorAll('.bottom-tabs button').forEach(btn => {
+    btn.style.color = isLight ? 'black' : 'white';
+  });
 });
 
 async function generateImage() {
-  const prompt = promptInput.value.trim();
-  if (!prompt) return;
+  const prompt = promptInput.value.trim();
+  if (!prompt) return;
 
-  // 1. Immediately disable button, show loading, and HIDE download button
-  toggleButtons(true); 
-  showLoading(true);
-  downloadBtn.classList.add('hidden'); // Ensure it is hidden
+  // 1. Immediately disable button, show loading, and HIDE download button
+  toggleButtons(true); 
+  showLoading(true);
+  downloadBtn.classList.add('hidden'); // Ensure it is hidden
 
-  // Simple retry mechanism with exponential backoff
-  const maxRetries = 3;
-  let attempt = 0;
-  let success = false;
-  let base64Data = null;
-  let lastError = null;
+  // Simple retry mechanism with exponential backoff
+  const maxRetries = 3;
+  let attempt = 0;
+  let success = false;
+  let base64Data = null;
+  let lastError = null;
 
-  while (attempt < maxRetries && !success) {
-      try {
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
-          const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseModalities: ['TEXT','IMAGE'] } };
-          const response = await fetch(apiUrl, { 
-              method: 'POST', 
-              headers: { 'Content-Type': 'application/json' }, 
-              body: JSON.stringify(payload) 
-          });
-          
-          if (!response.ok) {
-              throw new Error(`API returned status ${response.status}`);
-          }
-          
-          const result = await response.json();
-          base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
-          
-          if (base64Data) {
-              success = true;
-          } else {
-              throw new Error("No image data found in response.");
-          }
-      } catch (err) {
-          lastError = err;
-          attempt++;
-          if (attempt < maxRetries) {
-              const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
-              await new Promise(resolve => setTimeout(resolve, delay));
-          }
-      }
-  }
+  while (attempt < maxRetries && !success) {
+      try {
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
+          const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseModalities: ['TEXT','IMAGE'] } };
+          const response = await fetch(apiUrl, { 
+              method: 'POST', 
+              headers: { 'Content-Type': 'application/json' }, 
+              body: JSON.stringify(payload) 
+          });
+          
+          if (!response.ok) {
+              throw new Error(`API returned status ${response.status}`);
+          }
+          
+          const result = await response.json();
+          base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+          
+          if (base64Data) {
+              success = true;
+          } else {
+              throw new Error("No image data found in response.");
+          }
+      } catch (err) {
+          lastError = err;
+          attempt++;
+          if (attempt < maxRetries) {
+              const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+              await new Promise(resolve => setTimeout(resolve, delay));
+          }
+      }
+  }
 
-  // 2. Display result or error
-  if (base64Data) {
-    generatedImageDisplay.src = `data:image/png;base64,${base64Data}`;
-    generatedImageDisplay.classList.remove('hidden');
-    placeholderText.classList.add('hidden');
-    errorMessage.classList.add('hidden');
-    // SHOW download button on success
-    downloadBtn.classList.remove('hidden'); 
-  } else {
-    errorMessage.textContent = `Error generating image. Please try again. Last attempt failed: ${lastError ? lastError.message : 'Unknown error.'}`;
-    errorMessage.classList.remove('hidden');
-    // Ensure download button remains hidden on failure
-    downloadBtn.classList.add('hidden'); 
-  }
+  // 2. Display result or error
+  if (base64Data) {
+    generatedImageDisplay.src = `data:image/png;base64,${base64Data}`;
+    generatedImageDisplay.classList.remove('hidden');
+    placeholderText.classList.add('hidden');
+    errorMessage.classList.add('hidden');
+    // SHOW download button on success
+    downloadBtn.classList.remove('hidden'); 
+  } else {
+    errorMessage.textContent = `Error generating image. Please try again. Last attempt failed: ${lastError ? lastError.message : 'Unknown error.'}`;
+    errorMessage.classList.remove('hidden');
+    // Ensure download button remains hidden on failure
+    downloadBtn.classList.add('hidden'); 
+  }
 
-  // 3. Re-enable button
-  toggleButtons(false); 
-  showLoading(false);
+  // 3. Re-enable button
+  toggleButtons(false); 
+  showLoading(false);
 }
 
 generateBtn.addEventListener('click', generateImage);
 
 // Mobile tab switching
 function activateTab(tab) {
-  tabPrompt.classList.remove('active');
-  tabPreview.classList.remove('active');
-  sidebar.classList.remove('active');
-  imageArea.classList.remove('active');
+  tabPrompt.classList.remove('active');
+  tabPreview.classList.remove('active');
+  sidebar.classList.remove('active');
+  imageArea.classList.remove('active');
 
-  if (tab === 'prompt') {
-    tabPrompt.classList.add('active');
-    sidebar.classList.add('active');
-  } else {
-    tabPreview.classList.add('active');
-    imageArea.classList.add('active');
-  }
+  if (tab === 'prompt') {
+    tabPrompt.classList.add('active');
+    sidebar.classList.add('active');
+  } else {
+    tabPreview.classList.add('active');
+    imageArea.classList.add('active');
+  }
 }
 
 tabPrompt.addEventListener('click', () => activateTab('prompt'));
