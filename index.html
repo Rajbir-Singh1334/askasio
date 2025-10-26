@@ -536,7 +536,8 @@ async function generateImage() {
 
   while (attempt < maxRetries && !success) {
       try {
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
+          // *** FIX: Updated model name to the latest version for image generation ***
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
           const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseModalities: ['TEXT','IMAGE'] } };
           const response = await fetch(apiUrl, { 
               method: 'POST', 
