@@ -129,7 +129,7 @@
     
     <!-- Clerk Form Container (Hidden by default, shown as an overlay when a button is clicked) -->
     <div id="clerk-form-container" class="absolute inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 hidden">
-        <div class="p-4 w-full max-w-md">
+        <div id="clerk-mount-target" class="p-4 w-full max-w-md">
             <!-- Clerk mounts form here -->
         </div>
     </div>
@@ -283,6 +283,8 @@ const clerkAppearance = {
 // New elements for the auth gateway
 const publicLanding = document.getElementById("public-landing");
 const clerkFormContainer = document.getElementById("clerk-form-container");
+// Added new reference for the dedicated mount target
+const clerkMountTarget = document.getElementById("clerk-mount-target");
 const showSignInBtn = document.getElementById("showSignIn");
 const showSignUpBtn = document.getElementById("showSignUp");
 
@@ -294,10 +296,12 @@ function showForm(type) {
     // Hide the landing page and show the form container
     publicLanding.classList.add("hidden");
     clerkFormContainer.classList.remove("hidden");
-    clerkFormContainer.innerHTML = ''; // Clear previous mount
+    
+    // Crucial Fix: Clear the mount target's content, but do not delete the element itself.
+    clerkMountTarget.innerHTML = ''; 
 
     if (type === 'signIn') {
-        Clerk.mountSignIn(clerkFormContainer.querySelector('div'), { // Mount inside the inner div
+        Clerk.mountSignIn(clerkMountTarget, { // Use the dedicated mount target
             appearance: clerkAppearance,
             // Ensure internal links within the Clerk form switch views correctly
             initialState: {
@@ -305,7 +309,7 @@ function showForm(type) {
             }
         });
     } else { // type === 'signUp'
-        Clerk.mountSignUp(clerkFormContainer.querySelector('div'), { // Mount inside the inner div
+        Clerk.mountSignUp(clerkMountTarget, { // Use the dedicated mount target
             appearance: clerkAppearance,
             // Ensure internal links within the Clerk form switch views correctly
             initialState: {
