@@ -382,14 +382,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Listen for sign in/out events
   Clerk.addListener(({ user }) => {
     if (user) {
-        // --- FIX START: Deferring UI switch slightly to reduce perceived lag ---
-        setTimeout(() => {
-            document.getElementById("protected-content").classList.remove("hidden");
-            document.getElementById("public-auth").classList.add("hidden");
-            publicLanding.classList.remove("hidden"); // Reset state
-            clerkFormContainer.classList.add("hidden");
-        }, 0);
-        // --- FIX END ---
+      document.getElementById("protected-content").classList.remove("hidden");
+      document.getElementById("public-auth").classList.add("hidden");
+      publicLanding.classList.remove("hidden"); // Reset state
+      clerkFormContainer.classList.add("hidden");
     } else {
       document.getElementById("protected-content").classList.add("hidden");
       document.getElementById("public-auth").classList.remove("hidden");
@@ -401,9 +397,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 // === END OF FIX
 
-// --- FIX START: Changed API key to empty string ---
-const apiKey = ""; 
-// --- FIX END ---
+const apiKey = "AIzaSyD8xBXpp0FYeV0nCxZ9V_VtVjKwoo6_BUw";
 const sidebar = document.getElementById('sidebar');
 const imageArea = document.getElementById('imageArea');
 const promptInput = document.getElementById('promptInput');
