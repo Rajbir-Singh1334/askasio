@@ -109,7 +109,7 @@
                 Dream. Generate. Amaze.
             </h2>
             <p class="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto">
-                Transform your text ideas into stunning, high-resolution visual art in seconds. <strong></strong>Askaio</strong> uses the latest diffusion models to bring your deepest creative concepts to life.
+                Transform your text ideas into stunning, high-resolution visual art in seconds. **Askaio** uses the latest diffusion models to bring your deepest creative concepts to life.
             </p>
         </div>
 
@@ -304,6 +304,7 @@ const clerkAppearance = {
         colorText: "#1f2937", // Dark text color for readability on a light background (text-gray-800 equivalent)
     },
 };
+
 // New elements for the auth gateway
 const publicLanding = document.getElementById("public-landing");
 const clerkFormContainer = document.getElementById("clerk-form-container");
@@ -343,7 +344,9 @@ function showForm(type) {
     }
 }
 
-window.addEventListener("load", async () => {
+// === FIX: Changed 'window.addEventListener("load", ...)' to 'document.addEventListener("DOMContentLoaded", ...)'
+// This ensures Clerk starts loading as soon as the DOM structure is ready, improving responsiveness.
+document.addEventListener("DOMContentLoaded", async () => {
   await Clerk.load();
 
   if (!Clerk.user) {
@@ -392,6 +395,7 @@ window.addEventListener("load", async () => {
     }
   });
 });
+// === END OF FIX
 
 const apiKey = "AIzaSyD8xBXpp0FYeV0nCxZ9V_VtVjKwoo6_BUw";
 const sidebar = document.getElementById('sidebar');
@@ -596,5 +600,3 @@ tabPreview.addEventListener('click', () => activateTab('preview'));
 
 </body>
 </html>
-
-
