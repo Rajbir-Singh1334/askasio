@@ -401,7 +401,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 // === END OF FIX
 
+// --- FIX START: Changed API key to empty string ---
 const apiKey = ""; 
+// --- FIX END ---
 const sidebar = document.getElementById('sidebar');
 const imageArea = document.getElementById('imageArea');
 const promptInput = document.getElementById('promptInput');
@@ -460,13 +462,7 @@ function downloadImage() {
     if (imageData && imageData !== 'data:image/png;base64,') {
         const link = document.createElement('a');
         link.href = imageData;
-        
-        // Generate a unique 10-digit ID (number between 1,000,000,000 and 9,999,999,999)
-        const randomId = Math.floor(1000000000 + Math.random() * 9000000000);
-        
-        // Construct the dynamic filename
-        link.download = `askaio_generated_image${randomId}.png`; // Dynamic file name now
-        
+        link.download = 'askaio_generated_image.png'; // Set a default filename
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -536,8 +532,7 @@ async function generateImage() {
 
   while (attempt < maxRetries && !success) {
       try {
-          // *** FIX: Updated model name to the latest version for image generation ***
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
           const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseModalities: ['TEXT','IMAGE'] } };
           const response = await fetch(apiUrl, { 
               method: 'POST', 
