@@ -265,29 +265,45 @@ body.light-mode .sidebar {
 // Define the custom Clerk appearance once
 const clerkAppearance = {
     elements: {
-        card: "bg-gradient-to-br from-[#1a102b] to-[#0b0f24] border border-purple-700/40 shadow-xl rounded-2xl p-6",
-        headerTitle: "text-3xl font-extrabold text-purple-400 tracking-wide drop-shadow-lg",
-        headerSubtitle: "text-gray-400 italic",
+        // Light background, subtle shadow, and light border
+        card: "bg-white shadow-2xl rounded-2xl p-6 border border-gray-200",
+        
+        // Darker text for titles on a light background, keeping the purple accent
+        headerTitle: "text-3xl font-extrabold text-purple-700 tracking-wide",
+        
+        // Lighter gray subtitle
+        headerSubtitle: "text-gray-500 italic",
+        
+        // Primary button with a vibrant gradient, now starting from lighter shades
         formButtonPrimary: 
-            "bg-gradient-to-r from-purple-500 via-fuchsia-600 to-pink-600 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:scale-[1.05] hover:shadow-purple-500/50 transition-all",
+            "bg-gradient-to-r from-purple-500 via-fuchsia-600 to-pink-600 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:scale-[1.05] hover:shadow-purple-400/50 transition-all",
+        
+        // Light input field with a subtle border and dark text
         formFieldInput: 
-            "bg-[#0f172a] border border-purple-600/40 text-white placeholder-gray-400 rounded-lg px-3 py-2 focus:ring-2 focus:ring-fuchsia-500",
+            "bg-gray-50 border border-purple-300 text-gray-800 placeholder-gray-400 rounded-lg px-3 py-2 focus:ring-2 focus:ring-fuchsia-500",
+        
+        // Accent link color for the footer, standing out against the light background
         footerActionLink: 
-            "text-purple-400 hover:text-fuchsia-300 font-semibold transition-colors",
+            "text-purple-600 hover:text-fuchsia-500 font-semibold transition-colors",
+        
+        // Social buttons with light background and colored border/text
         socialButtonsBlockButton: 
-            "bg-[#111827] border border-purple-500/40 text-purple-300 rounded-lg px-4 py-2 hover:bg-purple-900/30 hover:text-white transition-all",
+            "bg-white border border-purple-300 text-purple-600 rounded-lg px-4 py-2 hover:bg-purple-50 hover:text-purple-700 transition-all",
     },
+    
+    // Layout remains the same
     layout: {
         socialButtonsPlacement: "bottom",
         logoPlacement: "none",
     },
+    
+    // Variable changes for a light theme
     variables: {
-        colorPrimary: "#a855f7",
-        colorBackground: "transparent",
-        colorText: "#e5e7eb",
+        colorPrimary: "#a855f7", // Same purple accent
+        colorBackground: "transparent", // Use the surrounding light background
+        colorText: "#1f2937", // Dark text color for readability on a light background (text-gray-800 equivalent)
     },
 };
-
 // New elements for the auth gateway
 const publicLanding = document.getElementById("public-landing");
 const clerkFormContainer = document.getElementById("clerk-form-container");
@@ -580,4 +596,5 @@ tabPreview.addEventListener('click', () => activateTab('preview'));
 
 </body>
 </html>
+
 
