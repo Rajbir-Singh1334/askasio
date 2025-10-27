@@ -51,8 +51,10 @@
       #imageArea { display: flex !important; }
     }
     @media (max-width: 767px) {
-      #sidebar { display: flex; }
-      #imageArea { display: none; }
+      /* Mobile view logic */
+      #sidebar, #imageArea { display: none; }
+      #sidebar.active, #imageArea.active { display: flex !important; }
+      .bottom-tabs { display: flex; }
     }
     .bottom-tabs button.active {
       color: white !important;
@@ -62,12 +64,10 @@
       transition: background var(--transition-fast), color var(--transition-fast);
       border-radius: 6px;
     }
-    body:not(.light-mode) .bottom-tabs button {
-      color: white;
-    }
-    body.light-mode .bottom-tabs button {
-      color: black;
-    }
+    /* Theme specific bottom tabs colors */
+    body:not(.light-mode) .bottom-tabs button { color: white; }
+    body.light-mode .bottom-tabs button { color: black; }
+    
     .loading-spinner {
       border-width: 6px;
       border-style: solid;
@@ -79,10 +79,7 @@
     }
     
     /* Light Mode Styles */
-    body.light-mode {
-      background: #f3f4f6;
-      color: #1f2937;
-    }
+    body.light-mode { background: #f3f4f6; color: #1f2937; }
     body.light-mode .sidebar { background: #ffffff; }
     body.light-mode #promptInput { background: #ffffff; color: #111827; border-color: #d1d5db; }
     body.light-mode #imageArea { background: #ffffff; border-color: #d1d5db; }
@@ -95,11 +92,8 @@
     body.light-mode #themeToggle { background: #e5e7eb; color: #1f2937; }
     body.light-mode #themeToggle:hover { background: #d1d5db; }
     body.light-mode .sidebar { background: #e5e7eb; }
-    @media (max-width: 767px) {
-      #sidebar, #imageArea { display: none; }
-      #sidebar.active, #imageArea.active { display: flex !important; }
-    }
-    /* Ensure the public view takes up full space */
+    
+    /* Ensure the public view takes up full space and is initially hidden */
     #public-view { display: none; }
   </style>
 </head>
@@ -199,14 +193,11 @@ window.addEventListener("load", async () => {
     const clerkSignInContainer = document.getElementById("clerk-sign-in-form-container");
     const ctaButton = document.getElementById("cta-start-generating");
 
-    // Initial view update based on authentication status
-    updateView(Clerk.user);
-
-    // Mount the Clerk SignIn form 
+    // MOUNT CLERK COMPONENTS (Do this before listening for changes)
+    // Mount the Clerk SignIn form (hidden by default on the landing page)
     Clerk.mountSignIn(document.getElementById("clerk-sign-in-form"), {
         appearance: {
             elements: {
-                // Using new PranAI/dark theme colors
                 card: "bg-gradient-to-br from-[#1a102b] to-[#0b0f24] border border-purple-700/40 shadow-xl rounded-2xl p-6",
                 headerTitle: "text-3xl font-extrabold text-[var(--color-primary)] tracking-wide drop-shadow-lg",
                 headerSubtitle: "text-gray-400 italic",
@@ -252,7 +243,8 @@ window.addEventListener("load", async () => {
         clerkSignInContainer.classList.remove('hidden');
     });
 
-    // Listen for sign in/out events
+    // RELY ENTIRELY ON THIS LISTENER FOR VIEW SWITCHING
+    // This listener fires immediately upon initialization with the current user state
     Clerk.addListener(({ user }) => {
         updateView(user);
     });
@@ -260,7 +252,7 @@ window.addEventListener("load", async () => {
     // 2. Image Generation and UI Setup (renamed all Askaio to PranAI)
     const apiKey = ""; // API key is handled by the canvas environment
     const sidebar = document.getElementById('sidebar');
-    const imageArea = document.getElementById('imageArea');
+    // ... (rest of variable declarations)
     const promptInput = document.getElementById('promptInput');
     const generateBtn = document.getElementById('generateBtn');
     const copyPromptBtn = document.getElementById('copyPromptBtn');
@@ -272,6 +264,8 @@ window.addEventListener("load", async () => {
     const body = document.body;
     const tabPrompt = document.getElementById('tabPrompt');
     const tabPreview = document.getElementById('tabPreview');
+    const imageArea = document.getElementById('imageArea');
+
 
     function showLoading(show) {
       if (show) {
@@ -323,10 +317,10 @@ window.addEventListener("load", async () => {
     });
 
     copyPromptBtn.addEventListener('click', () => {
-      if (promptInput.value.trim()) {
-        // Use document.execCommand('copy') for better compatibility in iframes
-        document.execCommand('copy', false, promptInput.value.trim());
-      }
+      // Updated to modern clipboard API
+      navigator.clipboard.writeText(promptInput.value)
+        .then(() => console.log('Prompt copied to clipboard!'))
+        .catch(err => console.error('Could not copy text: ', err));
     });
 
     async function generateImage() {
@@ -336,14 +330,12 @@ window.addEventListener("load", async () => {
       toggleButtons(true);
       showLoading(true);
 
-      // Simple retry mechanism with exponential backoff
       const maxRetries = 3;
       let delay = 1000;
       let base64Data = null;
 
       for (let i = 0; i < maxRetries; i++) {
         try {
-          // Using imagen-3.0-generate-002 as the preferred model for image generation
           const modelName = 'imagen-3.0-generate-002';
           const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:predict?key=${apiKey}`;
           
@@ -359,7 +351,6 @@ window.addEventListener("load", async () => {
           });
           
           if (!response.ok) {
-              // Throw error to trigger retry or final catch
               throw new Error(`API call failed: ${response.status} ${response.statusText}`);
           }
 
@@ -367,12 +358,10 @@ window.addEventListener("load", async () => {
           base64Data = result?.predictions?.[0]?.bytesBase64Encoded;
           
           if (base64Data) {
-            // Success, break the loop
             break; 
           } else if (i < maxRetries - 1) {
-            // No image data but not last attempt, wait and retry
             await new Promise(resolve => setTimeout(resolve, delay));
-            delay *= 2; // Exponential backoff
+            delay *= 2; 
           }
 
         } catch (err) {
@@ -380,7 +369,6 @@ window.addEventListener("load", async () => {
               await new Promise(resolve => setTimeout(resolve, delay));
               delay *= 2;
             } else {
-              // Last attempt failed
               throw err; 
             }
         }
