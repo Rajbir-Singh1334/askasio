@@ -1,611 +1,889 @@
 <!DOCTYPE html>
-
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Askaio - AI Image Generator</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pranai AI Chatbot</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,0,0&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,1,0" />
+    <style>
+      /* --- UPDATED: Imported Londrina Shadow, Inter, and Dancing Script fonts --- */
+      @import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&family=Londrina+Shadow&family=Dancing+Script:wght@400..700&display=swap");
 
-  <!-- Clerk Frontend SDK -->
-  <script 
-    async 
-    crossorigin="anonymous" 
-    data-clerk-publishable-key="pk_test_ZXBpYy1haXJlZGFsZS02MS5jbGVyay5hY2NvdW50cy5kZXYk" 
-    src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js">
-  </script>
+      * {
+        margin: 0;
+        padding: 0;
+        font-family: "Inter", sans-serif;
+        box-sizing: border-box;
+      }
 
-  <style>
-    :root {
-      --color-dark-bg: #211e2f;
-      --color-panel-bg: #2b283d;
-      --color-primary: #ecddfa;
-      --color-primary-dark: #9333ea;
-      --color-text-light: #d1d5db;
-      --color-border: #4b4864;
-      --transition-fast: 0.3s ease;
-      --transition-slow: 0.6s ease;
-    }
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--color-dark-bg);
-      margin: 0;
-      padding: 0;
-      color: var(--color-text-light);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+      body {
+        min-height: 100vh;
+        background: linear-gradient(#eeeeff, #c8c7ff);
+      }
 
-    /* Custom Animation for Landing Page Headline */
-    @keyframes pulse-slow {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.8; }
-    }
-    .animate-pulse-slow {
-      animation: pulse-slow 8s infinite ease-in-out;
-    }
-  </style>
-</head>
-<body>
-  <!-- Header -->
-  <header class="flex justify-between items-center p-4 bg-[var(--color-panel-bg)]">
-    <h1 class="text-xl font-bold">Askaio</h1>
-    <div class="flex items-center gap-4">
-      <div id="clerk-sign-in"></div>
-      <div id="clerk-user-button"></div>
-    </div>
-  </header>
+      /* --- NEW STYLES: Container for all central elements (button + text) --- */
+      #chatbot-container {
+        position: fixed;
+        /* Perfect Center */
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%); 
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        transition: all 0.3s ease-in-out; 
+        z-index: 1000;
+      }
 
-  <!-- Protected Content (only visible when logged in) -->
-  <main id="protected-content" class="flex-1 hidden">
-    <div class="main-layout flex flex-col md:flex-row gap-4 p-4 md:p-8">
-      <!-- Sidebar (Prompt Panel) -->
-      <aside class="sidebar flex flex-col gap-4 bg-[var(--color-panel-bg)] rounded-2xl shadow-lg p-6 w-full md:w-[400px]" id="sidebar">
-        <div class="sidebar-header flex justify-between items-center mb-4">
-          <h1 class="text-4xl font-extrabold tracking-wide drop-shadow-lg">Askaio</h1>
-          <button id="themeToggle" aria-label="Toggle Theme" class="w-12 h-12 flex items-center justify-center rounded-full bg-gray-700 hover:bg-gray-600 text-2xl transition-all">☀️</button>
+      /* Disappearance animation applied to the container */
+      #chatbot-container.disappear-animation {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.5) rotate(180deg);
+          pointer-events: none;
+      }
+      
+      /* Click Indicator Text */
+      #click-indicator {
+          font-size: 2.2rem;
+          font-weight: 700;
+          color: #5350c4;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+          user-select: none;
+      }
+
+      #click-indicator span {
+          font-size: 2.5rem; /* Larger icon */
+          color: #5350c4;
+          animation: bounce 1.5s infinite; /* Gentle down bounce */
+      }
+      
+      /* Mood Branding Text */
+      #moods-main {
+          font-family: 'Dancing Script', cursive; /* Cursive, twisted text */
+          font-size: 2.5rem;
+          color: #3d39ac;
+          line-height: 1;
+          margin-bottom: 5px;
+          text-shadow: 2px 2px 0 #fff;
+          user-select: none;
+      }
+
+      #moods-sub {
+          font-family: 'Inter', sans-serif; 
+          font-size: 0.9rem; /* Smaller sub-text */
+          font-style: italic;
+          color: #706db0;
+          font-weight: 500;
+          user-select: none;
+      }
+      
+      @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {
+          transform: translateY(0);
+        }
+        40% {
+          transform: translateY(-8px);
+        }
+        60% {
+          transform: translateY(-4px);
+        }
+      }
+      /* --- END NEW STYLES --- */
+
+      /* --- UPDATED STYLES: Chatbot Toggler positioning is now relative to its container --- */
+      #chatbot-toggler {
+        position: static; /* No longer fixed, contained by #chatbot-container */
+        transform: none; 
+        margin-top: 10px; /* Space from the click indicator */
+        margin-bottom: 10px; /* Space to the mood text */
+        
+        height: 50px;
+        width: 50px;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border-radius: 50%;
+        background: #5350c4;
+        transition: all 0.3s ease-in-out; 
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+      
+      /* Old disappearance animation rules are now on #chatbot-container */
+      
+      #chatbot-toggler span:last-child {
+        display: none;
+      }
+
+      #chatbot-toggler span {
+        color: #fff;
+        position: absolute;
+      }
+
+      /* --- UPDATED STYLES: Chatbot Popup center position --- */
+      .chatbot-popup {
+        position: fixed;
+        /* Center Horizontally and Vertically */
+        top: 50%;
+        left: 50%; 
+        /* Set origin to center for pop-in effect */
+        transform-origin: center center;
+        /* Apply initial transform */
+        transform: translate(-50%, -50%) scale(0.2);
+        
+        width: 420px;
+        background: #fff;
+        overflow: hidden;
+        border-radius: 15px;
+        opacity: 0;
+        
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        pointer-events: none;
+        box-shadow: 0 0 128px rgba(0, 0, 0, 0.1), 0 32px 64px -48px rgba(0, 0, 0, 0.5);
+        z-index: 999;
+      }
+
+      body.show-chatbot .chatbot-popup {
+        opacity: 1;
+        pointer-events: auto;
+        /* Scale up to 100% */
+        transform: translate(-50%, -50%) scale(1);
+      }
+      /* --- End UPDATED STYLES --- */
+
+      .chat-header {
+        display: flex;
+        align-items: center;
+        background: #5350c4;
+        padding: 15px 22px;
+        justify-content: space-between;
+      }
+
+      .chat-header .header-info {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .header-info .chatbot-logo {
+        height: 35px;
+        width: 35px;
+        padding: 6px;
+        fill: #5350c4;
+        flex-shrink: 0;
+        background: #fff;
+        border-radius: 50%;
+      }
+
+      /* --- UPDATED: New font applied here --- */
+      .header-info .logo-text {
+        color: #fff;
+        font-size: 1.8rem; /* Increased size to suit the decorative font */
+        font-weight: 400; 
+        font-family: 'Londrina Shadow', cursive;
+        letter-spacing: 2px;
+      }
+      /* --- End UPDATED FONT --- */
+
+      .chat-header #close-chatbot {
+        border: none;
+        color: #fff;
+        height: 40px;
+        width: 40px;
+        font-size: 1.9rem;
+        margin-right: -10px;
+        padding-top: 2px;
+        cursor: pointer;
+        border-radius: 50%;
+        background: none;
+        transition: 0.2s ease;
+      }
+
+      .chat-header #close-chatbot:hover {
+        background: #3d39ac;
+      }
+
+      .chat-body {
+        padding: 25px 22px;
+        display: flex;
+        gap: 20px;
+        height: 460px;
+        margin-bottom: 82px;
+        overflow-y: auto;
+        flex-direction: column;
+        scrollbar-width: thin;
+        scrollbar-color: #ccccf5 transparent;
+      }
+
+      .chat-body .message {
+        display: flex;
+        gap: 11px;
+        align-items: center;
+      }
+
+      .chat-body .bot-message .bot-avatar {
+        height: 35px;
+        width: 35px;
+        padding: 6px;
+        fill: #fff;
+        flex-shrink: 0;
+        margin-bottom: 2px;
+        align-self: flex-end;
+        background: #5350c4;
+        border-radius: 50%;
+      }
+
+      .chat-body .user-message {
+        flex-direction: column;
+        align-items: flex-end;
+      }
+
+      .chat-body .message .message-text {
+        padding: 12px 16px;
+        max-width: 75%;
+        font-size: 0.95rem;
+        background: #f2f2ff;
+      }
+
+      .chat-body .bot-message.thinking .message-text {
+        padding: 2px 16px;
+      }
+
+      .chat-body .bot-message .message-text {
+        background-color: #f2f2ff;
+        border-radius: 13px 13px 13px 3px;
+      }
+
+      .chat-body .user-message .message-text {
+        color: #fff;
+        background-color: #5350c4;
+        border-radius: 13px 13px 3px 13px;
+      }
+
+      .chat-body .bot-message .thinking-indicator {
+        display: flex;
+        gap: 4px;
+        padding-block: 15px;
+      }
+
+      .chat-body .bot-message .thinking-indicator .dot:nth-child(1) {
+        animation-delay: 0.2s;
+      }
+
+      .chat-body .bot-message .thinking-indicator .dot:nth-child(2) {
+        animation-delay: 0.3s;
+      }
+
+      .chat-body .bot-message .thinking-indicator .dot:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      .chat-body .bot-message .thinking-indicator .dot {
+        height: 7px;
+        width: 7px;
+        opacity: 0.7;
+        border-radius: 50%;
+        background: #6f6bc2;
+        animation: dotPulse 1.8s ease-in-out infinite;
+      }
+
+      @keyframes dotPulse {
+        0%,
+        44% {
+          transform: translateY(0);
+        }
+
+        28% {
+          opacity: 0.4;
+          transform: translateY(-4px);
+        }
+
+        44% {
+          opacity: 0.2;
+        }
+      }
+
+      .chat-footer {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        background: white;
+        padding: 15px 22px 20px;
+      }
+
+      .chat-footer .chat-form {
+        display: flex;
+        align-items: center;
+        background: white;
+        border-radius: 32px;
+        outline: 1px solid #cccce5;
+      }
+
+      .chat-footer .chat-form:focus-within {
+        outline: 2px solid #5350c4;
+      }
+
+      .chat-form .message-input {
+        border: none;
+        outline: none;
+        height: 47px;
+        width: 100%;
+        resize: none;
+        max-height: 180px;
+        white-space: pre-line;
+        font-size: 1rem;
+        padding: 13px;
+        border-radius: inherit;
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
+      }
+
+      .chat-form .message-input::hover {
+        scrollbar-color: #ccccf5 transparent;
+      }
+
+      .chat-form .chat-controls {
+        display: flex;
+        height: 47px;
+        gap: 3px;
+        align-items: center;
+        align-self: flex-end;
+        padding-right: 6px;
+      }
+
+      .chat-form .chat-controls button {
+        height: 35px;
+        width: 35px;
+        border: none;
+        font-size: 1.15rem;
+        cursor: pointer;
+        color: #706db0;
+        background: none;
+        border-radius: 50%;
+        transition: 0.2s ease;
+      }
+
+      .chat-form .chat-controls #send-message {
+        color: #fff;
+        display: none;
+        background: #5350c4;
+      }
+
+      .chat-form .message-input:valid ~ .chat-controls #send-message {
+        display: block;
+      }
+
+      .chat-form .chat-controls #send-message:hover {
+        background: #3d39ac;
+      }
+
+      .chat-form .chat-controls button:hover {
+        background: #f1f1f1;
+      }
+
+      .chat-body .user-message .attachment {
+        width: 50%;
+        margin-top: -7px;
+        border-radius: 13px 3px 13px 3px;
+      }
+
+      em-emoji-picker {
+        position: absolute;
+        left: 50%;
+        top: -337px;
+        width: 100%;
+        max-width: 350px;
+        max-height: 330px;
+        visibility: hidden;
+        transform: translateX(-50%);
+      }
+
+      body.show-emoji-picker em-emoji-picker {
+        visibility: visible;
+      }
+      /* Responsive for mobile screen */
+      @media screen and (max-width: 600px) {
+        #chatbot-container {
+            top: 50%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .chatbot-popup {
+          width: 100%;
+          left: 0;
+          top: 0; /* Full screen on mobile */
+          bottom: 0;
+          border-radius: 0;
+          height: 100%;
+          transform: none; 
+          transform-origin: center center;
+        }
+        
+        body.show-chatbot .chatbot-popup {
+            transform: none;
+        }
+
+
+        .chat-header .header-info .logo-text {
+          font-size: 1.6rem; /* Adjusted for mobile */
+        }
+
+        .chat-body {
+          height: 100%;
+          margin-bottom: 0;
+        }
+
+        .chat-body .message .message-text {
+          max-width: 85%;
+        }
+
+        .chat-footer .chat-form {
+          border-radius: 0;
+          border-radius: 25px;
+        }
+
+        .chat-footer .chat-form .message-input {
+          border-radius: 0;
+        }
+
+        .chat-footer .chat-form .chat-controls {
+          padding-right: 10px;
+        }
+
+        .chat-footer .chat-form .chat-controls button {
+          height: 40px;
+          width: 40px;
+        }
+        
+        #click-indicator {
+            font-size: 1.8rem;
+        }
+        #moods-main {
+            font-size: 2rem;
+        }
+        #moods-sub {
+            font-size: 0.8rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- NEW: Container for the button and surrounding text, replacing the fixed positioning of the toggler -->
+    <div id="chatbot-container">
+        <div id="click-indicator">
+            Click Here 
+            <span class="material-symbols-rounded">keyboard_arrow_down</span>
         </div>
-        <p class="text-gray-400 leading-relaxed">Enter a descriptive prompt to generate a stunning AI-powered image. The more details you provide, the better your result!</p>
-        <textarea id="promptInput" placeholder="e.g., A futuristic neon city skyline at night with flying cars" class="prompt-box w-full h-40 p-4 rounded-xl border-2 border-[var(--color-primary-dark)] bg-gray-800 text-white resize-none focus:outline-none focus:ring-4 focus:ring-purple-400 transition-all"></textarea>
-        <button id="generateBtn" disabled class="w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all">GENERATE IMAGE</button>
-      </aside>
+        
+        <button id="chatbot-toggler">
+          <span class="material-symbols-outlined">mode_comment</span>
+          <span class="material-symbols-rounded">close</span>
+        </button>
+        
+        <div id="mood-text-container">
+            <div id="moods-main">Doubt?, Confused?, Happy!</div>
+            <div id="moods-sub">Chat with Pranai in any mood</div>
+        </div>
+    </div>
 
-      <!-- Main Image Display -->
-      <main class="image-area flex-1 flex justify-center items-center bg-[var(--color-panel-bg)] rounded-2xl shadow-lg overflow-hidden relative p-4" id="imageArea">
-        <div class="image-display w-full h-full flex justify-center items-center border-2 border-dashed border-[var(--color-border)] rounded-xl relative">
-          <div id="loadingState" class="hidden flex flex-col items-center gap-4">
-            <div class="loading-spinner border-6 border-gray-600 border-t-[var(--color-primary)] rounded-full w-14 h-14 animate-spin"></div>
-            <p class="loading-message text-gray-400 italic">Generating your masterpiece...</p>
+    <div class="chatbot-popup">
+      <!-- Chatbot Header -->
+      <div class="chat-header">
+        <div class="header-info">
+          <svg 
+            class="chatbot-logo"
+            xmlns="http://www.w3.org/2000/svg"
+            width="50"
+            height="50"
+            viewBox="0 0 1024 1024"
+          >
+            <path
+              d="M738.3 287.6H285.7c-59 0-106.8 47.8-106.8 106.8v303.1c0 59 47.8 106.8 106.8 106.8h81.5v111.1c0 .7.8 1.1 1.4.7l166.9-110.6 41.8-.8h117.4l43.6-.4c59 0 106.8-47.8 106.8-106.8V394.5c0-59-47.8-106.9-106.8-106.9zM351.7 448.2c0-29.5 23.9-53.5 53.5-53.5s53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5-53.5-23.9-53.5-53.5zm157.9 267.1c-67.8 0-123.8-47.5-132.3-109h264.6c-8.6 61.5-64.5 109-132.3 109zm110-213.7c-29.5 0-53.5-23.9-53.5-53.5s23.9-53.5 53.5-53.5 53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5zM867.2 644.5V453.1h26.5c19.4 0 35.1 15.7 35.1 35.1v121.1c0 19.4-15.7 35.1-35.1 35.1h-26.5zM95.2 609.4V488.2c0-19.4 15.7-35.1 35.1-35.1h26.5v191.3h-26.5c-19.4 0-35.1-15.7-35.1-35.1zM561.5 149.6c0 23.4-15.6 43.3-36.9 49.7v44.9h-30v-44.9c-21.4-6.5-36.9-26.3-36.9-49.7 0-28.6 23.3-51.9 51.9-51.9s51.9 23.3 51.9 51.9z"
+            ></path>
+          </svg>
+
+          <!-- UPDATED: Text is now 'Pranai' -->
+          <h2 class="logo-text">Pranai</h2>
+        </div>
+        <button id="close-chatbot"
+        class="material-symbols-rounded">keyboard_arrow_down</button>
+      </div>
+
+      <!-- Chatbot Body -->
+      <div class="chat-body">
+        <div class="message bot-message">
+          <svg 
+            class="bot-avatar"
+            xmlns="http://www.w3.org/2000/svg"
+            width="50"
+            height="50"
+            viewBox="0 0 1024 1024"
+          >
+          <path
+              d="M738.3 287.6H285.7c-59 0-106.8 47.8-106.8 106.8v303.1c0 59 47.8 106.8 106.8 106.8h81.5v111.1c0 .7.8 1.1 1.4.7l166.9-110.6 41.8-.8h117.4l43.6-.4c59 0 106.8-47.8 106.8-106.8V394.5c0-59-47.8-106.9-106.8-106.9zM351.7 448.2c0-29.5 23.9-53.5 53.5-53.5s53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5-53.5-23.9-53.5-53.5zm157.9 267.1c-67.8 0-123.8-47.5-132.3-109h264.6c-8.6 61.5-64.5 109-132.3 109zm110-213.7c-29.5 0-53.5-23.9-53.5-53.5s23.9-53.5 53.5-53.5 53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5zM867.2 644.5V453.1h26.5c19.4 0 35.1 15.7 35.1 35.1v121.1c0 19.4-15.7 35.1-35.1 35.1h-26.5zM95.2 609.4V488.2c0-19.4 15.7-35.1 35.1-35.1h26.5v191.3h-26.5c-19.4 0-35.1-15.7-35.1-35.1zM561.5 149.6c0 23.4-15.6 43.3-36.9 49.7v44.9h-30v-44.9c-21.4-6.5-36.9-26.3-36.9-49.7 0-28.6 23.3-51.9 51.9-51.9s51.9 23.3 51.9 51.9z"
+      ></path>
+      </svg>
+          <div id="initial-message" class="message-text">
+            Hey there 👋 <br />
+            How can I help you today?
           </div>
-          <img id="generatedImage" src="" alt="Generated Image" class="hidden max-w-full max-h-full rounded-lg shadow-lg transition-opacity duration-700">
-          
-          <!-- Download Button - Only visible when an image is successfully loaded -->
-          <button id="downloadBtn" class="absolute top-4 right-4 p-3 bg-purple-700/80 text-white rounded-full shadow-lg hover:bg-purple-600 transition-opacity duration-300 hidden z-10" aria-label="Download Image">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-          </button>
-
-          <p id="placeholderText" class="text-gray-500 italic">Your generated image will appear here.</p>
-          <p id="errorMessage" class="error-message text-red-400 font-semibold hidden"></p>
         </div>
-      </main>
+      </div>
+      
+
+      <!-- Chatbot Footer -->
+      <div class="chat-footer">
+        <form action="#" class="chat-form">
+          <textarea placeholder="Message..." class="message-input" required></textarea>
+          <div class="chat-controls">
+            <button type="button" id="emoji-picker" class="material-symbols-rounded">sentiment_satisfied</button>
+            <div class="file-upload-wrapper">
+              <input type="file" accept="images" id="file-input" hidden>
+              <button type="button" id="file-upload" class="material-symbols-rounded">attach_file</button>
+            </div>
+            <button type="submit" id="send-message" class="material-symbols-rounded">arrow_upward</button>
+          </div>
+        </form>
+      </div>
     </div>
-    <div class="bottom-tabs fixed bottom-0 left-0 w-full flex justify-around bg-[var(--color-panel-bg)] p-2 md:hidden">
-      <button id="tabPrompt" class="flex-1 py-2 text-center active">Prompt</button>
-      <button id="tabPreview" class="flex-1 py-2 text-center">Preview</button>
-    </div>
-  </main>
 
-  <!-- Public Auth Page (when logged out) -->
-  <div id="public-auth" class="flex-1 hidden flex items-center justify-center p-4 relative">
     
-    <!-- Landing Page: Initial View (Hero block) -->
-    <div id="public-landing" class="max-w-7xl w-full flex flex-col items-center justify-center space-y-16">
-        
-        <!-- Hero Content -->
-        <div class="text-center space-y-8 p-4 pt-10 md:pt-0">
-            <h2 class="text-6xl md:text-8xl font-extrabold leading-tight tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 drop-shadow-2xl animate-pulse-slow">
-                Dream. Generate. Amaze.
-            </h2>
-            <p class="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto">
-                Transform your text ideas into stunning, high-resolution visual art in seconds. **Askaio** uses the latest diffusion models to bring your deepest creative concepts to life.
-            </p>
-        </div>
+    <script src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"></script>
 
-        <!-- CTAs / Entry Point -->
-        <div class="flex flex-col sm:flex-row gap-6 justify-center">
-            <button id="showSignUp" class="flex items-center justify-center sm:w-60 py-4 rounded-full text-lg font-bold bg-gradient-to-r from-fuchsia-600 to-purple-700 text-white shadow-xl hover:shadow-fuchsia-500/50 hover:scale-[1.05] transition-all duration-300">
-                Start Generating Now
-            </button>
-            <button id="showSignIn" class="flex items-center justify-center sm:w-60 py-4 rounded-full text-lg font-bold border-2 border-purple-500 text-purple-300 hover:bg-purple-900/40 hover:text-white transition-all duration-300">
-                Log In
-            </button>
-        </div>
-        
-        <!-- Mockup Visual -->
-        <div class="w-full max-w-5xl p-6 bg-[var(--color-panel-bg)] rounded-3xl border-2 border-purple-700/50 shadow-2xl shadow-purple-900/50 hidden md:block">
-            <div class="h-64 md:h-96 w-full rounded-2xl bg-gray-900 flex items-center justify-center overflow-hidden relative">
-                <img src="https://placehold.co/1200x600/1e293b/d1d5db?text=Breathtaking+AI+Art+Example" alt="AI Art Example" class="w-full h-full object-cover opacity-70">
-                <div class="absolute inset-0 bg-black/30 flex items-center justify-center">
-                    <p class="text-white text-3xl font-semibold drop-shadow-lg">A New Canvas for Creativity</p>
-                </div>
-        </div>
-        </div>
+    <script>
 
-    </div>
-    
-    <!-- Clerk Form Container (Hidden by default, shown as an overlay when a button is clicked) -->
-    <div id="clerk-form-container" class="absolute inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 hidden">
-        <div id="clerk-mount-target" class="p-4 w-full max-w-md">
-            <!-- Clerk mounts form here -->
-        </div>
-    </div>
-  </div>
+const chatBody = document.querySelector(".chat-body");
+const messageInput = document.querySelector(".message-input");
+const sendMessageButton = document.querySelector("#send-message");
+const fileInput = document.querySelector("#file-input");
+const fileUploadWrapper = document.querySelector("#file-upload-wrapper");
+const fileCancelButton = document.querySelector("#file-cancel");
+const chatbotToggler = document.querySelector("#chatbot-toggler");
+const closeChatbot = document.querySelector("#close-chatbot");
+const chatbotContainer = document.querySelector("#chatbot-container");
+const initialMessageElement = document.querySelector("#initial-message"); // NEW
+// API setup
+const API_KEY = "AIzaSyDrnirnkuWf9gWdvepONEGMgH-cbgv0VhM"; // Intentionally empty: will be supplied by the environment.
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
-
-<style>
-@media (min-width: 768px) {
-  .bottom-tabs { display: none !important; }
-  #sidebar { display: flex !important; }
-  #imageArea { display: flex !important; }
-}
-@media (max-width: 767px) {
-  #sidebar { display: flex; }
-  #imageArea { display: none; }
-}
-.bottom-tabs button.active {
-  color: white;
-  background-color: var(--color-primary);
-}
-.bottom-tabs button {
-  transition: background var(--transition-fast), color var(--transition-fast);
-}
-.bottom-tabs button:hover {
-  background-color: rgba(255,255,255,0.05);
-}
-@media (max-width: 767px) {
-  #sidebar, #imageArea {
-    display: none;
-  }
-  #sidebar.active, #imageArea.active {
-    display: flex !important;
-  }
-  .bottom-tabs { display: flex; }
-}
-
-.bottom-tabs button.active {
-  color: white;
-  background-color: var(--color-primary);
-}
-.bottom-tabs button {
-  transition: background var(--transition-fast), color var(--transition-fast);
-  border-radius: 6px;
-}
-
-/* Dark mode text color */
-body:not(.light-mode) .bottom-tabs button {
-  color: white;
-}
-
-/* Light mode text color */
-body.light-mode .bottom-tabs button {
-  color: black;
-}
-
-/* Active tab style */
-.bottom-tabs button.active {
-  color: white !important; /* always white on active */
-  background-color: var(--color-primary);
-}
-.loading-spinner {
-  border-width: 6px;
-  border-style: solid;
-  border-color: rgba(255,255,255,0.2);
-  border-top-color: var(--color-primary);
-}
-#generatedImage {
-  box-shadow: 0 0 20px rgba(168, 85, 247, 0.7);
-}
-body.light-mode {
-  background: #f3f4f6;
-  color: #1f2937;
-}
-
-body.light-mode .sidebar {
-  background: #ffffff;
-}
-
-body.light-mode #promptInput {
-  background: #ffffff;
-  color: #111827;
-  border-color: #d1d5db;
-}
-
-body.light-mode #imageArea {
-  background: #ffffff;
-  border-color: #d1d5db;
-}
-
-body.light-mode #placeholderText {
-  color: #6b7280;
-}
-
-body.light-mode #generateBtn {
-  background: linear-gradient(to right, #6366f1, #4f46e5);
-}
-
-body.light-mode .image-display {
-  border-color: #d1d5db;
-}
-
-body.light-mode #errorMessage {
-  color: #dc2626;
-}
-body.light-mode header {
-  background: #ffffff;
-}
-body.light-mode #themeToggle {
-  background: #e5e7eb; /* light gray */
-  color: #1f2937; /* dark text */
-}
-body.light-mode #themeToggle:hover {
-  background: #d1d5db; /* slightly darker gray */
-}
-
-body.light-mode .sidebar {
-  background: #e5e7eb;
-}
-
-</style>
-<script>
-// Define the custom Clerk appearance once
-const clerkAppearance = {
-    elements: {
-        // Light background, subtle shadow, and light border
-        card: "bg-white shadow-2xl rounded-2xl p-6 border border-gray-200",
-        
-        // Darker text for titles on a light background, keeping the purple accent
-        headerTitle: "text-3xl font-extrabold text-purple-700 tracking-wide",
-        
-        // Lighter gray subtitle
-        headerSubtitle: "text-gray-500 italic",
-        
-        // Primary button with a vibrant gradient, now starting from lighter shades
-        formButtonPrimary: 
-            "bg-gradient-to-r from-purple-500 via-fuchsia-600 to-pink-600 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:scale-[1.05] hover:shadow-purple-400/50 transition-all",
-        
-        // Light input field with a subtle border and dark text
-        formFieldInput: 
-            "bg-gray-50 border border-purple-300 text-gray-800 placeholder-gray-400 rounded-lg px-3 py-2 focus:ring-2 focus:ring-fuchsia-500",
-        
-        // Accent link color for the footer, standing out against the light background
-        footerActionLink: 
-            "text-purple-600 hover:text-fuchsia-500 font-semibold transition-colors",
-        
-        // Social buttons with light background and colored border/text
-        socialButtonsBlockButton: 
-            "bg-white border border-purple-300 text-purple-600 rounded-lg px-4 py-2 hover:bg-purple-50 hover:text-purple-700 transition-all",
-    },
-    
-    // Layout remains the same
-    layout: {
-        socialButtonsPlacement: "bottom",
-        logoPlacement: "none",
-    },
-    
-    // Variable changes for a light theme
-    variables: {
-        colorPrimary: "#a855f7", // Same purple accent
-        colorBackground: "transparent", // Use the surrounding light background
-        colorText: "#1f2937", // Dark text color for readability on a light background (text-gray-800 equivalent)
-    },
+const userData = {
+  message: null,
+  file: {
+    data: null,
+    mimeType: null,
+  },
 };
 
-// New elements for the auth gateway
-const publicLanding = document.getElementById("public-landing");
-const clerkFormContainer = document.getElementById("clerk-form-container");
-// Added new reference for the dedicated mount target
-const clerkMountTarget = document.getElementById("clerk-mount-target");
-const showSignInBtn = document.getElementById("showSignIn");
-const showSignUpBtn = document.getElementById("showSignUp");
+const chatHistory = [];
+const initialInputHeight = messageInput.scrollHeight;
 
-/**
- * Hides the landing page and mounts the appropriate Clerk form (Sign In or Sign Up).
- * @param {'signIn' | 'signUp'} type - The type of form to mount.
- */
-function showForm(type) {
-    // Hide the landing page and show the form container
-    publicLanding.classList.add("hidden");
-    clerkFormContainer.classList.remove("hidden");
-    
-    // Crucial Fix: Clear the mount target's content, but do not delete the element itself.
-    clerkMountTarget.innerHTML = ''; 
-
-    if (type === 'signIn') {
-        Clerk.mountSignIn(clerkMountTarget, { // Use the dedicated mount target
-            appearance: clerkAppearance,
-            // Ensure internal links within the Clerk form switch views correctly
-            initialState: {
-                onSwitchToSignUp: () => showForm('signUp') 
-            }
-        });
-    } else { // type === 'signUp'
-        Clerk.mountSignUp(clerkMountTarget, { // Use the dedicated mount target
-            appearance: clerkAppearance,
-            // Ensure internal links within the Clerk form switch views correctly
-            initialState: {
-                onSwitchToSignIn: () => showForm('signIn')
-            }
-        });
-    }
+// --- HISTORY INITIALIZATION (NEW) ---
+// Add the initial message to chatHistory so the AI knows the starting point and its name.
+if (initialMessageElement) {
+    chatHistory.push({
+        role: "model",
+        parts: [{ text: initialMessageElement.innerText.trim() }]
+    });
 }
+// --- END HISTORY INITIALIZATION ---
 
-// === FIX: Changed 'window.addEventListener("load", ...)' to 'document.addEventListener("DOMContentLoaded", ...)'
-// This ensures Clerk starts loading as soon as the DOM structure is ready, improving responsiveness.
-document.addEventListener("DOMContentLoaded", async () => {
-  await Clerk.load();
 
-  if (!Clerk.user) {
-    document.getElementById("protected-content").classList.add("hidden");
-    document.getElementById("public-auth").classList.remove("hidden");
+// Create message element with dynamic classes and return it
+const createMessageElement = (content, ...classes) => {
+  const div = document.createElement("div");
+  div.classList.add("message", ...classes);
+  div.innerHTML = content;
+  return div;
+};
 
-    // Start by showing the friendly landing page (Hero)
-    publicLanding.classList.remove("hidden");
-    clerkFormContainer.classList.add("hidden");
-    
-    // Attach event listeners to the new buttons
-    if (showSignInBtn) showSignInBtn.addEventListener('click', () => showForm('signIn'));
-    if (showSignUpBtn) showSignUpBtn.addEventListener('click', () => showForm('signUp'));
-  } else {
-    document.getElementById("protected-content").classList.remove("hidden");
-    document.getElementById("public-auth").classList.add("hidden");
-  }
-
-  // Mount the user button in the header (space theme 👨‍🚀)
-  Clerk.mountUserButton(document.getElementById("clerk-user-button"), {
-    appearance: {
-      elements: {
-        avatarBox:
-          "ring-2 ring-purple-500 hover:ring-fuchsia-400 transition-all shadow-md",
-        userButtonPopoverCard:
-          "bg-gradient-to-br from-[#1a102b] to-[#0b0f24] border border-purple-700/40 rounded-xl shadow-2xl",
-        userButtonPopoverActionButton:
-          "hover:bg-purple-800/40 text-purple-200 px-3 py-2 rounded-lg transition-all",
-      },
-    },
-  });
-
-  // Listen for sign in/out events
-  Clerk.addListener(({ user }) => {
-    if (user) {
-      document.getElementById("protected-content").classList.remove("hidden");
-      document.getElementById("public-auth").classList.add("hidden");
-      publicLanding.classList.remove("hidden"); // Reset state
-      clerkFormContainer.classList.add("hidden");
-    } else {
-      document.getElementById("protected-content").classList.add("hidden");
-      document.getElementById("public-auth").classList.remove("hidden");
-      // Show landing page again on sign out
-      publicLanding.classList.remove("hidden"); 
-      clerkFormContainer.classList.add("hidden");
+// Function to handle API call with exponential backoff
+const fetchWithRetry = async (url, options, maxRetries = 5) => {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            const response = await fetch(url, options);
+            if (response.status !== 429) { // Not a rate limit error
+                return response;
+            }
+            // If rate limited, wait and retry
+            const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+            await new Promise(resolve => setTimeout(resolve, delay));
+        } catch (error) {
+            if (i === maxRetries - 1) throw error;
+            const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
     }
+    throw new Error("Max retries reached.");
+};
+
+// Generate bot response using API
+const generateBotResponse = async (incomingMessageDiv) => {
+  const messageElement = incomingMessageDiv.querySelector(".message-text");
+
+  // Construct the payload for the API
+  const payload = {
+      // Pass the complete chat history for context/follow-up questions
+      contents: chatHistory, 
+      
+      // Use Google Search for grounding if no file is attached, for updated info
+      ...(!userData.file.data && { tools: [{ "google_search": {} }] }),
+      
+      // UPDATED: Restrictive System instruction to avoid Markdown bolding/formatting
+      systemInstruction: {
+        parts: [{ text: "You are a helpful and friendly chatbot assistant named Pranai. Provide concise and relevant answers. ABSOLUTELY DO NOT use any Markdown, including bolding (**), italics, or lists. Respond in plain text." }]
+      }
+  };
+
+
+  // API request options
+  const requestOptions = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  };
+
+  try {
+    // Fetch bot response from API
+    const response = await fetchWithRetry(API_URL, requestOptions);
+    const data = await response.json();
+    
+    // Check for API error structure
+    if (data.error) throw new Error(data.error.message);
+    
+    const candidate = data.candidates?.[0];
+
+    if (!candidate || !candidate.content?.parts?.[0]?.text) {
+        throw new Error("Received an empty or invalid response from the AI model.");
+    }
+    
+    // Extract and display the generated text
+    const apiResponseText = candidate.content.parts[0].text.trim();
+    messageElement.innerText = apiResponseText;
+
+    // Add bot response to chat history (Crucial for follow-up questions)
+    chatHistory.push({
+      role: "model",
+      parts: [
+        { text: apiResponseText }
+      ],
+    });
+    
+    // Reset file data after successful send
+    userData.file = { data: null, mimeType: null };
+
+
+  } catch (error) {
+    console.error("AI Error:", error);
+    messageElement.innerText = `An error occurred: ${error.message}. Please try again.`;
+    messageElement.style.color = "#ff0000";
+    // If we fail, we still want to log the error message as the model's response in history to track it.
+     chatHistory.push({
+        role: "model",
+        parts: [{ text: `Error: ${error.message}` }]
+     });
+  } finally {
+    incomingMessageDiv.classList.remove("thinking");
+    chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: "smooth" });
+  }
+};
+
+// Handle outgoing user messages
+const handleOutgoingMessage = (e) => {
+  e.preventDefault();
+  const rawMessage = messageInput.value.trim();
+  if (!rawMessage) return;
+    
+  userData.message = rawMessage;
+  
+  // Create history entry *before* clearing the input (as it contains the full text + inline data part)
+   chatHistory.push({
+    role: "user",
+    parts: [
+        { text: userData.message },
+        ...(userData.file.data ? [{ inlineData: userData.file }] : []),
+    ],
   });
+
+  messageInput.value = "";
+  messageInput.dispatchEvent(new Event("input")); // Reset textarea height
+
+  // Create and display user message
+  const messageContent = `<div class="message-text"></div>
+                           ${userData.file.data
+                              ? `<img src="data:${userData.file.mimeType};base64,${userData.file.data}" class="attachment" onerror="this.src='https://placehold.co/150x100/A0A0A0/FFFFFF?text=Image+Load+Failed'" />`
+                              : ""
+                           }`;
+                           
+  const outgoingMessageDiv = createMessageElement(
+    messageContent,
+    "user-message"
+  );
+  outgoingMessageDiv.querySelector(".message-text").textContent =
+    userData.message;
+  chatBody.appendChild(outgoingMessageDiv);
+  chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: "smooth" });
+  
+
+  // Simulate bot response with thinking indicator after a delay
+  setTimeout(() => {
+    const messageContent = `<svg 
+        class="bot-avatar"
+        xmlns="http://www.w3.org/2000/svg"
+        width="50"
+        height="50"
+        viewBox="0 0 1024 1024"
+      >
+      <path
+          d="M738.3 287.6H285.7c-59 0-106.8 47.8-106.8 106.8v303.1c0 59 47.8 106.8 106.8 106.8h81.5v111.1c0 .7.8 1.1 1.4.7l166.9-110.6 41.8-.8h117.4l43.6-.4c59 0 106.8-47.8 106.8-106.8V394.5c0-59-47.8-106.9-106.8-106.9zM351.7 448.2c0-29.5 23.9-53.5 53.5-53.5s53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5-53.5-23.9-53.5-53.5zm157.9 267.1c-67.8 0-123.8-47.5-132.3-109h264.6c-8.6 61.5-64.5 109-132.3 109zm110-213.7c-29.5 0-53.5-23.9-53.5-53.5s23.9-53.5 53.5-53.5 53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5zM867.2 644.5V453.1h26.5c19.4 0 35.1 15.7 35.1 35.1v121.1c0 19.4-15.7 35.1-35.1 35.1h-26.5zM95.2 609.4V488.2c0-19.4 15.7-35.1 35.1-35.1h26.5v191.3h-26.5c-19.4 0-35.1-15.7-35.1-35.1zM561.5 149.6c0 23.4-15.6 43.3-36.9 49.7v44.9h-30v-44.9c-21.4-6.5-36.9-26.3-36.9-49.7 0-28.6 23.3-51.9 51.9-51.9s51.9 23.3 51.9 51.9z"
+      ></path>
+      </svg>
+      <div class="message-text">
+        <div class="thinking-indicator">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>`;
+    const incomingMessageDiv = createMessageElement(
+      messageContent,
+      "bot-message",
+      "thinking"
+    );
+    chatBody.appendChild(incomingMessageDiv);
+    chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: "smooth" });
+    generateBotResponse(incomingMessageDiv);
+  }, 600);
+};
+
+// Handle Enter key press for sending messages
+messageInput.addEventListener("keydown", (e) => {
+  const userMessage = e.target.value.trim();
+  // Check if it's the Enter key, and either Shift is not pressed OR it's mobile (where enter is often used for newline)
+  if (e.key === "Enter" && userMessage && !e.shiftKey) {
+    e.preventDefault(); // Prevent default newline insertion
+    handleOutgoingMessage(e);
+  }
 });
-// === END OF FIX
 
-const apiKey = "AIzaSyD8xBXpp0FYeV0nCxZ9V_VtVjKwoo6_BUw";
-const sidebar = document.getElementById('sidebar');
-const imageArea = document.getElementById('imageArea');
-const promptInput = document.getElementById('promptInput');
-const generateBtn = document.getElementById('generateBtn');
-const generatedImageDisplay = document.getElementById('generatedImage');
-const loadingState = document.getElementById('loadingState');
-const placeholderText = document.getElementById('placeholderText');
-const errorMessage = document.getElementById('errorMessage');
-const themeToggle = document.getElementById('themeToggle');
-const body = document.body;
-// New reference for the download button
-const downloadBtn = document.getElementById('downloadBtn');
 
-const tabPrompt = document.getElementById('tabPrompt');
-const tabPreview = document.getElementById('tabPreview');
-
-function showLoading(show) {
-  if (show) {
-    loadingState.classList.remove('hidden');
-    generatedImageDisplay.classList.add('hidden');
-    placeholderText.classList.add('hidden');
-    errorMessage.classList.add('hidden');
-    // Hide download button when generating or before success
-    downloadBtn.classList.add('hidden');
-  } else {
-    loadingState.classList.add('hidden');
+// Auto resize message input
+messageInput.addEventListener("input", (e) => {
+  messageInput.style.height = `${initialInputHeight}px`;
+  messageInput.style.height = `${messageInput.scrollHeight}px`;
+  const chatForm = document.querySelector(".chat-form");
+  if (chatForm) {
+      chatForm.style.borderRadius = messageInput.scrollHeight > initialInputHeight ? "15px" : "32px";
   }
-}
+});
 
-/**
- * Disables/enables the generate button and updates its appearance.
- * @param {boolean} disabled - True to disable and show loading state, false to re-enable.
- */
-function toggleButtons(disabled) {
-  const isPromptEmpty = promptInput.value.trim() === '';
-  generateBtn.disabled = disabled || isPromptEmpty;
+// Convert file to Base64
+const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            // Get the base64 part only
+            const base64String = e.target.result.split(",")[1];
+            resolve(base64String);
+        };
+        reader.onerror = (error) => reject(error);
+        reader.readAsDataURL(file);
+    });
+};
 
-  if (disabled) {
-    generateBtn.textContent = 'GENERATING...';
-    generateBtn.classList.add('opacity-70', 'cursor-not-allowed');
-    generateBtn.classList.remove('hover:scale-[1.02]', 'shadow-md', 'hover:shadow-lg');
-  } else {
-    generateBtn.textContent = 'GENERATE IMAGE';
-    generateBtn.classList.remove('opacity-70', 'cursor-not-allowed');
-    if (!isPromptEmpty) {
-        generateBtn.classList.add('hover:scale-[1.02]', 'shadow-md', 'hover:shadow-lg');
-    }
-  }
-}
-
-/**
- * Generates a 10-digit random number string for unique filenames.
- * @returns {string} A 10-digit random number string.
- */
-function generateRandomId() {
-    // Ensure the number is 10 digits by multiplying by 10^10 and padding with leading zeros.
-    return Math.floor(Math.random() * 10000000000).toString().padStart(10, '0');
-}
-
-/**
- * Handles the download of the generated image, using a unique filename.
- */
-function downloadImage() {
-    const imageData = generatedImageDisplay.src;
-    if (imageData && imageData !== 'data:image/png;base64,') {
-        const link = document.createElement('a');
-        link.href = imageData;
-        // Generate a unique filename using a 10-digit random ID
-        const randomId = generateRandomId();
-        link.download = `askaio_generated_image_${randomId}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const savedTheme = localStorage.getItem('theme');
-
-  // Default theme logic
-  if (!savedTheme || savedTheme === 'light') {
-    body.classList.add('light-mode');
-    themeToggle.textContent = '🌙';
-    localStorage.setItem('theme', 'light');
-  } else {
-    themeToggle.textContent = '☀️';
-  }
-
-  // Set bottom tab text colors on load
-  document.querySelectorAll('.bottom-tabs button').forEach(btn => {
-    btn.style.color = (!savedTheme || savedTheme === 'light') ? 'black' : 'white';
-  });
-
-  promptInput.addEventListener('input', () => {
-    // Only toggle based on empty state if we are NOT currently generating
-    if (generateBtn.textContent !== 'GENERATING...') {
-        toggleButtons(false); 
-    }
-  });
-
-  // Mobile default: show prompt tab
-  if (window.innerWidth < 768) {
-    activateTab('prompt');
+// Handle file input change
+fileInput.addEventListener("change", async () => {
+  const file = fileInput.files[0];
+  if (!file || !file.type.startsWith('image/')) {
+      // Clear input if file is invalid or not an image
+      fileInput.value = "";
+      return;
   }
   
-  // Attach download handler
-  downloadBtn.addEventListener('click', downloadImage);
+  try {
+      const base64String = await fileToBase64(file);
+
+      // Store file data in userData
+      userData.file = {
+          data: base64String,
+          mimeType: file.type, 
+      };
+      
+      // Optionally display a message that the image is ready to send
+      messageInput.placeholder = `Image attached: ${file.name}. Type your message.`;
+
+  } catch (error) {
+      console.error("Error reading file:", error);
+      // Fallback: Clear file data and input
+      userData.file = { data: null, mimeType: null };
+      messageInput.placeholder = "Message...";
+  }
+  fileInput.value = ""; // Clear file input after reading
 });
 
-themeToggle.addEventListener('click', () => {
-  body.classList.toggle('light-mode');
-  const isLight = body.classList.contains('light-mode');
-  themeToggle.textContent = isLight ? '🌙' : '☀️';
-  localStorage.setItem('theme', isLight ? 'light' : 'dark');
-
-  // Update bottom tab text colors instantly
-  document.querySelectorAll('.bottom-tabs button').forEach(btn => {
-    btn.style.color = isLight ? 'black' : 'white';
-  });
+// Emoji picker setup
+const picker = new EmojiMart.Picker({
+  theme: "light",
+  skinTonePosition: "none",
+  preview: "none",
+  onEmojiSelect: (emoji) => {
+    const { selectionStart: start, selectionEnd: end } = messageInput;
+    messageInput.setRangeText(emoji.native, start, end, "end");
+    messageInput.focus();
+  },
+  onClickOutside: (e) => {
+    // Check if the click target is the emoji button itself
+    if (e.target.id === "emoji-picker" || e.target.closest('#emoji-picker')) {
+      document.body.classList.toggle("show-emoji-picker");
+    } else {
+      document.body.classList.remove("show-emoji-picker");
+    }
+  }
 });
 
-async function generateImage() {
-  const prompt = promptInput.value.trim();
-  if (!prompt) return;
+document.querySelector(".chat-form").appendChild(picker);
 
-  // 1. Immediately disable button, show loading, and HIDE download button
-  toggleButtons(true); 
-  showLoading(true);
-  downloadBtn.classList.add('hidden'); // Ensure it is hidden
 
-  // Simple retry mechanism with exponential backoff
-  const maxRetries = 3;
-  let attempt = 0;
-  let success = false;
-  let base64Data = null;
-  let lastError = null;
+sendMessageButton.addEventListener("click", (e) => handleOutgoingMessage(e));
+document
+  .querySelector("#file-upload")
+  .addEventListener("click", () => fileInput.click());
 
-  while (attempt < maxRetries && !success) {
-      try {
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
-          const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseModalities: ['TEXT','IMAGE'] } };
-          const response = await fetch(apiUrl, { 
-              method: 'POST', 
-              headers: { 'Content-Type': 'application/json' }, 
-              body: JSON.stringify(payload) 
-          });
-          
-          if (!response.ok) {
-              throw new Error(`API returned status ${response.status}`);
-          }
-          
-          const result = await response.json();
-          base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
-          
-          if (base64Data) {
-              success = true;
-          } else {
-              throw new Error("No image data found in response.");
-          }
-      } catch (err) {
-          lastError = err;
-          attempt++;
-          if (attempt < maxRetries) {
-              const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
-              await new Promise(resolve => setTimeout(resolve, delay));
-          }
-      }
-  }
+// Function to handle opening the chatbot (button disappears)
+const openChatbot = () => { 
+    // 1. Start container disappearance animation
+    chatbotContainer.classList.add("disappear-animation");
+    
+    // 2. Wait for animation (300ms) and then show chatbot
+    setTimeout(() => {
+        document.body.classList.add("show-chatbot");
+        chatbotContainer.style.display = 'none'; // Completely hide the element
+    }, 300); 
+};
 
-  // 2. Display result or error
-  if (base64Data) {
-    generatedImageDisplay.src = `data:image/png;base64,${base64Data}`;
-    generatedImageDisplay.classList.remove('hidden');
-    placeholderText.classList.add('hidden');
-    errorMessage.classList.add('hidden');
-    // SHOW download button on success
-    downloadBtn.classList.remove('hidden'); 
-  } else {
-    errorMessage.textContent = `Error generating image. Please try again. Last attempt failed: ${lastError ? lastError.message : 'Unknown error.'}`;
-    errorMessage.classList.remove('hidden');
-    // Ensure download button remains hidden on failure
-    downloadBtn.classList.add('hidden'); 
-  }
+// Function to handle closing the chatbot (button reappears)
+const closeChatbotAndReappear = () => { 
+    document.body.classList.remove("show-chatbot");
+    
+    // 1. Show the container instantly (to allow CSS transition to apply)
+    chatbotContainer.style.display = 'flex'; 
+    
+    // 2. Remove the disappearance class to trigger the appearance transition
+    // A slight delay ensures the CSS transition resets properly
+    setTimeout(() => {
+        chatbotContainer.classList.remove("disappear-animation");
+    }, 10); 
+};
 
-  // 3. Re-enable button
-  toggleButtons(false); 
-  showLoading(false);
-}
+// Listeners for the new sequenced interaction
+chatbotToggler.addEventListener("click", openChatbot);
+closeChatbot.addEventListener("click", closeChatbotAndReappear);
 
-generateBtn.addEventListener('click', generateImage);
-
-// Mobile tab switching
-function activateTab(tab) {
-  tabPrompt.classList.remove('active');
-  tabPreview.classList.remove('active');
-  sidebar.classList.remove('active');
-  imageArea.classList.remove('active');
-
-  if (tab === 'prompt') {
-    tabPrompt.classList.add('active');
-    sidebar.classList.add('active');
-  } else {
-    tabPreview.classList.add('active');
-    imageArea.classList.add('active');
-  }
-}
-
-tabPrompt.addEventListener('click', () => activateTab('prompt'));
-tabPreview.addEventListener('click', () => activateTab('preview'));
-</script>
-
-</body>
+    </script>
+  </body>
 </html>
