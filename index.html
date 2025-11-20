@@ -3,118 +3,163 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pranai AI Chatbot</title>
+    <title>hitAi Chatbot</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,0,0&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,1,0" />
     <style>
-      /* --- UPDATED: Imported Londrina Shadow, Inter, and Dancing Script fonts --- */
       @import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&family=Londrina+Shadow&family=Dancing+Script:wght@400..700&display=swap");
+
+      :root {
+        --bg-primary: #0A0E27;
+        --bg-secondary: #151932;
+        --accent-primary: #7C3AED;
+        --accent-secondary: #A78BFA;
+        --accent-glow: rgba(124, 58, 237, 0.4);
+        --surface-primary: #1E2139;
+        --surface-secondary: #252946;
+        --text-primary: #F1F5F9;
+        --text-secondary: #94A3B8;
+        --text-muted: #64748B;
+        --border-color: #334155;
+        --success: #10B981;
+        --error: #EF4444;
+      }
 
       * {
         margin: 0;
         padding: 0;
         font-family: "Inter", sans-serif;
         box-sizing: border-box;
+        color: var(--text-primary);
       }
 
       body {
         min-height: 100vh;
-        background: linear-gradient(#eeeeff, #c8c7ff);
+        background: radial-gradient(ellipse at top, #1a1f3a 0%, #0A0E27 50%, #000000 100%);
+        overflow: hidden;
       }
 
-      /* --- NEW STYLES: Container for all central elements (button + text) --- */
+      /* Animated background stars */
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: 
+          radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+          radial-gradient(2px 2px at 60px 70px, #fff, transparent),
+          radial-gradient(1px 1px at 50px 50px, #ddd, transparent),
+          radial-gradient(1px 1px at 130px 80px, #fff, transparent),
+          radial-gradient(2px 2px at 90px 10px, #eee, transparent);
+        background-size: 200px 200px;
+        animation: stars 20s linear infinite;
+        opacity: 0.3;
+        pointer-events: none;
+      }
+
+      @keyframes stars {
+        from { transform: translateY(0); }
+        to { transform: translateY(-200px); }
+      }
+      
       #chatbot-container {
         position: fixed;
-        /* Perfect Center */
         top: 50%;
         left: 50%;
-        transform: translate(-50%, -50%); 
+        transform: translate(-50%, -50%);
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
-        transition: all 0.3s ease-in-out; 
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         z-index: 1000;
       }
 
-      /* Disappearance animation applied to the container */
       #chatbot-container.disappear-animation {
-          opacity: 0;
-          transform: translate(-50%, -50%) scale(0.5) rotate(180deg);
-          pointer-events: none;
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.3) rotate(180deg);
+        pointer-events: none;
       }
       
-      /* Click Indicator Text */
       #click-indicator {
-          font-size: 2.2rem;
-          font-weight: 700;
-          color: #5350c4;
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-          user-select: none;
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-shadow: 0 0 20px var(--accent-glow);
+        user-select: none;
+        margin-bottom: 15px;
+        letter-spacing: 0.5px;
       }
 
       #click-indicator span {
-          font-size: 2.5rem; /* Larger icon */
-          color: #5350c4;
-          animation: bounce 1.5s infinite; /* Gentle down bounce */
+        font-size: 2.5rem;
+        color: var(--accent-secondary);
+        animation: bounce 1.5s infinite;
+        filter: drop-shadow(0 0 8px var(--accent-glow));
       }
       
-      /* Mood Branding Text */
       #moods-main {
-          font-family: 'Dancing Script', cursive; /* Cursive, twisted text */
-          font-size: 2.5rem;
-          color: #3d39ac;
-          line-height: 1;
-          margin-bottom: 5px;
-          text-shadow: 2px 2px 0 #fff;
-          user-select: none;
+        font-family: 'Dancing Script', cursive;
+        font-size: 3.5rem;
+        background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+        margin-bottom: 8px;
+        filter: drop-shadow(0 2px 10px var(--accent-glow));
+        user-select: none;
+        font-weight: 700;
       }
 
       #moods-sub {
-          font-family: 'Inter', sans-serif; 
-          font-size: 0.9rem; /* Smaller sub-text */
-          font-style: italic;
-          color: #706db0;
-          font-weight: 500;
-          user-select: none;
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        font-style: italic;
+        color: var(--text-secondary);
+        font-weight: 400;
+        user-select: none;
+        letter-spacing: 0.5px;
       }
       
       @keyframes bounce {
-        0%, 20%, 50%, 80%, 100% {
-          transform: translateY(0);
-        }
-        40% {
-          transform: translateY(-8px);
-        }
-        60% {
-          transform: translateY(-4px);
-        }
+        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-10px); }
+        60% { transform: translateY(-5px); }
       }
-      /* --- END NEW STYLES --- */
 
-      /* --- UPDATED STYLES: Chatbot Toggler positioning is now relative to its container --- */
       #chatbot-toggler {
-        position: static; /* No longer fixed, contained by #chatbot-container */
-        transform: none; 
-        margin-top: 10px; /* Space from the click indicator */
-        margin-bottom: 10px; /* Space to the mood text */
-        
-        height: 50px;
-        width: 50px;
+        position: static;
+        transform: none;
+        margin: 20px 0;
+        height: 70px;
+        width: 70px;
         border: none;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         border-radius: 50%;
-        background: #5350c4;
-        transition: all 0.3s ease-in-out; 
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 32px var(--accent-glow), 0 0 0 0 var(--accent-glow);
+        animation: pulse 2s infinite;
       }
-      
-      /* Old disappearance animation rules are now on #chatbot-container */
+
+      @keyframes pulse {
+        0% { box-shadow: 0 8px 32px var(--accent-glow), 0 0 0 0 var(--accent-glow); }
+        50% { box-shadow: 0 8px 32px var(--accent-glow), 0 0 0 15px transparent; }
+        100% { box-shadow: 0 8px 32px var(--accent-glow), 0 0 0 0 var(--accent-glow); }
+      }
+
+      #chatbot-toggler:hover {
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: 0 12px 40px rgba(124, 58, 237, 0.6);
+      }
       
       #chatbot-toggler span:last-child {
         display: none;
@@ -123,127 +168,180 @@
       #chatbot-toggler span {
         color: #fff;
         position: absolute;
+        font-size: 2rem;
       }
 
-      /* --- UPDATED STYLES: Chatbot Popup center position and FLEX LAYOUT FIX --- */
       .chatbot-popup {
         position: fixed;
-        /* Center Horizontally and Vertically */
         top: 50%;
-        left: 50%; 
-        /* Set origin to center for pop-in effect */
+        left: 50%;
         transform-origin: center center;
-        /* Apply initial transform */
-        transform: translate(-50%, -50%) scale(0.2);
-        
-        width: 420px;
-        height: 600px; /* Set a fixed height for the desktop popup */
-        max-height: 90vh; /* Better responsive control */
-        background: #fff;
+        transform: translate(-50%, -50%) scale(0);
+        width: 440px;
+        height: 650px;
+        max-height: 90vh;
+        background: var(--bg-secondary);
         overflow: hidden;
-        border-radius: 15px;
+        border-radius: 24px;
         opacity: 0;
-        /* CRITICAL FIX: Use Flexbox to manage internal layout */
         display: flex;
-        flex-direction: column; 
-        
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        flex-direction: column;
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         pointer-events: none;
-        box-shadow: 0 0 128px rgba(0, 0, 0, 0.1), 0 32px 64px -48px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 0 80px rgba(0, 0, 0, 0.5), 0 20px 60px rgba(124, 58, 237, 0.3);
+        border: 1px solid var(--border-color);
         z-index: 999;
       }
 
       body.show-chatbot .chatbot-popup {
         opacity: 1;
         pointer-events: auto;
-        /* Scale up to 100% */
         transform: translate(-50%, -50%) scale(1);
       }
-      /* --- End UPDATED STYLES --- */
 
       .chat-header {
         display: flex;
         align-items: center;
-        background: #5350c4;
-        padding: 15px 22px;
+        background: linear-gradient(135deg, var(--accent-primary) 0%, #6D28D9 100%);
+        padding: 20px 24px;
         justify-content: space-between;
-        flex-shrink: 0; /* Prevents header from shrinking in flex container */
+        flex-shrink: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .chat-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        transform: translateX(-100%);
+        animation: shimmer 3s infinite;
+      }
+
+      @keyframes shimmer {
+        100% { transform: translateX(100%); }
       }
 
       .chat-header .header-info {
         display: flex;
-        gap: 10px;
+        gap: 12px;
         align-items: center;
       }
 
       .header-info .chatbot-logo {
-        height: 35px;
-        width: 35px;
-        padding: 6px;
-        fill: #5350c4;
+        height: 42px;
+        width: 42px;
+        padding: 8px;
+        fill: var(--accent-primary);
         flex-shrink: 0;
-        background: #fff;
-        border-radius: 50%;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        animation: logoFloat 3s ease-in-out infinite;
       }
 
-      /* --- UPDATED: New font applied here --- */
+      @keyframes logoFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+      }
+
       .header-info .logo-text {
-        color: #fff;
-        font-size: 1.8rem; /* Increased size to suit the decorative font */
-        font-weight: 400; 
+        color: white;
+        font-size: 2rem;
+        font-weight: 400;
         font-family: 'Londrina Shadow', cursive;
         letter-spacing: 2px;
+        filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
       }
-      /* --- End UPDATED FONT --- */
 
       .chat-header #close-chatbot {
         border: none;
-        color: #fff;
-        height: 40px;
-        width: 40px;
-        font-size: 1.9rem;
-        margin-right: -10px;
-        padding-top: 2px;
+        color: white;
+        height: 42px;
+        width: 42px;
+        font-size: 1.8rem;
         cursor: pointer;
-        border-radius: 50%;
-        background: none;
-        transition: 0.2s ease;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+        z-index: 1;
       }
 
       .chat-header #close-chatbot:hover {
-        background: #3d39ac;
+        background: rgba(255, 255, 255, 0.2);
+        transform: rotate(90deg);
       }
-
+      
       .chat-body {
-        padding: 25px 22px;
+        padding: 24px;
         display: flex;
         gap: 20px;
-        /* CRITICAL FIX: Remove fixed height and margin, use flex-grow */
-        /* height: 460px; */ 
-        /* margin-bottom: 82px; */
-        flex-grow: 1; /* Takes up all available space */
+        flex-grow: 1;
         overflow-y: auto;
         flex-direction: column;
         scrollbar-width: thin;
-        scrollbar-color: #ccccf5 transparent;
+        scrollbar-color: var(--accent-primary) transparent;
+        background: var(--bg-primary);
+        position: relative;
+      }
+
+      .chat-body::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+          radial-gradient(circle at 20% 80%, rgba(124, 58, 237, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(167, 139, 250, 0.05) 0%, transparent 50%);
+        pointer-events: none;
+      }
+
+      .chat-body::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .chat-body::-webkit-scrollbar-thumb {
+        background: var(--accent-primary);
+        border-radius: 10px;
       }
 
       .chat-body .message {
         display: flex;
-        gap: 11px;
-        align-items: center;
+        gap: 12px;
+        align-items: flex-start;
+        animation: messageSlide 0.3s ease;
+      }
+
+      @keyframes messageSlide {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       .chat-body .bot-message .bot-avatar {
-        height: 35px;
-        width: 35px;
-        padding: 6px;
-        fill: #fff;
+        height: 38px;
+        width: 38px;
+        padding: 7px;
+        fill: var(--accent-primary);
         flex-shrink: 0;
-        margin-bottom: 2px;
-        align-self: flex-end;
-        background: #5350c4;
-        border-radius: 50%;
+        margin-top: 4px;
+        background: var(--surface-secondary);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       }
 
       .chat-body .user-message {
@@ -252,36 +350,54 @@
       }
 
       .chat-body .message .message-text {
-        padding: 12px 16px;
+        padding: 14px 18px;
         max-width: 75%;
         font-size: 0.95rem;
-        background: #f2f2ff;
+        line-height: 1.5;
+        color: var(--text-primary);
+        position: relative;
       }
 
       .chat-body .bot-message.thinking .message-text {
-        padding: 2px 16px;
+        padding: 8px 18px;
       }
       
-      /* New style to prevent text overflow during typing */
       .chat-body .bot-message.typing .message-text {
         white-space: pre-wrap;
       }
 
       .chat-body .bot-message .message-text {
-        background-color: #f2f2ff;
-        border-radius: 13px 13px 13px 3px;
+        background: var(--surface-secondary);
+        border-radius: 16px 16px 16px 4px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
       }
 
       .chat-body .user-message .message-text {
-        color: #fff;
-        background-color: #5350c4;
-        border-radius: 13px 13px 3px 13px;
+        color: white;
+        background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+        border-radius: 16px 16px 4px 16px;
+        box-shadow: 0 4px 12px var(--accent-glow);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .chat-body .user-message .message-text::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        transform: translateX(-100%);
+        animation: shimmer 3s infinite;
       }
 
       .chat-body .bot-message .thinking-indicator {
         display: flex;
-        gap: 4px;
-        padding-block: 15px;
+        gap: 5px;
+        padding-block: 16px;
       }
 
       .chat-body .bot-message .thinking-indicator .dot:nth-child(1) {
@@ -297,96 +413,114 @@
       }
 
       .chat-body .bot-message .thinking-indicator .dot {
-        height: 7px;
-        width: 7px;
-        opacity: 0.7;
+        height: 8px;
+        width: 8px;
         border-radius: 50%;
-        background: #6f6bc2;
+        background: var(--accent-primary);
         animation: dotPulse 1.8s ease-in-out infinite;
+        box-shadow: 0 0 8px var(--accent-glow);
       }
 
       @keyframes dotPulse {
-        0%,
-        44% {
-          transform: translateY(0);
-        }
-
-        28% {
-          opacity: 0.4;
-          transform: translateY(-4px);
-        }
-
-        44% {
-          opacity: 0.2;
-        }
+        0%, 44% { transform: translateY(0); opacity: 0.7; }
+        28% { opacity: 1; transform: translateY(-6px); }
+        44% { opacity: 0.3; }
       }
 
       .chat-footer {
-        /* CRITICAL FIX: Change from absolute to relative to stay in flex flow */
-        position: relative; 
-        /* bottom: 0; removed */
+        position: relative;
         width: 100%;
-        background: white;
-        padding: 15px 22px 20px;
-        flex-shrink: 0; /* Prevents footer from shrinking */
+        background: var(--bg-secondary);
+        padding: 20px 24px 24px;
+        flex-shrink: 0;
+        border-top: 1px solid var(--border-color);
       }
 
       .chat-footer .chat-form {
         display: flex;
         align-items: center;
-        background: white;
-        border-radius: 32px;
-        outline: 1px solid #cccce5;
+        background: var(--surface-primary);
+        border-radius: 16px;
+        border: 2px solid var(--border-color);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .chat-footer .chat-form::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.05), transparent);
+        transform: translateX(-100%);
+        animation: shimmer 6s infinite;
       }
 
       .chat-footer .chat-form:focus-within {
-        outline: 2px solid #5350c4;
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 0 3px var(--accent-glow);
       }
 
       .chat-form .message-input {
         border: none;
         outline: none;
-        height: 47px;
+        height: 50px;
         width: 100%;
         resize: none;
         max-height: 180px;
         white-space: pre-line;
-        font-size: 1rem;
-        padding: 13px;
+        font-size: 0.95rem;
+        padding: 15px 16px;
         border-radius: inherit;
+        background: transparent;
+        color: var(--text-primary);
         scrollbar-width: thin;
-        scrollbar-color: transparent transparent;
+        scrollbar-color: var(--accent-primary) transparent;
+        position: relative;
+        z-index: 1;
       }
 
-      .chat-form .message-input::hover {
-        scrollbar-color: #ccccf5 transparent;
+      .chat-form .message-input::placeholder {
+        color: var(--text-muted);
       }
 
       .chat-form .chat-controls {
         display: flex;
-        height: 47px;
-        gap: 3px;
+        height: 50px;
+        gap: 4px;
         align-items: center;
         align-self: flex-end;
-        padding-right: 6px;
+        padding-right: 8px;
+        position: relative;
+        z-index: 1;
       }
 
       .chat-form .chat-controls button {
-        height: 35px;
-        width: 35px;
+        height: 38px;
+        width: 38px;
         border: none;
-        font-size: 1.15rem;
+        font-size: 1.2rem;
         cursor: pointer;
-        color: #706db0;
+        color: var(--text-secondary);
         background: none;
-        border-radius: 50%;
-        transition: 0.2s ease;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+      }
+
+      .chat-form .chat-controls button:hover {
+        background: var(--surface-secondary);
+        color: var(--text-primary);
+        transform: scale(1.05);
       }
 
       .chat-form .chat-controls #send-message {
-        color: #fff;
+        color: white;
         display: none;
-        background: #5350c4;
+        background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+        box-shadow: 0 4px 12px var(--accent-glow);
       }
 
       .chat-form .message-input:valid ~ .chat-controls #send-message {
@@ -394,17 +528,16 @@
       }
 
       .chat-form .chat-controls #send-message:hover {
-        background: #3d39ac;
+        transform: scale(1.1);
+        box-shadow: 0 6px 16px rgba(124, 58, 237, 0.5);
       }
-
-      .chat-form .chat-controls button:hover {
-        background: #f1f1f1;
-      }
-
+      
       .chat-body .user-message .attachment {
         width: 50%;
         margin-top: -7px;
-        border-radius: 13px 3px 13px 3px;
+        border-radius: 12px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       }
 
       em-emoji-picker {
@@ -416,99 +549,132 @@
         max-height: 330px;
         visibility: hidden;
         transform: translateX(-50%);
+        --background-color: var(--surface-secondary);
+        --text-color: var(--text-primary);
+        --border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        z-index: 10;
       }
 
       body.show-emoji-picker em-emoji-picker {
         visibility: visible;
       }
-      /* Responsive for mobile screen */
+
+      .typing-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: var(--surface-secondary);
+        border-radius: 16px;
+        max-width: fit-content;
+        margin-bottom: 10px;
+        animation: messageSlide 0.3s ease;
+      }
+
+      .typing-indicator span {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+      }
+
+      .typing-dots {
+        display: flex;
+        gap: 4px;
+      }
+
+      .typing-dots .dot {
+        height: 6px;
+        width: 6px;
+        border-radius: 50%;
+        background: var(--accent-primary);
+        animation: typingPulse 1.4s infinite ease-in-out;
+      }
+
+      .typing-dots .dot:nth-child(1) {
+        animation-delay: 0s;
+      }
+
+      .typing-dots .dot:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+
+      .typing-dots .dot:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      @keyframes typingPulse {
+        0%, 60%, 100% { transform: scale(1); opacity: 0.5; }
+        30% { transform: scale(1.2); opacity: 1; }
+      }
+
       @media screen and (max-width: 600px) {
         #chatbot-container {
-            top: 50%; 
-            left: 50%;
-            transform: translate(-50%, -50%);
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
         }
         
         .chatbot-popup {
           width: 100%;
           left: 0;
-          top: 0; 
+          top: 0;
           bottom: 0;
           border-radius: 0;
-          height: 100%; /* Full screen on mobile */
-          transform: none; 
+          height: 100%;
+          transform: none;
           transform-origin: center center;
         }
         
         body.show-chatbot .chatbot-popup {
-            transform: none;
+          transform: none;
         }
-
 
         .chat-header .header-info .logo-text {
-          font-size: 1.6rem; /* Adjusted for mobile */
-        }
-
-        .chat-body {
-          /* height: 100%; Removed, flex-grow handles this now */
-          margin-bottom: 0;
+          font-size: 1.7rem;
         }
 
         .chat-body .message .message-text {
           max-width: 85%;
         }
 
-        .chat-footer .chat-form {
-          border-radius: 0;
-          border-radius: 25px;
-        }
-
-        .chat-footer .chat-form .message-input {
-          border-radius: 0;
-        }
-
-        .chat-footer .chat-form .chat-controls {
-          padding-right: 10px;
-        }
-
-        .chat-footer .chat-form .chat-controls button {
-          height: 40px;
-          width: 40px;
+        #click-indicator {
+          font-size: 1.5rem;
         }
         
-        #click-indicator {
-            font-size: 1.8rem;
-        }
         #moods-main {
-            font-size: 2rem;
+          font-size: 2.8rem;
         }
+        
         #moods-sub {
-            font-size: 0.8rem;
+          font-size: 0.9rem;
+        }
+
+        #chatbot-toggler {
+          height: 60px;
+          width: 60px;
         }
       }
     </style>
   </head>
   <body>
-    <!-- NEW: Container for the button and surrounding text, replacing the fixed positioning of the toggler -->
     <div id="chatbot-container">
-        <div id="click-indicator">
-            Click Here 
-            <span class="material-symbols-rounded">keyboard_arrow_down</span>
-        </div>
-        
-        <button id="chatbot-toggler">
-          <span class="material-symbols-outlined">mode_comment</span>
-          <span class="material-symbols-rounded">close</span>
-        </button>
-        
-        <div id="mood-text-container">
-            <div id="moods-main">Doubt?, Confused?, Happy!</div>
-            <div id="moods-sub">Chat with Pranai in any mood</div>
-        </div>
+      <div id="click-indicator">
+        Click to Start
+        <span class="material-symbols-rounded">keyboard_arrow_down</span>
+      </div>
+      
+      <button id="chatbot-toggler">
+        <span class="material-symbols-outlined">mode_comment</span>
+        <span class="material-symbols-rounded">close</span>
+      </button>
+      
+      <div id="mood-text-container">
+        <div id="moods-main">hitAi</div>
+        <div id="moods-sub">Your next conversation starts here.</div>
+      </div>
     </div>
 
     <div class="chatbot-popup">
-      <!-- Chatbot Header -->
       <div class="chat-header">
         <div class="header-info">
           <svg 
@@ -518,19 +684,13 @@
             height="50"
             viewBox="0 0 1024 1024"
           >
-            <path
-              d="M738.3 287.6H285.7c-59 0-106.8 47.8-106.8 106.8v303.1c0 59 47.8 106.8 106.8 106.8h81.5v111.1c0 .7.8 1.1 1.4.7l166.9-110.6 41.8-.8h117.4l43.6-.4c59 0 106.8-47.8 106.8-106.8V394.5c0-59-47.8-106.9-106.8-106.9zM351.7 448.2c0-29.5 23.9-53.5 53.5-53.5s53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5-53.5-23.9-53.5-53.5zm157.9 267.1c-67.8 0-123.8-47.5-132.3-109h264.6c-8.6 61.5-64.5 109-132.3 109zm110-213.7c-29.5 0-53.5-23.9-53.5-53.5s23.9-53.5 53.5-53.5 53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5zM867.2 644.5V453.1h26.5c19.4 0 35.1 15.7 35.1 35.1v121.1c0 19.4-15.7 35.1-35.1 35.1h-26.5zM95.2 609.4V488.2c0-19.4 15.7-35.1 35.1-35.1h26.5v191.3h-26.5c-19.4 0-35.1-15.7-35.1-35.1zM561.5 149.6c0 23.4-15.6 43.3-36.9 49.7v44.9h-30v-44.9c-21.4-6.5-36.9-26.3-36.9-49.7 0-28.6 23.3-51.9 51.9-51.9s51.9 23.3 51.9 51.9z"
-            ></path>
+            <path d="M738.3 287.6H285.7c-59 0-106.8 47.8-106.8 106.8v303.1c0 59 47.8 106.8 106.8 106.8h81.5v111.1c0 .7.8 1.1 1.4.7l166.9-110.6 41.8-.8h117.4l43.6-.4c59 0 106.8-47.8 106.8-106.8V394.5c0-59-47.8-106.9-106.8-106.9zM351.7 448.2c0-29.5 23.9-53.5 53.5-53.5s53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5-53.5-23.9-53.5-53.5zm157.9 267.1c-67.8 0-123.8-47.5-132.3-109h264.6c-8.6 61.5-64.5 109-132.3 109zm110-213.7c-29.5 0-53.5-23.9-53.5-53.5s23.9-53.5 53.5-53.5 53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5zM867.2 644.5V453.1h26.5c19.4 0 35.1 15.7 35.1 35.1v121.1c0 19.4-15.7 35.1-35.1 35.1h-26.5zM95.2 609.4V488.2c0-19.4 15.7-35.1 35.1-35.1h26.5v191.3h-26.5c-19.4 0-35.1-15.7-35.1-35.1zM561.5 149.6c0 23.4-15.6 43.3-36.9 49.7v44.9h-30v-44.9c-21.4-6.5-36.9-26.3-36.9-49.7 0-28.6 23.3-51.9 51.9-51.9s51.9 23.3 51.9 51.9z"></path>
           </svg>
-
-          <!-- UPDATED: Text is now 'Pranai' -->
-          <h2 class="logo-text">Pranai</h2>
+          <h2 class="logo-text">hitAi</h2>
         </div>
-        <button id="close-chatbot"
-        class="material-symbols-rounded">keyboard_arrow_down</button>
+        <button id="close-chatbot" class="material-symbols-rounded">keyboard_arrow_down</button>
       </div>
 
-      <!-- Chatbot Body -->
       <div class="chat-body">
         <div class="message bot-message">
           <svg 
@@ -540,18 +700,15 @@
             height="50"
             viewBox="0 0 1024 1024"
           >
-          <path
-              d="M738.3 287.6H285.7c-59 0-106.8 47.8-106.8 106.8v303.1c0 59 47.8 106.8 106.8 106.8h81.5v111.1c0 .7.8 1.1 1.4.7l166.9-110.6 41.8-.8h117.4l43.6-.4c59 0 106.8-47.8 106.8-106.8V394.5c0-59-47.8-106.9-106.8-106.9zM351.7 448.2c0-29.5 23.9-53.5 53.5-53.5s53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5-53.5-23.9-53.5-53.5zm157.9 267.1c-67.8 0-123.8-47.5-132.3-109h264.6c-8.6 61.5-64.5 109-132.3 109zm110-213.7c-29.5 0-53.5-23.9-53.5-53.5s23.9-53.5 53.5-53.5 53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5zM867.2 644.5V453.1h26.5c19.4 0 35.1 15.7 35.1 35.1v121.1c0 19.4-15.7 35.1-35.1 35.1h-26.5zM95.2 609.4V488.2c0-19.4 15.7-35.1 35.1-35.1h26.5v191.3h-26.5c-19.4 0-35.1-15.7-35.1-35.1zM561.5 149.6c0 23.4-15.6 43.3-36.9 49.7v44.9h-30v-44.9c-21.4-6.5-36.9-26.3-36.9-49.7 0-28.6 23.3-51.9 51.9-51.9s51.9 23.3 51.9 51.9z"
-    ></path>
-    </svg>
+            <path d="M738.3 287.6H285.7c-59 0-106.8 47.8-106.8 106.8v303.1c0 59 47.8 106.8 106.8 106.8h81.5v111.1c0 .7.8 1.1 1.4.7l166.9-110.6 41.8-.8h117.4l43.6-.4c59 0 106.8-47.8 106.8-106.8V394.5c0-59-47.8-106.9-106.8-106.9zM351.7 448.2c0-29.5 23.9-53.5 53.5-53.5s53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5-53.5-23.9-53.5-53.5zm157.9 267.1c-67.8 0-123.8-47.5-132.3-109h264.6c-8.6 61.5-64.5 109-132.3 109zm110-213.7c-29.5 0-53.5-23.9-53.5-53.5s23.9-53.5 53.5-53.5 53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5zM867.2 644.5V453.1h26.5c19.4 0 35.1 15.7 35.1 35.1v121.1c0 19.4-15.7 35.1-35.1 35.1h-26.5zM95.2 609.4V488.2c0-19.4 15.7-35.1 35.1-35.1h26.5v191.3h-26.5c-19.4 0-35.1-15.7-35.1-35.1zM561.5 149.6c0 23.4-15.6 43.3-36.9 49.7v44.9h-30v-44.9c-21.4-6.5-36.9-26.3-36.9-49.7 0-28.6 23.3-51.9 51.9-51.9s51.9 23.3 51.9 51.9z"></path>
+          </svg>
           <div id="initial-message" class="message-text">
             Hey there 👋 <br />
-            How can I help you today?
+            I'm hitAi, how can I help you today?
           </div>
         </div>
       </div>
       
-      <!-- Chatbot Footer -->
       <div class="chat-footer">
         <form action="#" class="chat-form">
           <textarea placeholder="Message..." class="message-input" required></textarea>
@@ -567,10 +724,8 @@
       </div>
     </div>
 
-    
     <script src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"></script>
-
-    <script>
+        <script>
 
 const chatBody = document.querySelector(".chat-body");
 const messageInput = document.querySelector(".message-input");
@@ -583,7 +738,7 @@ const closeChatbot = document.querySelector("#close-chatbot");
 const chatbotContainer = document.querySelector("#chatbot-container");
 const initialMessageElement = document.querySelector("#initial-message"); 
 // API setup
-const API_KEY = "AIzaSyDrnirnkuWf9gWdvepONEGMgH-cbgv0VhM"; // Intentionally empty: will be supplied by the environment.
+const API_KEY = "AIzaSyAPZBIh8tZq-BfgfGLLfZtN28xcXFuXhOY"; // Intentionally empty: will be supplied by the environment.
 // UPDATED: Changed model to gemini-2.5-flash-preview-09-2025
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
 
@@ -611,13 +766,14 @@ const typeMessage = (element, text, delay = 15) => {
     return new Promise(resolve => {
         function type() {
           if (i < text.length) {
-              element.textContent += text.charAt(i);
-              // Scroll down with each character to keep the typing visible
-              chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: "instant" });
-              i++;
-              setTimeout(type, delay);
+            // Use innerHTML for text, preserving existing structure (like links if any)
+            element.textContent += text.charAt(i); 
+            // Scroll down with each character to keep the typing visible
+            chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: "instant" });
+            i++;
+            setTimeout(type, delay);
           } else {
-              resolve();
+            resolve();
           }
         }
         type();
@@ -666,8 +822,9 @@ const fetchWithRetry = async (url, options, maxRetries = 5) => {
 const generateBotResponse = async (incomingMessageDiv) => {
   const messageElement = incomingMessageDiv.querySelector(".message-text");
 
-  // Custom System Instruction for Pranav Kumar
-  const customSystemInstruction = "You are a helpful and friendly chatbot assistant named Pranai. This application was proudly developed by a very talented 13-year-old named Pranav Kumar. Provide concise and relevant answers. ABSOLUTELY DO NOT use any Markdown, including bolding (**), italics, or lists. Respond in plain text.";
+  // Custom System Instruction for hitAi
+  // UPDATED: Changed name to hitAi
+  const customSystemInstruction = "You are a helpful and friendly chatbot assistant named hitAi. Provide concise and relevant answers. ABSOLUTELY DO NOT use any Markdown, including bolding (**), italics, or lists. Respond in plain text.";
 
   // Construct the payload for the API
   const payload = {
@@ -677,7 +834,7 @@ const generateBotResponse = async (incomingMessageDiv) => {
       // Use Google Search for grounding if no file is attached, for updated info
       ...(!userData.file.data && { tools: [{ "google_search": {} }] }),
       
-      // UPDATED: Inject the custom instruction about Pranav Kumar
+      // UPDATED: Inject the custom instruction about hitAi
       systemInstruction: {
         parts: [{ text: customSystemInstruction }]
       }
@@ -734,7 +891,8 @@ const generateBotResponse = async (incomingMessageDiv) => {
     console.error("AI Error:", error);
     // Display error message
     apiResponseText = `An error occurred: ${error.message}. Please try again.`;
-    messageElement.style.color = "#ff0000";
+    // Update style to show error message clearly
+    messageElement.style.color = "#FF6347"; // Tomato red for errors 
     
     // Remove thinking indicator and type out the error
     incomingMessageDiv.classList.remove("thinking");
@@ -763,7 +921,7 @@ const handleOutgoingMessage = (e) => {
   userData.message = rawMessage;
   
   // Create history entry *before* clearing the input (as it contains the full text + inline data part)
-   chatHistory.push({
+    chatHistory.push({
     role: "user",
     parts: [
       { text: userData.message },
@@ -888,7 +1046,7 @@ fileInput.addEventListener("change", async () => {
 
 // Emoji picker setup
 const picker = new EmojiMart.Picker({
-  theme: "light",
+  theme: "dark", /* Set theme to dark to match the new design */
   skinTonePosition: "none",
   preview: "none",
   onEmojiSelect: (emoji) => {
